@@ -8,7 +8,7 @@
 
 <br/>
 
-[![Version](https://img.shields.io/badge/version-0.1.0-F97316?style=for-the-badge&logo=github)](https://github.com/ukbalfa/FlatMate/releases)
+[![Version](https://img.shields.io/badge/version-0.1.1-F97316?style=for-the-badge&logo=github)](https://github.com/ukbalfa/FlatMate/releases)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=000)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=fff)](https://www.typescriptlang.org)
@@ -150,46 +150,49 @@ Browser (React Client Components)
 flatmate-dashboard/
 ├── app/
 │   ├── layout.tsx                  # Root layout — Inter font + Providers
-│   ├── providers.tsx               # ThemeProvider + Sonner Toaster
-│   ├── globals.css                 # Tailwind v4 @theme tokens, fm-* classes
+│   ├── providers.tsx               # Auth, Notifications, I18n, Theme providers
+│   ├── globals.css                 # Tailwind v4 @theme tokens, fm-* helper classes
 │   ├── page.tsx                    # Public landing page
 │   ├── not-found.tsx               # 404 page
 │   ├── login/
 │   │   └── page.tsx                # Login + first-admin bootstrap
 │   ├── dashboard/
-│   │   ├── layout.tsx              # Sidebar + topbar + theme toggle (route guard)
-│   │   ├── page.tsx                # Home — metrics, announcements, activity, RentCountdown
+│   │   ├── layout.tsx              # Sidebar + topbar + route guard
+│   │   ├── page.tsx                # Home — metrics, announcements, activity
 │   │   ├── expenses/page.tsx       # Expense tracker + recurring expenses
-│   │   ├── cleaning/page.tsx       # Cleaning schedule
-│   │   ├── tasks/page.tsx          # Task manager
-│   │   ├── roommates/page.tsx      # Roommate profiles
 │   │   ├── rates/page.tsx          # Exchange rates & converter
-│   │   ├── balances/page.tsx       # Expense balances
+│   │   ├── balances/page.tsx       # Who-owes-whom overview + payment settlements
+│   │   ├── cleaning/page.tsx       # Weekly chore schedule
+│   │   ├── tasks/page.tsx          # Task manager with due-date badges
+│   │   ├── roommates/page.tsx      # Roommate profile cards
 │   │   ├── settings/page.tsx       # Household settings
-│   │   └── announcements/page.tsx   # Announcements board
+│   │   └── announcements/page.tsx  # Pinned announcements board
 │   ├── actions/
 │   │   └── deleteRoommate.ts       # Server Action (firebase-admin)
 │   └── components/                 # Shared UI components
-│       ├── ConfirmModal.tsx
-│       ├── EmptyState.tsx
-│       ├── ErrorBoundary.tsx
-│       ├── LanguageSwitcher.tsx
+│       ├── ConfirmModal.tsx        # Delete/confirm dialog
+│       ├── EmptyState.tsx          # Placeholder for empty lists
+│       ├── ErrorBoundary.tsx       # React error boundary
+│       ├── LanguageSwitcher.tsx    # en / ru / uz toggle
 │       ├── NotificationsDropdown.tsx
-│       ├── RentCountdown.tsx      # Rent due date tracker
-│       ├── Skeleton.tsx
-│       └── Spinner.tsx
+│       ├── RentCountdown.tsx       # Rent due date tracker
+│       ├── Skeleton.tsx            # Loading skeleton
+│       └── Spinner.tsx             # Inline spinner
 ├── context/
-│   ├── AuthContext.tsx            # Auth state via React context
-│   ├── I18nContext.tsx           # Internationalization (en, ru, uz)
-│   └── NotificationsContext.tsx   # Notifications state
+│   ├── AuthContext.tsx             # Auth state + userProfile
+│   ├── I18nContext.tsx             # i18n (en, ru, uz)
+│   └── NotificationsContext.tsx    # Notification state + toasts
 ├── lib/
-│   ├── firebase.ts               # Firebase init + exports
-│   └── recurringExpensesEngine.ts # Auto-generate recurring expenses
-├── firestore.rules               # Firestore security rules
-├── firebase.json                 # Firebase project config
-├── next.config.ts                # Next.js config (Turbopack)
-├── tsconfig.json                 # TypeScript config (strict)
-└── .env.local                    # 🔒 Firebase credentials (never committed)
+│   ├── firebase.ts                 # Firebase client SDK init
+│   ├── errorLogger.ts              # Structured error logging helper
+│   ├── export.ts                   # Data export utilities
+│   ├── recurringExpensesEngine.ts  # Auto-generate recurring expenses
+│   └── utils.ts                    # Shared helpers (formatCurrency, etc.)
+├── firestore.rules                 # Firestore security rules
+├── firebase.json                   # Firebase project config
+├── next.config.ts                  # Next.js config (Turbopack)
+├── tsconfig.json                   # TypeScript config (strict)
+└── .env.local                      # 🔒 Firebase credentials (never committed)
 ```
 
 ---
@@ -211,8 +214,8 @@ cd flatmate-dashboard
 # 2. Install dependencies
 npm install
 
-# 3. Create your environment file and fill in your Firebase credentials
-cp .env.example .env.local
+# 3. Create the environment file and fill in your Firebase credentials
+touch .env.local
 
 # 4. Start the development server
 npm run dev
@@ -259,12 +262,13 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY----
 
    | Field | Type | Description |
    |---|---|---|
-   | `username` | `string` | Login username |
-   | `password` | `string` | Login password (hashed recommended) |
+   | `username` | `string` | Login email address (must match Firebase Auth) |
    | `name` | `string` | Display name |
    | `role` | `"admin"` \| `"roommate"` | Access level |
    | `color` | `string` | Avatar colour (hex, e.g. `#F97316`) |
    | `joinedAt` | `string` | ISO date string (`YYYY-MM-DD`) |
+
+   > Passwords are managed by **Firebase Authentication** and should never be stored in Firestore.
 
 5. Copy your Firebase web app credentials into `.env.local`.
 
@@ -300,7 +304,7 @@ Contributions are welcome! Here's how to get involved:
 
 <div align="center">
 
-Built with ❤️ for shared living &nbsp;·&nbsp; **v0.1.0**
+Built with ❤️ for shared living &nbsp;·&nbsp; **v0.1.1**
 
 </div>
 

@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { logError } from '../../lib/errorLogger';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { toast } from 'sonner';
@@ -45,7 +46,7 @@ export default function RentCountdown() {
         });
       }
     } catch (error) {
-      console.error('Failed to load rent settings:', error);
+      logError(error, 'RentCountdown.loadSettings');
     } finally {
       setLoading(false);
     }
@@ -74,7 +75,7 @@ export default function RentCountdown() {
             : null
         );
       } catch (error) {
-        console.error('Failed to reset rent paid status:', error);
+        logError(error, 'RentCountdown.reset');
       }
     }
   }, [userProfile?.flatId, settings]);
@@ -99,7 +100,7 @@ export default function RentCountdown() {
       );
       toast.success(t('rent.toast.markedPaid'));
     } catch (error) {
-      console.error('Failed to mark rent as paid:', error);
+      logError(error, 'RentCountdown.markAsPaid');
       toast.error(t('rent.toast.markPaidFailed'));
     } finally {
       setMarkingPaid(false);
@@ -124,13 +125,17 @@ export default function RentCountdown() {
     }
   };
 
-  if (loading || !settings || !userProfile?.flatId) {
+  if (!userProfile?.flatId) {
+    return null;
+  }
+
+  if (loading || !settings) {
     return (
-      <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
+      <div className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-6">
         <div className="animate-pulse">
-          <div className="h-5 bg-white/10 rounded w-1/3 mb-3" />
-          <div className="h-8 bg-white/10 rounded w-1/2 mb-2" />
-          <div className="h-4 bg-white/10 rounded w-2/3" />
+          <div className="h-5 bg-[#FFF0CC] dark:bg-[#3D2E00] rounded w-1/3 mb-3" />
+          <div className="h-8 bg-[#FFF0CC] dark:bg-[#3D2E00] rounded w-1/2 mb-2" />
+          <div className="h-4 bg-[#FFF0CC] dark:bg-[#3D2E00] rounded w-2/3" />
         </div>
       </div>
     );
@@ -150,7 +155,7 @@ export default function RentCountdown() {
           ? 'bg-green-900/20 border-green-500/30'
           : isDueToday
           ? 'bg-amber-900/20 border-amber-500/30'
-          : 'bg-[#1a1d27] border-white/5'
+          : 'bg-white dark:bg-[#2A1E00] border-[#F0D89A] dark:border-[#3D2E00]'
       }`}
     >
       <div className="flex items-center justify-between mb-4">
@@ -160,7 +165,7 @@ export default function RentCountdown() {
               isPaid ? 'text-green-400' : isDueToday ? 'text-amber-400' : 'text-[#F97316]'
             }`}
           />
-          <h2 className="text-lg font-semibold text-white">{t('rent.title')}</h2>
+          <h2 className="text-lg font-semibold text-[#1C1400] dark:text-[#FFF5DC]">{t('rent.title')}</h2>
         </div>
         {isAdmin && !isPaid && (
           <button
@@ -185,8 +190,8 @@ export default function RentCountdown() {
               <CheckCircle className="w-7 h-7 text-green-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-green-400">{t('rent.status.paid')}</p>
-              <p className="text-sm text-gray-400">
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{t('rent.status.paid')}</p>
+              <p className="text-sm text-[#9A7C4A] dark:text-gray-400">
                 {t('rent.status.paidOn')} {settings.lastPaidMonth}
               </p>
             </div>
@@ -197,8 +202,8 @@ export default function RentCountdown() {
               <AlertTriangle className="w-7 h-7 text-amber-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-amber-400">{t('rent.status.dueToday')}</p>
-              <p className="text-sm text-gray-400">
+              <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{t('rent.status.dueToday')}</p>
+              <p className="text-sm text-[#9A7C4A] dark:text-gray-400">
                 {t('rent.dueDay')} {settings.rentDueDay}
               </p>
             </div>
@@ -209,10 +214,10 @@ export default function RentCountdown() {
               <Loader2 className="w-7 h-7 text-[#F97316]" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-[#1C1400] dark:text-[#FFF5DC]">
                 {daysUntil} {daysUntil === 1 ? t('rent.day') : t('rent.days')}
               </p>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-[#9A7C4A] dark:text-gray-400">
                 {t('rent.status.untilRent')} {settings.rentDueDay}
               </p>
             </div>

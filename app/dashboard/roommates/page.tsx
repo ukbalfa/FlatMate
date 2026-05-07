@@ -3,12 +3,14 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
-import { db } from '../../../lib/firebase';
-import { collection, getDocs, updateDoc, doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../../../lib/firebase';
+import { collection, getDocs, updateDoc, doc, setDoc, query, orderBy } from 'firebase/firestore';
 import { Plus, Phone, ExternalLink, X, Edit2, Send, Trash2 } from 'lucide-react';
 import { SkeletonCard } from '../../components/Skeleton';
 import { toast } from 'sonner';
+import { useI18n } from '../../../context/I18nContext';
 import { useAuth } from '../../../context/AuthContext';
+import { logError } from '../../../lib/errorLogger';
 import { deleteRoommateAction } from '../../actions/deleteRoommate';
 
 interface User {
@@ -44,6 +46,17 @@ interface FirestoreTimestamp {
   toDate?: () => Date;
 }
 
+function sanitizeSocialHandle(value: string): string {
+  if (!value) return '';
+  let cleaned = value.trim();
+  cleaned = cleaned.replace(/^https?:\/\//i, '');
+  cleaned = cleaned.replace(/^t\.me\//i, '');
+  cleaned = cleaned.replace(/^instagram\.com\//i, '');
+  cleaned = cleaned.replace(/^@/, '');
+  cleaned = cleaned.trim();
+  return cleaned;
+}
+
 function formatMonth(val: unknown): string {
   if (!val) return 'Just joined';
   let date: Date;
@@ -68,6 +81,7 @@ function formatMonth(val: unknown): string {
 }
 
 export default function RoommatesPage() {
+  const { t } = useI18n();
   const { userProfile } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [name, setName] = useState('');
@@ -87,20 +101,30 @@ export default function RoommatesPage() {
   const [roommateToDelete, setRoommateToDelete] = useState<User | null>(null);
 
   const fetchUsers = async () => {
-    setLoading(true);
-    try {
-      const snap = await getDocs(collection(db, 'users'));
-      setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as User)));
-    } catch (error) {
-      console.error('Failed to load roommates:', error);
-      toast.error('Failed to load roommates. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
+    setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as User)));
   };
 
   useEffect(() => {
-    fetchUsers();
+    let mounted = true;
+    const run = async () => {
+      setLoading(true);
+      try {
+        const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
+        if (!mounted) return;
+        setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as User)));
+      } catch (error) {
+        if (!mounted) return;
+      logError(error, 'Roommates.fetchUsers');
+        toast.error('Failed to load roommates. Please try again.');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    run();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const handleAdd = async (e: React.FormEvent) => {
@@ -123,7 +147,9 @@ export default function RoommatesPage() {
       await signOut(secondaryAuth);
       await setDoc(doc(db, 'users', userCred.user.uid), {
         name, surname, username, role: 'roommate', color,
-        occupation, phone, telegram, instagram,
+        occupation, phone,
+        telegram: sanitizeSocialHandle(telegram),
+        instagram: sanitizeSocialHandle(instagram),
         joinedAt: new Date().toISOString(),
       });
       setName(''); setSurname(''); setUsername(''); setPassword('');
@@ -151,13 +177,18 @@ export default function RoommatesPage() {
   const saveEdit = async () => {
     if (!editingId) return;
     try {
-      await updateDoc(doc(db, 'users', editingId), editForm);
+      const sanitizedForm = {
+        ...editForm,
+        telegram: editForm.telegram ? sanitizeSocialHandle(editForm.telegram) : '',
+        instagram: editForm.instagram ? sanitizeSocialHandle(editForm.instagram) : '',
+      };
+      await updateDoc(doc(db, 'users', editingId), sanitizedForm);
       setEditingId(null);
       setEditForm({});
       toast.success('Profile updated');
       fetchUsers();
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      logError(error, 'Roommates.saveEdit');
       toast.error('Failed to update profile. Please try again.');
     }
   };
@@ -169,8 +200,14 @@ export default function RoommatesPage() {
       return;
     }
 
+    const idToken = await auth.currentUser?.getIdToken();
+    if (!idToken) {
+      toast.error('Not authenticated');
+      return;
+    }
+
     try {
-      const result = await deleteRoommateAction(roommateToDelete.id ?? '');
+      const result = await deleteRoommateAction(roommateToDelete.id ?? '', idToken);
       if (result.success) {
         setUsers(prev => prev.filter(r => r.id !== roommateToDelete.id));
         setRoommateToDelete(null);
@@ -199,16 +236,16 @@ export default function RoommatesPage() {
   );
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen text-[#1C1400] dark:text-[#FFF5DC]">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 w-full gap-4">
-          <h2 className="text-xl font-bold text-white">Manage Roommates</h2>
+          <h2 className="text-xl font-bold text-[#1C1400] dark:text-[#FFF5DC]">Manage Roommates</h2>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-400">Sort by:</span>
+            <span className="text-sm text-[#9A7C4A] dark:text-gray-400">Sort by:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'date' | 'name')}
-              className="appearance-none bg-[#1a1d27] border border-white/10 text-white text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block px-4 py-2 outline-none cursor-pointer hover:bg-white/5 transition-colors shadow-sm"
+              className="appearance-none bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] text-[#1C1400] dark:text-[#FFF5DC] text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block px-4 py-2 outline-none cursor-pointer hover:bg-[#FFF0CC] dark:hover:bg-[#2A1E00] transition-colors shadow-sm"
             >
               <option value="date">Date Joined</option>
               <option value="name">Alphabetical</option>
@@ -230,7 +267,7 @@ export default function RoommatesPage() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   whileHover={{ y: -2, boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }}
-                  className="relative flex flex-col items-center p-6 bg-[#1a1d27] border border-white/5 rounded-xl h-full"
+                  className="relative flex flex-col items-center p-6 bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl h-full"
                 >
                   {editingId === u.id ? (
                     <div className="space-y-3 w-full">
@@ -239,6 +276,7 @@ export default function RoommatesPage() {
                         <button
                           onClick={() => setEditingId(null)}
                           className="text-gray-400 hover:text-white transition-colors"
+                          aria-label="Close"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -315,6 +353,7 @@ export default function RoommatesPage() {
                             onClick={() => startEdit(u)}
                             className="text-gray-500 hover:text-white transition-colors p-1"
                             title="Edit"
+                            aria-label="Edit roommate"
                           >
                             <Edit2 size={16} />
                           </button>
@@ -323,6 +362,7 @@ export default function RoommatesPage() {
                               onClick={() => setRoommateToDelete(u)}
                               className="text-gray-500 hover:text-red-400 transition-colors p-1"
                               title="Remove"
+                              aria-label="Remove roommate"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -410,17 +450,18 @@ export default function RoommatesPage() {
                   className="h-full min-h-[280px] flex flex-col items-center justify-center bg-transparent border-2 border-dashed border-gray-600 rounded-xl hover:border-gray-400 hover:bg-white/5 transition-all cursor-pointer text-gray-400 hover:text-white"
                 >
                   <Plus className="w-8 h-8 mb-2" />
-                  <span className="font-medium">Add roommate</span>
+                  <span className="font-medium">{t('roommates.addRoommate')}</span>
                 </button>
               )}
 
               {userProfile?.role === 'admin' && adding && (
                 <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-white">Add roommate</h3>
+                    <h3 className="text-lg font-semibold text-white">{t('roommates.addRoommate')}</h3>
                     <button
                       onClick={() => setAdding(false)}
                       className="text-gray-400 hover:text-white transition-colors"
+                      aria-label="Close"
                     >
                       <X className="w-5 h-5" />
                     </button>

@@ -27,9 +27,10 @@ export async function generateMissingRecurringExpenses(flatId: string) {
   const todayStr = new Date().toISOString().slice(0, 10);
   const today = new Date(todayStr);
 
-  const batch = writeBatch(db);
+  const BATCH_LIMIT = 500;
+  let batch = writeBatch(db);
+  let operationCount = 0;
   const results: { recurringId: string; generated: number }[] = [];
-  let totalGenerated = 0;
 
   for (const expenseDoc of snapshot.docs) {
     const data = expenseDoc.data() as RecurringExpense;
@@ -75,16 +76,23 @@ export async function generateMissingRecurringExpenses(flatId: string) {
           recurrenceEndDate: data.endDate || null,
           parentExpenseId: recurringId
         });
+        operationCount++;
       }
 
       batch.update(expenseDoc.ref, { lastGeneratedDate: todayStr });
+      operationCount++;
 
       results.push({ recurringId, generated: nextDates.length });
-      totalGenerated += nextDates.length;
+
+      if (operationCount >= BATCH_LIMIT) {
+        await batch.commit();
+        batch = writeBatch(db);
+        operationCount = 0;
+      }
     }
   }
 
-  if (totalGenerated > 0) {
+  if (operationCount > 0) {
     await batch.commit();
   }
 

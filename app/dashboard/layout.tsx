@@ -1,7 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useTheme } from 'next-themes';
+import { useTheme } from '../../context/ThemeContext';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -51,15 +51,6 @@ const pageNames: Record<string, string> = {
   "/dashboard/announcements": "nav.announcements",
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const COLOR_MAP: Record<string, string> = {
-  blue:   '#3b82f6',
-  amber:  '#FBBF24',
-  purple: '#a855f7',
-  orange: '#F97316',
-  rose:   '#f43f5e',
-};
-
 interface DashboardUser {
   id?: string;
   username: string;
@@ -85,8 +76,8 @@ function SidebarContent({ user, setSidebarOpen, handleLogout }: { user: Dashboar
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center justify-center h-16 border-b border-[#F0D89A]" style={{ fontFamily: 'var(--font-sora)', fontWeight: 800, fontSize: '18px', color: '#1C1400' }}>
-        <span>🏠 FlatMate</span>
+      <div className="flex items-center justify-center h-16 border-b border-border dark:border-dark-border font-[family-name:var(--font-sora)] font-extrabold text-lg text-heading">
+        <span className="text-[#1C1400] dark:text-[#FFF5DC]">🏠 FlatMate</span>
       </div>
 
       {/* Navigation */}
@@ -103,10 +94,9 @@ function SidebarContent({ user, setSidebarOpen, handleLogout }: { user: Dashboar
                 href={link.href}
                 className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-all duration-200 ${
                   isActive
-                    ? 'bg-gradient-to-r from-[rgba(249,115,22,0.15)] to-[rgba(251,191,36,0.1)] text-[#F97316] font-bold border-l-[3px] border-[#F97316]'
-                    : 'text-[#9A7C4A] hover:bg-[#FFF0CC] hover:text-[#1C1400]'
+                    ? 'bg-gradient-to-r from-[rgba(249,115,22,0.15)] to-[rgba(251,191,36,0.1)] text-[#F97316] font-bold border-l-[3px] border-[#F97316] font-[family-name:var(--font-sora)]'
+                    : 'text-[#9A7C4A] dark:text-[#9A7C4A] hover:bg-[#FFF0CC] dark:hover:bg-[#2A1E00] hover:text-[#1C1400] dark:hover:text-[#FFF5DC] font-[family-name:var(--font-dm-sans)] font-medium'
                 }`}
-                style={{ fontFamily: isActive ? 'var(--font-sora)' : 'var(--font-dm-sans)', fontWeight: isActive ? 700 : 500 }}
                 onClick={() => setSidebarOpen(false)}
               >
                 <link.icon className={`w-5 h-5 ${isActive ? 'text-[#F97316]' : ''}`} />
@@ -119,23 +109,21 @@ function SidebarContent({ user, setSidebarOpen, handleLogout }: { user: Dashboar
 
       {/* User info + logout */}
       {user && (
-        <div className="p-4 border-t border-[#F0D89A]">
-          <div className="flex items-center gap-3 mb-3 px-2 bg-[#FFF0CC] rounded-2xl p-3 border border-[#F0D89A]">
+        <div className="p-4 border-t border-[#F0D89A] dark:border-[#3D2E00]">
+          <div className="flex items-center gap-3 mb-3 px-2 bg-[#FFF0CC] dark:bg-[#2A1E00] rounded-2xl p-3 border border-[#F0D89A] dark:border-[#3D2E00]">
             <span
-              className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 gradient-citrus"
-              style={{ fontFamily: 'var(--font-sora)' }}
+              className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 gradient-citrus font-[family-name:var(--font-sora)]"
             >
               {user.name?.[0] || user.username?.[0] || '?'}
             </span>
             <div className="min-w-0">
-              <div className="text-sm font-semibold truncate" style={{ fontFamily: 'var(--font-sora)', fontWeight: 600, color: '#1C1400' }}>{user.name || user.username}</div>
-              <div className="text-xs capitalize" style={{ fontFamily: 'var(--font-dm-sans)', color: '#9A7C4A' }}>{user.role}</div>
+              <div className="text-sm font-semibold truncate font-[family-name:var(--font-sora)] text-heading">{user.name || user.username}</div>
+              <div className="text-xs capitalize font-[family-name:var(--font-dm-sans)] text-muted">{user.role}</div>
             </div>
           </div>
           <button
             onClick={() => handleLogout()}
-            className="flex items-center justify-center gap-2 w-full py-2 px-3 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-[rgba(239,68,68,0.1)] hover:text-[#EF4444]"
-            style={{ fontFamily: 'var(--font-dm-sans)', fontWeight: 500, color: '#9A7C4A' }}
+            className="flex items-center justify-center gap-2 w-full py-2 px-3 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-[rgba(239,68,68,0.1)] hover:text-[#EF4444] font-[family-name:var(--font-dm-sans)] text-muted"
           >
             <LogOut className="w-4 h-4" />
             Logout
@@ -146,7 +134,8 @@ function SidebarContent({ user, setSidebarOpen, handleLogout }: { user: Dashboar
   );
 }
 
-function LoadingScreen() {
+const LoadingScreen = memo(function LoadingScreen() {
+  const { t } = useI18n();
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#FFFBF0]">
       <div className="flex flex-col items-center gap-4">
@@ -155,11 +144,11 @@ function LoadingScreen() {
           <div className="absolute inset-2 rounded-full bg-[#FFFBF0]" />
           <div className="absolute inset-0 rounded-full gradient-citrus animate-ping opacity-75" />
         </div>
-        <span className="text-sm" style={{ fontFamily: 'var(--font-dm-mono)', fontWeight: 500, color: '#9A7C4A' }}>Loading...</span>
+        <span className="text-sm font-[family-name:var(--font-dm-mono)] font-medium text-muted">{t('common.loading')}</span>
       </div>
     </div>
   );
-}
+});
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -168,14 +157,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { resolvedTheme, setTheme } = useTheme();
   const pathname = usePathname();
   const { t } = useI18n();
+  const [authTimeout, setAuthTimeout] = useState(false);
   const pageTitle = pageNames[pathname] ? t(pageNames[pathname]) : t("nav.dashboard");
   const isDark = resolvedTheme === "dark";
 
   useEffect(() => {
-    if (!loading && !user) {
+    const timer = setTimeout(() => setAuthTimeout(true), 10000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if ((!loading || authTimeout) && !user) {
       router.replace("/login");
     }
-  }, [loading, user, router]);
+  }, [loading, user, router, authTimeout]);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -184,7 +179,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const dashboardUser = mapToDashboardUser(userProfile);
 
-  if (loading) {
+  if (loading && !authTimeout) {
     return <LoadingScreen />;
   }
 
@@ -229,8 +224,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <header className="flex items-center h-16 px-5 bg-[rgba(255,251,240,0.85)] dark:bg-[rgba(28,16,0,0.85)] backdrop-blur-md border-b border-[#F0D89A] sticky top-0 z-30">
           {/* Left: hamburger (mobile only) */}
           <button
-            className="lg:hidden p-2 rounded-lg transition-colors mr-3 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-[#FFF0CC]"
-            style={{ color: '#9A7C4A' }}
+            className="lg:hidden p-2 rounded-lg transition-colors mr-3 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-[#FFF0CC] text-muted"
             onClick={() => setSidebarOpen(true)}
             aria-label="Toggle sidebar"
           >
@@ -238,8 +232,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
 
           {/* Page title */}
-          <h1 className="text-base tracking-tight" style={{ fontFamily: 'var(--font-sora)', fontWeight: 700, fontSize: '18px', color: '#1C1400' }}>
-            {pageTitle.split('.').pop()?.replace(/([A-Z])/g, ' $1').trim()}
+          <h1 className="text-base tracking-tight font-[family-name:var(--font-sora)] font-bold text-lg text-heading">
+            <span className="text-[#1C1400] dark:text-[#FFF5DC]">{pageTitle.split('.').pop()?.replace(/([A-Z])/g, ' $1').trim()}</span>
           </h1>
 
           <div className="flex-1" />
@@ -249,27 +243,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             onClick={() => {
               setTheme(isDark ? 'light' : 'dark');
             }}
-            className="w-11 h-6 flex items-center rounded-full relative transition-all duration-300 focus:outline-none mr-3 hover:shadow-lg"
-            style={{
-              minWidth: 44,
-              minHeight: 24,
-              background: isDark ? 'linear-gradient(135deg, #F97316, #FBBF24)' : '#F0D89A',
-            }}
-            title="Toggle theme"
+            className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 mr-3 hover:scale-105 active:scale-95 bg-bg-section/60 dark:bg-dark-bg-section/80 border border-border dark:border-dark-border"
+            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             aria-label="Toggle dark mode"
           >
-            <span
-              className={`absolute left-1 top-1/2 -translate-y-1/2 transition-transform duration-300 w-4 h-4 rounded-full bg-white shadow-md ${
-                isDark ? 'translate-x-5' : 'translate-x-0'
-              }`}
-            />
-            <span className="absolute left-2 top-1/2 -translate-y-1/2">
+            <motion.div
+              initial={false}
+              animate={{ rotate: isDark ? 0 : 180, scale: isDark ? 1 : 0.9 }}
+              transition={{ duration: 0.3 }}
+            >
               {isDark ? (
-                <Sun className="w-3 h-3 text-white" />
+                <Moon className="w-5 h-5 text-accent-honey" />
               ) : (
-                <Moon className="w-3 h-3" style={{ color: '#9A7C4A' }} />
+                <Sun className="w-5 h-5 text-accent" />
               )}
-            </span>
+            </motion.div>
           </button>
 
           <NotificationsDropdown />
@@ -277,7 +265,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <LanguageSwitcher />
 
           {dashboardUser && (
-            <span className="text-sm font-medium hidden sm:block" style={{ fontFamily: 'var(--font-dm-sans)', fontWeight: 600, color: '#1C1400' }}>
+            <span className="text-sm font-semibold hidden sm:block text-heading font-[family-name:var(--font-dm-sans)]">
               {dashboardUser.name || dashboardUser.username}
             </span>
           )}

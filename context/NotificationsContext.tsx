@@ -13,8 +13,10 @@ import {
   doc,
   serverTimestamp,
   getDocs,
+  limit,
 } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
+import { logError } from '../lib/errorLogger';
 
 export interface Notification {
   id: string;
@@ -67,7 +69,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     const q = query(
       collection(db, 'notifications'),
       where('userId', '==', userProfile.uid),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
+      limit(100)
     );
 
     const unsubscribe = onSnapshot(
@@ -80,7 +83,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         setNotificationsState({ uid, items: data });
       },
       (error) => {
-        console.error('Failed to load notifications:', error);
+        logError(error, 'NotificationsContext.load');
       }
     );
 
@@ -94,7 +97,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         readAt: serverTimestamp(),
       });
     } catch (error) {
-      console.error('Failed to mark notification as read:', error);
+      logError(error, 'NotificationsContext.markAsRead');
     }
   };
 
@@ -110,7 +113,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         )
       );
     } catch (error) {
-      console.error('Failed to mark all notifications as read:', error);
+      logError(error, 'NotificationsContext.markAllAsRead');
     }
   };
 
@@ -123,7 +126,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       const snapshot = await getDocs(q);
       await Promise.all(snapshot.docs.map((d) => deleteDoc(doc(db, 'notifications', d.id))));
     } catch (error) {
-      console.error('Failed to clear notifications:', error);
+      logError(error, 'NotificationsContext.clearAll');
     }
   };
 
@@ -136,7 +139,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         createdAt: serverTimestamp(),
       });
     } catch (error) {
-      console.error('Failed to create notification:', error);
+      logError(error, 'NotificationsContext.create');
     }
   };
 

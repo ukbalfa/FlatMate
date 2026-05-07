@@ -12,6 +12,7 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '../../../context/AuthContext';
 import { useI18n } from '../../../context/I18nContext';
+import { logError } from '../../../lib/errorLogger';
 import {
   User,
   Lock,
@@ -103,7 +104,7 @@ export default function SettingsPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to load profile:', error);
+      logError(error, 'Settings.loadProfile');
       toast.error(t('settings.toast.profileLoadFailed'));
     } finally {
       setLoading(false);
@@ -127,7 +128,7 @@ export default function SettingsPage() {
       toast.success(t('settings.toast.profileUpdated'));
       loadUserProfile();
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      logError(error, 'Settings.saveProfile');
       toast.error(t('settings.toast.somethingWrong'));
     } finally {
       setSaving(false);
@@ -158,7 +159,7 @@ export default function SettingsPage() {
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
-      console.error('Failed to change password:', error);
+      logError(error, 'Settings.changePassword');
       toast.error(t('settings.toast.passwordChangeFailed'));
     }
   };
@@ -169,7 +170,7 @@ export default function SettingsPage() {
       await sendEmailVerification(firebaseUser);
       toast.success(t('settings.toast.verificationSent'));
     } catch (error) {
-      console.error('Failed to send verification:', error);
+      logError(error, 'Settings.sendVerification');
       toast.error(t('settings.toast.verificationFailed'));
     }
   };
@@ -183,7 +184,7 @@ export default function SettingsPage() {
       });
       toast.success(t('settings.toast.notificationsSaved'));
     } catch (error) {
-      console.error('Failed to save notifications:', error);
+      logError(error, 'Settings.saveNotifications');
       toast.error(t('settings.toast.somethingWrong'));
     }
   };

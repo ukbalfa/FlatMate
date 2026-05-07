@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme inline {
+@theme {
   --color-accent: #F97316;
   --color-accent-hover: #EA6D0E;
   --color-accent-lime: #84CC16;
@@ -18,10 +18,33 @@
   --color-danger: #EF4444;
   --color-warning: #FBBF24;
   --color-success: #84CC16;
+  --color-watermark: #E8E8E8;
+  --color-accent-dark: #B45309;
+  --color-body-light: #7C6A3A;
+  --color-body-dark: #5A4A2A;
   --font-sans: var(--font-dm-sans);
+
+  /* Dark theme values */
+  --color-dark-heading: #FFF5DC;
+  --color-dark-body: #d4c4a0;
+  --color-dark-muted: #9A7C4A;
+  --color-dark-border: #3D2E00;
+  --color-dark-border-light: #2A1E00;
+  --color-dark-bg-page: #1C1000;
+  --color-dark-bg-section: #231900;
+  --color-dark-bg-card: #2A1E00;
+  --color-dark-bg-sidebar: #231900;
+  --color-dark-bg-input: #2A1E00;
+  --color-dark-watermark: rgba(255, 245, 220, 0.12);
+  --color-dark-footer: #0a0500;
+  --color-bg-gradient-end: #FFF0C0;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+html.dark {
+  --color-watermark: var(--color-dark-watermark);
+}
 
 /* -- Base -- */
 html {
@@ -37,8 +60,8 @@ body {
 }
 
 html.dark body {
-  background: #1C1000;
-  color: #d4c4a0;
+  background: var(--color-dark-bg-page);
+  color: var(--color-dark-body);
 }
 
 /* -- Typography -- */
@@ -49,7 +72,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 html.dark h1, html.dark h2, html.dark h3, html.dark h4, html.dark h5, html.dark h6 {
-  color: #FFF5DC;
+  color: var(--color-dark-heading);
 }
 
 /* -- Card -- */
@@ -68,8 +91,8 @@ html.dark h1, html.dark h2, html.dark h3, html.dark h4, html.dark h5, html.dark 
 }
 
 html.dark .fm-card {
-  background: #2A1E00;
-  border-color: #3D2E00;
+  background: var(--color-dark-bg-card);
+  border-color: var(--color-dark-border);
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
@@ -176,9 +199,17 @@ html.dark .fm-btn-ghost:hover {
 }
 
 html.dark .fm-input {
-  background: #2A1E00;
-  border-color: #3D2E00;
-  color: #FFF5DC;
+  background: var(--color-dark-bg-input);
+  border-color: var(--color-dark-border);
+  color: var(--color-dark-heading);
+}
+
+html.dark .fm-input:focus {
+  box-shadow: 0 0 0 3px rgba(249,115,22,0.2);
+}
+
+html.dark .fm-input::placeholder {
+  color: var(--color-dark-muted);
 }
 
 html.dark .fm-input:focus {
@@ -202,6 +233,16 @@ html.dark .fm-input:focus {
 .fm-select:focus {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
+}
+
+html.dark .fm-select {
+  background: var(--color-dark-bg-input);
+  border-color: var(--color-dark-border);
+  color: var(--color-dark-heading);
+}
+
+html.dark .fm-select:focus {
+  box-shadow: 0 0 0 3px rgba(249,115,22,0.2);
 }
 
 html.dark .fm-select {
@@ -245,6 +286,10 @@ html.dark .fm-select {
 
 .glow-lime {
   box-shadow: 0 0 32px rgba(132,204,22,0.2);
+}
+
+.glow-citrus {
+  box-shadow: 0 8px 40px rgba(249,115,22,0.12);
 }
 
 /* -- Decorative Blob -- */
@@ -334,4 +379,60 @@ html.dark .fm-select {
 *:focus-visible {
   outline: 2px solid rgba(249,115,22,0.3);
   outline-offset: 2px;
+}
+
+/* -- Font Utilities -- */
+.font-sora {
+  font-family: var(--font-sora), system-ui, sans-serif;
+}
+
+.font-dm-sans {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.font-dm-mono {
+  font-family: var(--font-dm-mono), monospace, sans-serif;
+}
+
+.font-space-grotesk {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+
+/* -- Shadow Utilities -- */
+.shadow-glow {
+  box-shadow: 0 4px 20px rgba(249, 115, 22, 0.12);
+}
+
+.shadow-glow-strong {
+  box-shadow: 0 8px 32px rgba(249, 115, 22, 0.2);
+}
+
+html.dark .shadow-glow {
+  box-shadow: 0 4px 20px rgba(249, 115, 22, 0.25);
+}
+
+html.dark .shadow-glow-strong {
+  box-shadow: 0 8px 32px rgba(249, 115, 22, 0.35);
+}
+
+/* -- Reduced Motion -- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* -- Dot Grid Pattern -- */
+.bg-dot-grid {
+  background-image: radial-gradient(circle, var(--color-border) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+html.dark .bg-dot-grid {
+  background-image: radial-gradient(circle, var(--color-dark-border) 1px, transparent 1px);
 }

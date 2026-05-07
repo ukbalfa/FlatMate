@@ -1,5 +1,4 @@
 'use client';
-import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '../context/AuthContext';
 import { NotificationsProvider } from '../context/NotificationsContext';
@@ -10,15 +9,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <AuthProvider>
       <NotificationsProvider>
         <I18nProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            storageKey="flatmate-theme"
-          >
-            {children}
-            <Toaster richColors position="top-right" />
-          </ThemeProvider>
+          {children}
+          <Toaster richColors position="top-right" />
         </I18nProvider>
       </NotificationsProvider>
     </AuthProvider>

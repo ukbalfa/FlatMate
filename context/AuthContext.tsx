@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
+import { logError } from '../lib/errorLogger';
 
 interface UserProfile {
   uid: string;
@@ -52,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUserProfile({ uid: firebaseUser.uid, username: firebaseUser.email || 'Unknown' });
           }
         } catch (error) {
-          console.error('Failed to fetch user profile:', error);
+          logError(error, 'AuthContext');
           setUserProfile({ uid: firebaseUser.uid, username: firebaseUser.email || 'Unknown' });
         }
       } else {
@@ -60,7 +61,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setLoading(false);
     });
-    return () => unsubscribe();
+    
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   return (

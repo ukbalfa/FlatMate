@@ -10,10 +10,13 @@ import {
   addDoc,
   deleteDoc,
   doc,
+  orderBy,
+  limit,
 } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { useAuth } from '../../../context/AuthContext';
 import { useI18n } from '../../../context/I18nContext';
+import { logError } from '../../../lib/errorLogger';
 import { Spinner } from '../../components/Spinner';
 import { SkeletonTable } from '../../components/Skeleton';
 import { EmptyState } from '../../components/EmptyState';
@@ -81,34 +84,38 @@ export default function BalancesPage() {
     setLoading(true);
     try {
       // Load users
-      const usersSnap = await getDocs(collection(db, 'users'));
+       const usersSnap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
       setUsers(
         usersSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as User))
       );
 
       // Load expenses for selected month
-      const expensesQuery = query(
-        collection(db, 'expenses'),
-        where('date', '>=', `${selectedMonth}-01`),
-        where('date', '<=', `${selectedMonth}-31`)
-      );
+       const expensesQuery = query(
+         collection(db, 'expenses'),
+         where('date', '>=', `${selectedMonth}-01`),
+         where('date', '<=', `${selectedMonth}-31`),
+         orderBy('date', 'desc'),
+         limit(200)
+       );
       const expensesSnap = await getDocs(expensesQuery);
       setExpenses(
         expensesSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Expense))
       );
 
       // Load settlements
-      const settlementsQuery = query(
-        collection(db, 'settlements'),
-        where('date', '>=', `${selectedMonth}-01`),
-        where('date', '<=', `${selectedMonth}-31`)
-      );
+       const settlementsQuery = query(
+         collection(db, 'settlements'),
+         where('date', '>=', `${selectedMonth}-01`),
+         where('date', '<=', `${selectedMonth}-31`),
+         orderBy('date', 'desc'),
+         limit(100)
+       );
       const settlementsSnap = await getDocs(settlementsQuery);
       setSettlements(
         settlementsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Settlement))
       );
     } catch (error) {
-      console.error('Failed to load data:', error);
+      logError(error, 'Balances.loadData');
       toast.error(t('balances.toast.noConnection'));
     } finally {
       setLoading(false);
@@ -145,7 +152,7 @@ export default function BalancesPage() {
       setSettlementForm({ from: '', to: '', amount: '', note: '' });
       loadData();
     } catch (error) {
-      console.error('Failed to create settlement:', error);
+      logError(error, 'Balances.createSettlement');
       toast.error(t('balances.toast.somethingWrong'));
     }
   };
@@ -161,7 +168,7 @@ export default function BalancesPage() {
           toast.success(t('balances.toast.settlementDeleted'));
           loadData();
         } catch (error) {
-          console.error('Failed to delete settlement:', error);
+          logError(error, 'Balances.deleteSettlement');
           toast.error(t('balances.toast.deleteFailed'));
         }
       },
@@ -173,23 +180,34 @@ export default function BalancesPage() {
     if (users.length === 0) return [];
     const totalExp = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
     const sharePerPerson = totalExp / users.length;
-    const userStats: Record<string, { paid: number; name: string }> = {};
+    const userStats: Record<string, { paid: number; name: string; sent: number; received: number }> = {};
     users.forEach((u) => {
-      userStats[u.username] = { paid: 0, name: u.name || u.username };
+      userStats[u.username] = { paid: 0, name: u.name || u.username, sent: 0, received: 0 };
     });
     expenses.forEach((e) => {
-      if (userStats[e.paidBy]) {
-        userStats[e.paidBy].paid += Number(e.amount) || 0;
+      const userStat = userStats[e.paidBy];
+      if (userStat) {
+        userStat.paid += Number(e.amount) || 0;
       }
     });
+    settlements.forEach((s) => {
+        const fromUser = userStats[s.from];
+        if(fromUser) {
+            fromUser.sent += Number(s.amount) || 0;
+        }
+        const toUser = userStats[s.to];
+        if(toUser) {
+            toUser.received += Number(s.amount) || 0;
+        }
+    })
     return Object.entries(userStats).map(([username, stats]) => ({
       user: username,
       name: stats.name,
       paid: stats.paid,
       owed: sharePerPerson,
-      netBalance: stats.paid - sharePerPerson,
+      netBalance: stats.paid - sharePerPerson - stats.sent + stats.received,
     }));
-  }, [expenses, users]);
+  }, [expenses, users, settlements]);
 
   const debts = useMemo(() => {
     const creditors = balances.filter((b) => b.netBalance > 0);
@@ -433,7 +451,7 @@ export default function BalancesPage() {
                           <div>
                             <p className="text-white">
                               <span className="font-medium">{getUserName(settlement.from)}</span>
-                              {' paid '}
+                              {' '}{t('balances.settlementPaid')}{' '}
                               <span className="font-medium">{getUserName(settlement.to)}</span>
                             </p>
                             <p className="text-sm text-gray-500 flex items-center gap-1">
@@ -451,6 +469,7 @@ export default function BalancesPage() {
                             <button
                               onClick={() => deleteSettlement(settlement.id)}
                               className="text-gray-500 hover:text-red-400 transition-colors"
+                              aria-label="Delete settlement"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -478,6 +497,7 @@ export default function BalancesPage() {
               <button
                 onClick={() => setShowSettlementModal(false)}
                 className="text-gray-400 hover:text-white"
+                aria-label="Close"
               >
                 <X className="w-5 h-5" />
               </button>

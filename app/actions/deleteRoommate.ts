@@ -1,8 +1,8 @@
 'use server';
 
 import admin from 'firebase-admin';
-import { headers } from 'next/headers';
 import type { DecodedIdToken } from 'firebase-admin/auth';
+import { revalidatePath } from 'next/cache';
 
 interface DeleteRoommateResult {
   success: boolean;
@@ -27,18 +27,14 @@ function getAdminApp(): admin.app.App {
   return admin.app();
 }
 
-export async function deleteRoommateAction(uid: string): Promise<DeleteRoommateResult> {
+export async function deleteRoommateAction(uid: string, idToken: string): Promise<DeleteRoommateResult> {
   try {
     getAdminApp();
 
-    // 1. AUTHENTICATION CHECK: Verify caller via Firebase ID token in Authorization header
-    const headersList = await headers();
-    const authHeader = headersList.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!idToken) {
       return { success: false, error: 'Unauthorized' };
     }
-    
-    const idToken = authHeader.split('Bearer ')[1];
+
     let decodedToken: DecodedIdToken;
     try {
       decodedToken = await admin.auth().verifyIdToken(idToken);
@@ -78,6 +74,10 @@ export async function deleteRoommateAction(uid: string): Promise<DeleteRoommateR
     // 5. Perform deletion: Delete Firebase Auth user and Firestore document
     await admin.auth().deleteUser(uid);
     await admin.firestore().collection('users').doc(uid).delete();
+
+    // 6. Revalidate cached paths to reflect the deletion
+    revalidatePath('/dashboard/roommates');
+    revalidatePath('/dashboard');
 
     return { success: true };
   } catch (error) {

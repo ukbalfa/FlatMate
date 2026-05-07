@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import ConfirmModal from '../../components/ConfirmModal';
 import { Trash2 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
+import { logError } from '../../../lib/errorLogger';
 
 interface User {
   id?: string;
@@ -24,6 +25,8 @@ interface User {
   joinedAt: string;
 }
 
+import { getMonday } from '../../../lib/utils';
+
 interface CleaningTask {
   id: string;
   task: string;
@@ -34,15 +37,6 @@ interface CleaningTask {
 }
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-function getMonday(d: Date) {
-  const date = new Date(d);
-  const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-  date.setDate(diff);
-  date.setHours(0, 0, 0, 0);
-  return date.toISOString().slice(0, 10);
-}
 
 export default function CleaningPage() {
   const { t } = useI18n();
@@ -58,16 +52,22 @@ export default function CleaningPage() {
   const weekStart = getMonday(new Date());
 
   useEffect(() => {
+    let mounted = true;
     const loadUsers = async () => {
       try {
         const snap = await getDocs(collection(db, 'users'));
+        if (!mounted) return;
         setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as User)));
       } catch (error) {
-        console.error('Failed to load users:', error);
+        if (!mounted) return;
+        logError(error, 'Cleaning.loadUsers');
         toast.error(t('cleaning.toast.loadUsersFailed'));
       }
     };
     loadUsers();
+    return () => {
+      mounted = false;
+    };
   }, [t]);
 
   useEffect(() => {
@@ -80,7 +80,7 @@ export default function CleaningPage() {
         setLoading(false);
       },
       (error) => {
-        console.error('Failed to load cleaning tasks:', error);
+        logError(error, 'Cleaning.load');
         toast.error(t('cleaning.toast.loadTasksFailed'));
         setLoading(false);
       }
@@ -101,7 +101,7 @@ export default function CleaningPage() {
       const assignedSnap = await getDocs(query(collection(db, 'users'), where('username', '==', assignedTo)));
       if (!assignedSnap.empty) {
         const assignedDoc = assignedSnap.docs[0];
-        if (assignedDoc.id !== userProfile?.uid) {
+        if (assignedDoc && assignedDoc.id !== userProfile?.uid) {
           await createNotification({
             userId: assignedDoc.id,
             title: t('cleaning.toast.taskAssigned'),
@@ -114,7 +114,7 @@ export default function CleaningPage() {
       }
   
     } catch (error) {
-      console.error('Failed to add cleaning task:', error);
+      logError(error, 'Cleaning.add');
       toast.error(error instanceof Error ? error.message : t('cleaning.toast.addFailed'));
     }
   };
@@ -124,7 +124,7 @@ export default function CleaningPage() {
       await updateDoc(doc(db, 'cleaning', item.id), { done: !item.done });
       toast.success(t('cleaning.toast.taskDone'));
     } catch (error) {
-      console.error('Failed to update task:', error);
+      logError(error, 'Cleaning.toggleDone');
       toast.error(t('cleaning.toast.updateFailed'));
     }
   };
@@ -137,14 +137,15 @@ export default function CleaningPage() {
         await deleteDoc(doc(db, 'cleaning', id));
         toast.success(t('cleaning.toast.deleted'));
       } catch (error) {
-        console.error('Failed to delete cleaning task:', error);
+        logError(error, 'Cleaning.delete');
         toast.error(t('cleaning.toast.deleteFailed'));
       }
+      setConfirmModal(prev => ({ ...prev, isOpen: false }));
     }, message: t('cleaning.deleteConfirm') });
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen text-[#1C1400] dark:text-[#FFF5DC]">
       <ConfirmModal
         isOpen={confirmModal.isOpen}
         title={t('common.confirm') || 'Confirm'}
@@ -155,10 +156,10 @@ export default function CleaningPage() {
       />
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Cleaning Schedule Card */}
-        <div className="bg-[#1a1d27] border border-white/[0.06] border border-white/[0.06] rounded-xl p-6">
+        <div className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-white">{t('cleaning.title')}</h2>
-            <span className="text-sm text-gray-400">
+            <h2 className="text-xl font-semibold text-[#1C1400] dark:text-[#FFF5DC]">{t('cleaning.title')}</h2>
+            <span className="text-sm text-[#9A7C4A] dark:text-gray-400">
               {new Date(weekStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} —{' '}
               {new Date(new Date(weekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
                 month: 'short',
@@ -264,7 +265,7 @@ export default function CleaningPage() {
 
         {/* Admin Add Task Form */}
         {userProfile?.role === 'admin' && (
-          <div className="bg-[#1a1d27] border border-white/[0.06] border border-white/[0.06] rounded-xl p-6">
+          <div className="bg-[#1a1d27] border border-white/[0.06] rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4 text-white">{t('cleaning.addTaskTitle')}</h3>
             <form onSubmit={handleAdd} className="space-y-4">
               <div>
@@ -273,7 +274,7 @@ export default function CleaningPage() {
                   type="text"
                   value={task}
                   onChange={(e) => setTask(e.target.value)}
-                  className="w-full bg-white/[0.05] border border-white/10 text-white border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                  className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
                   required
                 />
               </div>
@@ -283,7 +284,7 @@ export default function CleaningPage() {
                   <select
                     value={dayOfWeek}
                     onChange={(e) => setDayOfWeek(e.target.value)}
-                    className="w-full bg-white/[0.05] border border-white/10 text-white border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                    className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
                     required
                   >
                     {DAYS.map((day) => (
@@ -298,7 +299,7 @@ export default function CleaningPage() {
                   <select
                     value={assignedTo}
                     onChange={(e) => setAssignedTo(e.target.value)}
-                    className="w-full bg-white/[0.05] border border-white/10 text-white border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                    className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
                     required
                   >
                     <option className="bg-[#1a1d27]" value="">{t('cleaning.select')}</option>

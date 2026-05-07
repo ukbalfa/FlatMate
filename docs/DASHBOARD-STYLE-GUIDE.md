@@ -9,9 +9,9 @@ This document outlines the exact Tailwind class changes to apply across all dash
 2. **Sidebar background**: `bg-white dark:bg-[#13161f]` → `bg-[#13161f]` (dark only)
 3. **Logo**: Added pulsing green dot, white text
 4. **Nav items**:
-   - Active: `bg-[#1D9E75]/10 text-white font-semibold shadow-[0_0_20px_rgba(29,158,117,0.15)]` (teal glow)
+    - Active: `bg-[#F97316]/10 text-white font-semibold shadow-[0_0_20px_rgba(249,115,22,0.15)]` (orange glow)
    - Hover: `text-slate-300 hover:bg-white/[0.04] hover:text-white` + subtle x-axis movement (4px)
-   - Icon on active: `text-[#1D9E75]`
+   - Icon on active: `text-[#F97316]`
 5. **Topbar**: Added `backdrop-blur-sm` for glassmorphism
 6. **Text colors**: All changed to `text-white`, `text-slate-200`, `text-slate-300`
 7. **User info**: Improved contrast and spacing
@@ -27,7 +27,7 @@ Replace all card backgrounds with:
 className="bg-white dark:bg-[#1a1d27] border border-[#e5e7eb] dark:border-white/[0.08]"
 
 // NEW (Premium Glassmorphism):
-className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.08] rounded-2xl hover:bg-white/[0.06] hover:border-[#1D9E75]/30 transition-all duration-300"
+className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.08] rounded-2xl hover:bg-white/[0.06] hover:border-[#F97316]/30 transition-all duration-300"
 style={{ boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}
 ```
 
@@ -47,11 +47,11 @@ Match the floating hero cards from landing page:
 <motion.div
   whileHover={{ y: -6 }}
   transition={{ duration: 0.2 }}
-  className="bg-white/[0.12] backdrop-blur-md border border-white/[0.18] rounded-xl p-6 shadow-2xl hover:border-[#1D9E75]/40 transition-all"
+  className="bg-white/[0.12] backdrop-blur-md border border-white/[0.18] rounded-xl p-6 shadow-2xl hover:border-[#F97316]/40 transition-all"
 >
   <div className="flex items-center gap-3 mb-3">
-    <div className="w-12 h-12 rounded-xl bg-[#1D9E75]/20 flex items-center justify-center">
-      <Icon className="w-6 h-6 text-[#1D9E75]" strokeWidth={1.5} />
+    <div className="w-12 h-12 rounded-xl bg-[#F97316]/20 flex items-center justify-center">
+      <Icon className="w-6 h-6 text-[#F97316]" strokeWidth={1.5} />
     </div>
     <div>
       <span className="text-xs uppercase tracking-wider text-slate-300 font-medium">Label</span>
@@ -65,7 +65,7 @@ Match the floating hero cards from landing page:
 ### Buttons
 ```tsx
 // Primary buttons:
-className="bg-[#1D9E75] hover:bg-[#22b382] text-white font-semibold px-4 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+className="bg-[#F97316] hover:bg-[#EA6D0E] text-white font-semibold px-4 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
 
 // Secondary buttons:
 className="bg-white/[0.06] hover:bg-white/[0.1] text-slate-100 font-medium px-4 py-2 rounded-lg border border-white/[0.12] transition-all"
@@ -73,7 +73,7 @@ className="bg-white/[0.06] hover:bg-white/[0.1] text-slate-100 font-medium px-4 
 
 ### Icons
 - Always use `strokeWidth={1.5}` for consistency with landing page
-- Teal icons: `text-[#1D9E75]`
+- Teal icons: `text-[#F97316]`
 - Default icons: `text-slate-300` or `text-slate-400`
 
 ---
@@ -89,7 +89,7 @@ className={`bg-white dark:bg-[#1a1d27] border border-[#e5e7eb] dark:border-white
 
 // To (with hover effect):
 whileHover={{ y: -6 }}
-className="bg-white/[0.12] backdrop-blur-md border border-white/[0.18] rounded-xl p-6 shadow-2xl hover:border-[#1D9E75]/40 transition-all"
+className="bg-white/[0.12] backdrop-blur-md border border-white/[0.18] rounded-xl p-6 shadow-2xl hover:border-[#F97316]/40 transition-all"
 ```
 
 **Metric labels:**
@@ -113,7 +113,7 @@ text-gray-900 dark:text-[#f1f5f9] → text-white
 **Activity feed:**
 - Item text: `text-slate-200`
 - Timestamps: `text-slate-400`
-- Avatars: keep teal background
+ - Avatars: keep orange background
 
 ---
 
@@ -122,7 +122,7 @@ text-gray-900 dark:text-[#f1f5f9] → text-white
 **Rate cards:**
 ```tsx
 // Transform to match landing page feature cards:
-className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.08] rounded-2xl p-6 hover:bg-white/[0.06] hover:border-[#1D9E75]/30 transition-all"
+className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.08] rounded-2xl p-6 hover:bg-white/[0.06] hover:border-[#F97316]/30 transition-all"
 style={{ boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}
 ```
 
@@ -133,8 +133,8 @@ style={{ boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255
 
 **Live indicator badge:**
 ```tsx
-className="inline-flex items-center gap-2 bg-[#1D9E75]/10 border border-[#1D9E75]/20 rounded-full px-3 py-1"
-<span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75] animate-pulse"></span>
+className="inline-flex items-center gap-2 bg-[#F97316]/10 border border-[#F97316]/20 rounded-full px-3 py-1"
+<span className="w-1.5 h-1.5 rounded-full bg-[#F97316] animate-pulse"></span>
 <span className="text-xs text-slate-200 font-medium">Live rates</span>
 ```
 
@@ -148,7 +148,7 @@ className="inline-flex items-center gap-2 bg-[#1D9E75]/10 border border-[#1D9E75
 className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-4 hover:bg-white/[0.06] transition-all"
 
 // Category badge:
-className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#1D9E75]/10 text-[#1D9E75] text-xs font-medium"
+className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#F97316]/10 text-[#F97316] text-xs font-medium"
 
 // Amount:
 className="text-lg font-bold text-white"
@@ -171,7 +171,7 @@ className="text-xs text-slate-300"
 **Cleaning task cards:**
 ```tsx
 // Task item:
-className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5 hover:border-[#1D9E75]/30 transition-all"
+className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5 hover:border-[#F97316]/30 transition-all"
 
 // Task name:
 className="text-base font-semibold text-white"
@@ -225,7 +225,7 @@ className="text-xs text-slate-300"
 ```tsx
 // Premium card with glassmorphism:
 whileHover={{ y: -6, scale: 1.02 }}
-className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.08] rounded-2xl p-6 hover:bg-white/[0.06] hover:border-[#1D9E75]/30 transition-all"
+className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.08] rounded-2xl p-6 hover:bg-white/[0.06] hover:border-[#F97316]/30 transition-all"
 style={{ boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}
 
 // Avatar (large):
@@ -235,13 +235,13 @@ className="w-20 h-20 rounded-full shadow-xl"
 className="text-lg font-bold text-white"
 
 // Role badge:
-className="inline-flex items-center px-3 py-1 rounded-full bg-[#1D9E75]/10 text-[#1D9E75] text-xs font-semibold uppercase tracking-wide"
+className="inline-flex items-center px-3 py-1 rounded-full bg-[#F97316]/10 text-[#F97316] text-xs font-semibold uppercase tracking-wide"
 
 // Contact info:
 className="text-sm text-slate-200"
 
 // Telegram link:
-className="text-[#1D9E75] hover:text-[#22b382] font-medium transition-colors"
+className="text-[#F97316] hover:text-[#EA6D0E] font-medium transition-colors"
 ```
 
 ---
@@ -288,12 +288,12 @@ const itemVariants = {
 | Component | Before | After |
 |-----------|--------|-------|
 | Card background | `bg-white dark:bg-[#1a1d27]` | `bg-white/[0.03] backdrop-blur-sm` |
-| Card border | `border-[#e5e7eb] dark:border-white/[0.08]` | `border-white/[0.08] hover:border-[#1D9E75]/30` |
+| Card border | `border-[#e5e7eb] dark:border-white/[0.08]` | `border-white/[0.08] hover:border-[#F97316]/30` |
 | Heading text | `text-gray-900 dark:text-[#f1f5f9]` | `text-white` or `text-slate-50` |
 | Body text | `text-gray-500 dark:text-[#94a3b8]` | `text-slate-100` or `text-slate-200` |
 | Label text | `text-gray-400 dark:text-[#6b7280]` | `text-slate-300` |
-| Icon color | `text-gray-400` | `text-[#1D9E75]` or `text-slate-300` |
-| Button primary | `bg-[#1D9E75] hover:bg-[#22b382]` | Same + `shadow-lg hover:shadow-xl` |
+| Icon color | `text-gray-400` | `text-[#F97316]` or `text-slate-300` |
+| Button primary | `bg-[#F97316] hover:bg-[#EA6D0E]` | Same + `shadow-lg hover:shadow-xl` |
 
 ---
 

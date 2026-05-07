@@ -2,10 +2,11 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '../../../lib/firebase';
-import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc, getDocs, limit } from 'firebase/firestore';
 import { useAuth } from '../../../context/AuthContext';
 import { useI18n } from '../../../context/I18nContext';
 import { useNotifications } from '../../../context/NotificationsContext';
+import { logError } from '../../../lib/errorLogger';
 import { Pin, Trash2, Megaphone } from 'lucide-react';
 import { toast } from 'sonner';
 import ConfirmModal from '../../components/ConfirmModal';
@@ -50,7 +51,7 @@ export default function AnnouncementsPage() {
   const isAdmin = userProfile?.role === 'admin';
 
   useEffect(() => {
-    const q = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'));
+    const q = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(50));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Announcement));
       // Sort pinned first
@@ -67,27 +68,35 @@ export default function AnnouncementsPage() {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !content) return;
-    
+
+    if (title.length > 100 || content.length > 500) {
+      toast.error('Title must be under 100 characters and content under 500 characters');
+      return;
+    }
+
+    const sanitizedTitle = title.replace(/<[^>]*>/g, '');
+    const sanitizedContent = content.replace(/<[^>]*>/g, '');
+
     try {
-      const newDoc = {
-        title,
-        content,
-        color,
-        pinned,
-        createdBy: userProfile?.username || 'admin',
-        createdAt: new Date().toISOString()
-      };
-      
+       const newDoc = {
+         title,
+         content,
+         color,
+         pinned,
+         createdBy: userProfile?.username || 'admin',
+         createdAt: new Date().toISOString(),
+       };
+
       await addDoc(collection(db, 'announcements'), newDoc);
       toast.success('Announcement posted');
 
-      const usersSnap = await getDocs(collection(db, 'users'));
+      const usersSnap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
       usersSnap.docs.forEach(async (userDoc) => {
         if (userDoc.id !== userProfile?.uid) {
           await createNotification({
             userId: userDoc.id,
-            title: title,
-            message: content.substring(0, 100),
+            title: sanitizedTitle,
+            message: sanitizedContent.substring(0, 100),
             type: 'system',
             read: false,
             link: '/dashboard/announcements',
@@ -100,8 +109,7 @@ export default function AnnouncementsPage() {
       setColor('teal');
       setPinned(false);
     } catch (error) {
-      console.error(error);
-      toast.error('Failed to post announcement');
+      logError(error, 'Announcements.add');
     }
   };
 
@@ -109,8 +117,7 @@ export default function AnnouncementsPage() {
     try {
       await updateDoc(doc(db, 'announcements', id), { pinned: !currentPinned });
     } catch (error) {
-      console.error(error);
-      toast.error('Failed to update announcement');
+      logError(error, 'Announcements.togglePin');
     }
   };
 
@@ -123,8 +130,7 @@ export default function AnnouncementsPage() {
           await deleteDoc(doc(db, 'announcements', id));
           toast.success('Announcement deleted');
         } catch (error) {
-          console.error(error);
-          toast.error('Failed to delete announcement');
+          logError(error, 'Announcements.delete');
         }
         setConfirmModal(prev => ({ ...prev, isOpen: false }));
       }
@@ -138,7 +144,7 @@ export default function AnnouncementsPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen text-[#1C1400] dark:text-[#FFF5DC]">
       <ConfirmModal
         isOpen={confirmModal.isOpen}
         title={t('common.confirm') || 'Confirm'}
@@ -152,15 +158,15 @@ export default function AnnouncementsPage() {
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-[#1a1d27] border border-white/[0.06] rounded-xl p-5 h-32 animate-pulse"></div>
+              <div key={i} className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-5 h-32 animate-pulse"></div>
             ))}
           </div>
         ) : announcements.length === 0 ? (
-          <div className="text-center py-16 bg-[#1a1d27] border border-white/[0.06] rounded-xl">
+          <div className="text-center py-16 bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl">
             <Megaphone className="w-12 h-12 text-gray-500 mx-auto mb-4 opacity-50" />
-            <h3 className="text-lg font-medium text-white mb-2">{t('announcements.noAnnouncements')}</h3>
-            <p className="text-gray-400">
-              {isAdmin ? 'Use the form below to post the first announcement.' : 'Check back later for updates.'}
+            <h3 className="text-lg font-medium text-[#1C1400] dark:text-[#FFF5DC] mb-2">{t('announcements.noAnnouncements')}</h3>
+            <p className="text-[#9A7C4A] dark:text-gray-400">
+              {isAdmin ? t('announcements.postFirst') : t('announcements.empty')}
             </p>
           </div>
         ) : (
@@ -190,6 +196,7 @@ export default function AnnouncementsPage() {
                           onClick={() => handleTogglePin(a.id, a.pinned)}
                           className={`p-1.5 rounded-lg transition-colors ${a.pinned ? 'text-[#F97316] bg-[#F97316]/10' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
                           title="Toggle pin"
+                          aria-label="Toggle pin"
                         >
                           <Pin className="w-4 h-4" />
                         </button>
@@ -197,6 +204,7 @@ export default function AnnouncementsPage() {
                           onClick={() => handleDelete(a.id)}
                           className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
                           title="Delete"
+                          aria-label="Delete announcement"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

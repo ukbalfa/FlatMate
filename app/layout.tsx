@@ -1,6 +1,8 @@
-import { Sora, DM_Sans, DM_Mono } from "next/font/google";
+import { Sora, DM_Sans, DM_Mono, Bebas_Neue, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import ClientThemeProvider from "../components/ClientThemeProvider";
+import LangSync from "../components/LangSync";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -20,6 +22,18 @@ const dmMono = DM_Mono({
   weight: ["500"],
 });
 
+const bebasNeue = Bebas_Neue({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-bebas",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["700"],
+  variable: "--font-space-grotesk",
+});
+
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
@@ -30,8 +44,12 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${sora.variable} ${dmSans.variable} ${dmMono.variable} font-sans`}>
-        <Providers>{children}</Providers>
+      <head />
+      <body className={`${sora.variable} ${dmSans.variable} ${dmMono.variable} ${bebasNeue.variable} ${spaceGrotesk.variable} font-sans`} suppressHydrationWarning>
+        <ClientThemeProvider>
+          <LangSync />
+          <Providers>{children}</Providers>
+        </ClientThemeProvider>
       </body>
     </html>
   );

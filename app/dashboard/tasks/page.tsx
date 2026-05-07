@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '../../../lib/firebase';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, limit } from 'firebase/firestore';
 import { Trash2 } from 'lucide-react';
 import { Spinner } from '../../components/Spinner';
 import { SkeletonList } from '../../components/Skeleton';
@@ -11,6 +11,7 @@ import ConfirmModal from '../../components/ConfirmModal';
 import { toast } from 'sonner';
 import { useAuth } from '../../../context/AuthContext';
 import { useI18n } from '../../../context/I18nContext';
+import { logError } from '../../../lib/errorLogger';
 
 interface User {
   id?: string;
@@ -60,25 +61,28 @@ export default function TasksPage() {
 
   const fetchUsers = async () => {
     try {
-      const snap = await getDocs(collection(db, 'users'));
+      const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
       setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as User)));
     } catch (error) {
-      console.error('Failed to load users:', error);
+      logError(error, 'Tasks.fetchUsers');
       toast.error(t('tasks.toast.loadUsersFailed'));
     }
   };
 
   useEffect(() => {
-    const q = query(collection(db, 'tasks'), orderBy('dueDate'));
+    let mounted = true;
+    const q = query(collection(db, 'tasks'), orderBy('dueDate'), limit(100));
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
+        if (!mounted) return;
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
         setTasks(data);
         setLoading(false);
       },
       (error) => {
-        console.error('Failed to load tasks:', error);
+        if (!mounted) return;
+        logError(error, 'Tasks.load');
         toast.error(t('tasks.toast.loadTasksFailed'));
         setLoading(false);
       }
@@ -86,7 +90,11 @@ export default function TasksPage() {
     
     fetchUsers();
     
-    return () => unsubscribe();
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAdd = async (e: React.FormEvent) => {
@@ -100,13 +108,14 @@ export default function TasksPage() {
         assignedTo,
         dueDate,
         createdBy: userProfile?.username || '',
+        createdAt: new Date().toISOString(),
       });
       setText('');
       setDueDate('');
       setAssignedTo('');
       toast.success(t('tasks.toast.added'));
     } catch (error) {
-      console.error('Failed to add task:', error);
+      logError(error, 'Tasks.add');
       toast.error(t('tasks.toast.addFailed'));
     } finally {
       setAdding(false);
@@ -118,7 +127,7 @@ export default function TasksPage() {
       await updateDoc(doc(db, 'tasks', task.id), { done: !task.done });
       toast.success(task.done ? t('tasks.toast.reopened') : t('tasks.toast.completed'));
     } catch (error) {
-      console.error('Failed to update task:', error);
+      logError(error, 'Tasks.toggleDone');
       toast.error(t('tasks.toast.addFailed'));
     }
   };
@@ -135,7 +144,7 @@ export default function TasksPage() {
           await deleteDoc(doc(db, 'tasks', id));
           toast.success(t('tasks.toast.deleted'));
         } catch (error) {
-          console.error('Failed to delete task:', error);
+          logError(error, 'Tasks.delete');
           toast.error(t('tasks.toast.deleteFailed'));
         }
       },
@@ -144,10 +153,10 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen text-[#1C1400] dark:text-[#FFF5DC]">
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Add Task Form */}
-        <div className="bg-white dark:bg-gray-800 border border-[#e5e7eb] dark:border-gray-700 rounded-xl p-6">
+        <div className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-6">
           <h3 className="text-lg font-semibold mb-4 text-[#0a0a0a] dark:text-gray-100">{t('tasks.newTask')}</h3>
           <form onSubmit={handleAdd} className="space-y-4">
             <div>

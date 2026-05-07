@@ -48,9 +48,21 @@ export function SkeletonList({ rows = 3 }: { rows?: number }) {
 
 export function SkeletonTable({ rows = 3 }: { rows?: number }) {
   return (
-    <div className="space-y-4">
+    <div className="divide-y divide-white/5">
       {Array.from({ length: rows }).map((_, i) => (
-        <Skeleton key={i} className="h-16 w-full rounded-lg" />
+        <div key={i} className="px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-10 h-10 rounded-full flex-shrink-0" />
+            <div>
+              <Skeleton className="h-4 w-24 mb-2" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+          </div>
+          <div className="text-right">
+            <Skeleton className="h-6 w-20" />
+            <Skeleton className="h-3 w-16 mt-1" />
+          </div>
+        </div>
       ))}
     </div>
   );

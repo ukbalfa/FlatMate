@@ -1,125 +1,66 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper functions
-    function isAuthenticated() {
-      return request.auth != null;
-    }
 
+    // Helper function to check if the requesting user is an admin
     function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return request.auth != null
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    function isSelf(userId) {
-      return request.auth.uid == userId;
-    }
-
-    // Check if the user belongs to the same flat as the document
-    function isSameFlatMember(flatId) {
-      return flatId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.flatId;
-    }
-
-    // Check if the user belongs to the same flat as the document (handles both resource and request data)
-    function isSameFlatMemberForDocument(documentData) {
-      return documentData.flatId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.flatId;
-    }
-
-    // Ensure no protected fields are being modified in user document
-    function isNotChangingProtectedFields() {
-      let protectedFields = ['role', 'flatId', 'uid'];
-      return !(protectedFields.some(field => field in request.resource.data &&
-        request.resource.data[field] != resource.data[field]));
-    }
-
-    // Users collection: Anyone authed can read. Only admin or self can write specific safe fields.
+    // Users: self-read/write, admin-read-all, admin-delete
     match /users/{userId} {
-      // Allow read: authenticated users can read any user profile
-      allow read: if isAuthenticated();
-
-      // Allow write: users can only update their own document, and only safe fields
-      allow update: if isAuthenticated() && 
-        isSelf(userId) && 
-        isNotChangingProtectedFields();
-
-      // Allow admin to make any changes to user documents
-      allow write: if isAuthenticated() && isAdmin();
+      allow read: if request.auth != null
+        && (request.auth.uid == userId || isAdmin());
+      allow create: if request.auth != null;
+      allow update: if request.auth != null
+        && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
     }
 
-    // Expenses collection: Read/write limited to same flat members only
-    match /expenses/{expenseId} {
-      // Allow read: same flat members can read expenses
-      allow read: if isAuthenticated() && 
-        isSameFlatMemberForDocument(resource.data);
-      
-      // Allow write: same flat members can create/modify expenses
-      allow write: if isAuthenticated() && 
-        isSameFlatMemberForDocument(request.resource.data);
+    // Expenses: authenticated read/write
+    match /expenses/{docId} {
+      allow read, write: if request.auth != null;
     }
 
-    // Tasks collection: Read/write limited to same flat members only
-    match /tasks/{taskId} {
-      // Allow read: same flat members can read tasks
-      allow read: if isAuthenticated() && 
-        isSameFlatMemberForDocument(resource.data);
-      
-      // Allow write: same flat members can create/modify tasks
-      allow write: if isAuthenticated() && 
-        isSameFlatMemberForDocument(request.resource.data);
+    // Tasks: authenticated read/write
+    match /tasks/{docId} {
+      allow read, write: if request.auth != null;
     }
 
-    // Cleaning collection: Read/write limited to same flat members only
-    match /cleaning/{cleaningId} {
-      // Allow read: same flat members can read cleaning assignments
-      allow read: if isAuthenticated() && 
-        isSameFlatMemberForDocument(resource.data);
-      
-      // Allow write: same flat members can create/modify cleaning assignments
-      allow write: if isAuthenticated() && 
-        isSameFlatMemberForDocument(request.resource.data);
+    // Cleaning schedule: authenticated read/write
+    match /cleaning/{docId} {
+      allow read, write: if request.auth != null;
     }
 
-    // Announcements collection: Read/write limited to same flat members only
-    match /announcements/{announcementId} {
-      // Allow read: same flat members can read announcements
-      allow read: if isAuthenticated() && 
-        isSameFlatMemberForDocument(resource.data);
-      
-      // Allow write: same flat members can create/modify announcements
-      allow write: if isAuthenticated() && 
-        isSameFlatMemberForDocument(request.resource.data);
+    // Announcements: authenticated read/write
+    match /announcements/{docId} {
+      allow read, write: if request.auth != null;
     }
 
-    // Settlements collection: Read/write limited to same flat members only
-    match /settlements/{settlementId} {
-      // Allow read: same flat members can read settlements
-      allow read: if isAuthenticated() && 
-        isSameFlatMemberForDocument(resource.data);
-      
-      // Allow write: same flat members can create/modify settlements
-      allow write: if isAuthenticated() && 
-        isSameFlatMemberForDocument(request.resource.data);
+    // Settlements: authenticated read/write
+    match /settlements/{docId} {
+      allow read, write: if request.auth != null;
     }
 
-    // RecurringExpenses collection: Read/write limited to same flat members only
-    match /recurringExpenses/{recurringExpenseId} {
-      // Allow read: same flat members can read recurring expenses
-      allow read: if isAuthenticated() && 
-        isSameFlatMemberForDocument(resource.data);
-      
-      // Allow write: same flat members can create/modify recurring expenses
-      allow write: if isAuthenticated() && 
-        isSameFlatMemberForDocument(request.resource.data);
+    // Recurring expenses: authenticated read/write
+    match /recurringExpenses/{docId} {
+      allow read, write: if request.auth != null;
     }
 
-    // Settings collection: Read/write limited to same flat members only
-    match /settings/{settingId} {
-      // Allow read: same flat members can read settings
-      allow read: if isAuthenticated() && 
-        isSameFlatMemberForDocument(resource.data);
-      
-      // Allow write: same flat members can create/modify settings
-      allow write: if isAuthenticated() && 
-        isSameFlatMemberForDocument(request.resource.data);
+    // Notifications: user can only read/write their own
+    match /notifications/{docId} {
+      allow read: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Settings: authenticated read/write
+    match /settings/{docId} {
+      allow read, write: if request.auth != null;
     }
   }
 }

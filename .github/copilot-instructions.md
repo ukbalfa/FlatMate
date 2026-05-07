@@ -31,6 +31,6 @@
 - **Role-based UI and writes:** pages consistently derive permissions from `useAuth()` (`userProfile?.role === 'admin'`) for destructive/admin-only actions; Firestore security rules enforce authenticated access and admin/self constraints on `/users`.
 - **Date storage format:** business records commonly store dates as ISO strings (`YYYY-MM-DD`) and query/filter by string ranges (for example monthly filters in balances/expenses).
 - **State persistence keys:** shared UI preferences are persisted under fixed keys (`flatmate-theme`, `flatmate-language`, `cached_rates`) and should stay stable unless doing a migration.
-- **Styling pattern:** Tailwind v4 utility classes are primary; `fm-` prefixed classes from `app/globals.css` are also used for common UI primitives. Brand accent is `#1D9E75`.
+- **Styling pattern:** Tailwind v4 utility classes are primary; `fm-` prefixed classes from `app/globals.css` are also used for common UI primitives. Brand accent is `#F97316`.
 
 For deeper project conventions, also read `AGENTS.md`, `CLAUDE.md`, and `README.md`.

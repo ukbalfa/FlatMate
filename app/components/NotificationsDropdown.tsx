@@ -3,7 +3,10 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Check, X, Receipt, CheckSquare, Sparkles, Wallet, AlertCircle } from 'lucide-react';
 import { useNotifications, Notification } from '../../context/NotificationsContext';
+import { useI18n } from '../../context/I18nContext';
 import { useRouter } from 'next/navigation';
+import { formatTimeAgo } from '../../lib/utils';
+import ConfirmModal from './ConfirmModal';
 
 const typeIcons = {
   task: CheckSquare,
@@ -22,7 +25,9 @@ const typeColors = {
 };
 
 export default function NotificationsDropdown() {
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearAll } = useNotifications();
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -48,20 +53,6 @@ export default function NotificationsDropdown() {
     }
     
     setIsOpen(false);
-  };
-
-  const formatTimeAgo = (date: string) => {
-    const now = new Date();
-    const then = new Date(date);
-    const diffInMinutes = Math.floor((now.getTime() - then.getTime()) / (1000 * 60));
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    const diffInDays = Math.floor(diffInHours / 24);
-
-    if (diffInMinutes < 1) return 'Just now';
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    if (diffInDays < 7) return `${diffInDays}d ago`;
-    return then.toLocaleDateString();
   };
 
   return (
@@ -125,9 +116,9 @@ export default function NotificationsDropdown() {
                 {notifications.length === 0 ? (
                   <div className="px-4 py-12 text-center">
                     <Bell className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-                    <p className="text-gray-500 text-sm">No notifications yet</p>
+                    <p className="text-gray-500 text-sm">{t('notifications.noNotifications')}</p>
                     <p className="text-gray-600 text-xs mt-1">
-                      We&apos;ll notify you about tasks, expenses, and more
+                      {t('notifications.willNotify')}
                     </p>
                   </div>
                 ) : (
@@ -173,24 +164,35 @@ export default function NotificationsDropdown() {
                 )}
               </div>
 
-              {/* Footer */}
-              {notifications.length > 0 && (
-                <div className="px-4 py-2 border-t border-white/10 flex items-center justify-between">
-                  <span className="text-xs text-gray-500">
-                    {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
-                  </span>
-                  <button
-                    onClick={clearAll}
-                    className="text-xs text-red-400 hover:text-red-300 hover:bg-red-400/10 px-2 py-1 rounded transition-colors"
-                  >
-                    Clear All
-                  </button>
-                </div>
-              )}
+                {/* Footer */}
+                {notifications.length > 0 && (
+                  <div className="px-4 py-2 border-t border-white/10 flex items-center justify-between">
+                    <span className="text-xs text-gray-500">
+                      {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
+                    </span>
+                    <button
+                      onClick={() => setConfirmClearAll(true)}
+                      className="text-xs text-red-400 hover:text-red-300 hover:bg-red-400/10 px-2 py-1 rounded transition-colors"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                )}
             </motion.div>
           </>
         )}
       </AnimatePresence>
+      <ConfirmModal
+        isOpen={confirmClearAll}
+        title="Clear All Notifications"
+        message="Are you sure you want to permanently delete all your notifications? This action cannot be undone."
+        confirmLabel="Clear All"
+        onConfirm={async () => {
+          await clearAll();
+          setConfirmClearAll(false);
+        }}
+        onCancel={() => setConfirmClearAll(false)}
+      />
     </div>
   );
 }

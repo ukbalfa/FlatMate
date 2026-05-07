@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { db } from '../../../lib/firebase';
-import { collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, getDocs, limit } from 'firebase/firestore';
 import { Trash2, Repeat, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import { Spinner } from '../../components/Spinner';
 import { SkeletonList } from '../../components/Skeleton';
@@ -11,6 +11,7 @@ import ConfirmModal from '../../components/ConfirmModal';
 import { toast } from 'sonner';
 import { useAuth } from '../../../context/AuthContext';
 import { useI18n } from '../../../context/I18nContext';
+import { logError } from '../../../lib/errorLogger';
 
 interface Expense {
   id: string;
@@ -99,29 +100,35 @@ export default function ExpensesPage() {
   const [generatingRecurring, setGeneratingRecurring] = useState(false);
 
   useEffect(() => {
-    const q = query(collection(db, 'expenses'), orderBy('date', 'desc'));
+    let mounted = true;
+    const q = query(collection(db, 'expenses'), orderBy('createdAt', 'desc'), limit(200));
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
+        if (!mounted) return;
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
         setExpenses(data);
         setLoading(false);
       },
       (error) => {
-        console.error('Failed to load expenses:', error);
+        if (!mounted) return;
+        logError(error, 'Expenses.load');
         toast.error(t('expenses.toast.loadFailed'));
         setLoading(false);
       }
     );
     
-    // Load recurring expenses
     loadRecurringExpenses();
     
-    return () => unsubscribe();
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
   }, [t]);
 
   // Generate missing recurring expenses on mount
   useEffect(() => {
+    let mounted = true;
     const generateMissingExpenses = async () => {
       if (!userProfile?.flatId) return;
       
@@ -130,6 +137,8 @@ export default function ExpensesPage() {
         const { generateMissingRecurringExpenses } = await import('../../../lib/recurringExpensesEngine');
         const results = await generateMissingRecurringExpenses(userProfile.flatId);
         
+        if (!mounted) return;
+        
         if (results.length > 0) {
           const totalGenerated = results.reduce((sum, result) => sum + result.generated, 0);
           if (totalGenerated > 0) {
@@ -137,35 +146,44 @@ export default function ExpensesPage() {
           }
         }
       } catch (error) {
-        console.error('Error generating recurring expenses:', error);
+        if (!mounted) return;
+        logError(error, 'Expenses.generateRecurring');
         toast.error(t('expenses.toast.syncFailed'));
       } finally {
-        setGeneratingRecurring(false);
+        if (mounted) setGeneratingRecurring(false);
       }
     };
 
     generateMissingExpenses();
+    return () => {
+      mounted = false;
+    };
   }, [userProfile?.flatId, t]);
 
   const loadRecurringExpenses = async () => {
     try {
-      const q = query(collection(db, 'recurringExpenses'), orderBy('createdAt', 'desc'));
+       const q = query(collection(db, 'recurringExpenses'), orderBy('createdAt', 'desc'), limit(200));
       const snap = await getDocs(q);
       setRecurringExpenses(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as RecurringExpense)));
     } catch (error) {
-      console.error('Failed to load recurring expenses:', error);
+      logError(error, 'Expenses.loadRecurring');
     }
   };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !category || !date) return;
+    const parsedAmount = Number(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
     setSubmitting(true);
     try {
       if (isRecurring) {
         const recurringData = {
           flatId: userProfile?.flatId || '',
-          amount: Number(amount),
+          amount: parsedAmount,
           category,
           paidBy: userProfile?.username || '',
           startDate: date,
@@ -181,7 +199,7 @@ export default function ExpensesPage() {
         
         await addDoc(collection(db, 'expenses'), {
           flatId: userProfile?.flatId || '',
-          amount: Number(amount),
+          amount: parsedAmount,
           category,
           paidBy: userProfile?.username || '',
           date,
@@ -190,6 +208,7 @@ export default function ExpensesPage() {
           recurrencePattern,
           recurrenceEndDate: recurrenceEndDate || null,
           parentExpenseId: recurringRef.id,
+          createdAt: new Date().toISOString(),
         });
         
         toast.success(`${t('expenses.toast.recurring')} ${recurrencePattern} ${t('expenses.toast.createdSuccessfully')}`);
@@ -200,12 +219,13 @@ export default function ExpensesPage() {
       } else {
         await addDoc(collection(db, 'expenses'), {
           flatId: userProfile?.flatId || '',
-          amount: Number(amount),
+          amount: parsedAmount,
           category,
           paidBy: userProfile?.username || '',
           date,
           note,
           isRecurring: false,
+          createdAt: new Date().toISOString(),
         });
         toast.success(t('expenses.toast.added'));
       }
@@ -215,7 +235,7 @@ export default function ExpensesPage() {
       setDate(new Date().toISOString().slice(0, 10));
       setNote('');
     } catch (error) {
-      console.error('Failed to add expense:', error);
+      logError(error, 'Expenses.add');
       toast.error(t('expenses.toast.addFailed'));
     } finally {
       setSubmitting(false);
@@ -241,7 +261,7 @@ export default function ExpensesPage() {
           toast.success(t('expenses.toast.recurringDeleted'));
           loadRecurringExpenses();
         } catch (error) {
-          console.error('Failed to delete recurring expense:', error);
+          logError(error, 'Expenses.deleteRecurring');
           toast.error(t('expenses.toast.recurringDeleteFailed'));
         }
       },
@@ -263,7 +283,7 @@ export default function ExpensesPage() {
           await deleteDoc(doc(db, 'expenses', id));
           toast.success(t('expenses.toast.deleted'));
         } catch (error) {
-          console.error('Failed to delete expense:', error);
+          logError(error, 'Expenses.delete');
           toast.error(t('expenses.toast.deleteFailed'));
         }
       },
@@ -280,7 +300,7 @@ export default function ExpensesPage() {
   const maxTotal = Math.max(...summary.map(s => s.total), 1);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen text-[#1C1400] dark:text-[#FFF5DC]">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Generating State Indicator */}
         {generatingRecurring && (
@@ -291,8 +311,8 @@ export default function ExpensesPage() {
         )}
 
         {/* Summary Card */}
-        <div className="bg-white dark:bg-gray-800 border border-[#e5e7eb] dark:border-gray-700 rounded-xl p-6">
-          <h3 className="text-lg font-semibold mb-4 text-[#0a0a0a] dark:text-gray-100">{selectedMonth}</h3>
+        <div className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-6">
+          <h3 className="text-lg font-semibold mb-4 text-[#1C1400] dark:text-[#FFF5DC]">{selectedMonth}</h3>
           <div className="space-y-3">
             {summary.map((cat) => (
               <div key={cat.name} className="flex items-center gap-4">
@@ -314,8 +334,8 @@ export default function ExpensesPage() {
         </div>
 
         {/* Add Expense Form */}
-        <form onSubmit={handleAdd} className="bg-white dark:bg-gray-800 border border-[#e5e7eb] dark:border-gray-700 rounded-xl p-6">
-          <h3 className="text-lg font-semibold mb-4 text-[#0a0a0a] dark:text-gray-100">{t('expenses.addExpenseTitle')}</h3>
+        <form onSubmit={handleAdd} className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-6">
+          <h3 className="text-lg font-semibold mb-4 text-[#1C1400] dark:text-[#FFF5DC]">{t('expenses.addExpenseTitle')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-[#6b7280] dark:text-gray-400 mb-2">{t('expenses.amountUzs')}</label>
@@ -482,6 +502,7 @@ export default function ExpensesPage() {
                         onClick={() => deleteRecurringExpense(rec.id)}
                         className="text-gray-500 hover:text-red-400 transition-colors p-1"
                         title="Delete recurring expense"
+                        aria-label="Delete recurring expense"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -494,9 +515,9 @@ export default function ExpensesPage() {
         )}
 
         {/* Transactions Card */}
-        <div className="bg-white dark:bg-gray-800 border border-[#e5e7eb] dark:border-gray-700 rounded-xl p-6">
+        <div className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-[#0a0a0a] dark:text-gray-100">{t('expenses.transactions')}</h3>
+            <h3 className="text-lg font-semibold text-[#1C1400] dark:text-[#FFF5DC]">{t('expenses.transactions')}</h3>
           </div>
 
           {/* Filter Buttons */}

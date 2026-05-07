@@ -35,6 +35,11 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(username)) {
+      setError('Please enter a valid email address');
+      return;
+    }
     try {
       if (isSetupMode && hasExistingUsers) {
         setError('Admin already exists. Please sign in.');
@@ -74,10 +79,9 @@ export default function LoginPage() {
 
   return (
     <div
-      className={`min-h-screen flex transition-opacity duration-500 ${
+      className={`min-h-screen flex transition-opacity duration-500 bg-white ${
         pageReady ? 'opacity-100' : 'opacity-0'
       }`}
-      style={{ background: 'white' }}
     >
       {/* Left — branding (hidden on mobile) */}
       <div className="hidden lg:flex flex-col items-center justify-between w-1/2 px-16 py-12 bg-[#f9fafb] dark:bg-gray-900">
@@ -104,7 +108,7 @@ export default function LoginPage() {
             ))}
           </div>
         </motion.div>
-        <div className="text-xs text-gray-400 dark:text-gray-500">© 2026 FlatMate · Tashkent 🇺🇿</div>
+        <div className="text-xs text-gray-400 dark:text-gray-500">© {new Date().getFullYear()} FlatMate · Tashkent 🇺🇿</div>
       </div>
 
       {/* Right — form */}

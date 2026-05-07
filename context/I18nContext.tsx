@@ -1,12 +1,12 @@
 'use client';
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
-type Language = 'en' | 'ru' | 'es' | 'uz';
+type Language = 'en' | 'ru' | 'uz';
 
 interface I18nContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 const translations: Record<Language, Record<string, string>> = {
@@ -20,6 +20,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.roommates': 'Roommates',
     'nav.settings': 'Settings',
     'nav.announcements': 'Announcements',
+    'auth.password': 'Password',
     'common.save': 'Save',
     'common.cancel': 'Cancel',
     'common.done': 'Done',
@@ -28,6 +29,7 @@ const translations: Record<Language, Record<string, string>> = {
     'common.add': 'Add',
     'common.loading': 'Loading...',
     'common.confirm': 'Confirm',
+    'common.today': 'Today',
     'dashboard.welcome': 'Welcome back',
     'dashboard.totalExpenses': 'Total expenses',
     'expenses.title': 'Expenses',
@@ -39,6 +41,11 @@ const translations: Record<Language, Record<string, string>> = {
     'balances.whoOwes': 'Who Owes Whom',
     'settings.title': 'Settings',
     'notifications.title': 'Notifications',
+    'notifications.noNotifications': 'No notifications yet',
+    'notifications.willNotify': "We'll notify you about tasks, expenses, and more",
+    'roommates.addRoommate': 'Add roommate',
+    'balances.settlementPaid': 'paid',
+    'rates.noComparison': 'No comparison',
     'landing.nav.features': 'Features',
     'landing.nav.signIn': 'Sign in',
     'landing.badge': '\u2726 Apartment management, simplified',
@@ -166,7 +173,13 @@ const translations: Record<Language, Record<string, string>> = {
     'balances.activeDebts': 'Active Debts',
     'balances.memberBalances': 'Member Balances',
     'balances.paid': 'Paid',
+    'balances.owes': 'owes',
     'balances.confirm': 'Confirm',
+    'announcements.noAnnouncements': 'No announcements',
+    'announcements.empty': 'Check back later for updates.',
+    'announcements.postFirst': 'Use the form below to post the first announcement.',
+    'announcements.addAnnouncement': 'Add Announcement',
+    'announcements.pinned': 'Pinned',
     'cleaning.noTasks': 'No cleaning tasks for this week.',
     'cleaning.addTaskTitle': 'Add cleaning task',
     'cleaning.taskName': 'Task name',
@@ -247,9 +260,17 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Dashboard
     'dashboard.thisMonth': 'This Month',
+    'dashboard.thisMonthExpenses': "This Month's Expenses",
     'dashboard.overdue': 'overdue',
     'dashboard.thisWeek': 'This week',
     'dashboard.today': 'today',
+    'dashboard.expenseAdded': '{category} expense added',
+    'dashboard.paidAmount': '{paidBy} paid {amount} UZS',
+    'dashboard.taskDueSoon': 'Task due soon',
+    'dashboard.daysRemaining': '{days} days',
+    'dashboard.loadError': 'Failed to load dashboard data. Please try again.',
+    'dashboard.viewAllExpenses': 'View all expenses',
+    'dashboard.checkBalances': 'Check who owes whom',
     'dashboard.days': 'days',
     'dashboard.youPaid': 'You paid',
     'dashboard.quickActions': 'Quick Actions',
@@ -272,6 +293,7 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.viewBalances': 'View Balances',
     'dashboard.exchangeRates': 'Exchange Rates',
     'dashboard.activeMembers': 'Active members',
+    'dashboard.assignedTo': 'assigned to',
     'dashboard.myTasks': 'My Tasks',
 
     // Tasks
@@ -282,9 +304,9 @@ const translations: Record<Language, Record<string, string>> = {
     'tasks.addTaskButton': 'Add Task',
     'tasks.allClear': 'All clear!',
     'tasks.noTasks': 'No tasks right now. Enjoy the peace.',
-    'tasks.status.upcoming': 'Upcoming',
     'tasks.status.today': 'Today',
     'tasks.status.overdue': 'Overdue',
+    'tasks.status.upcoming': 'Upcoming',
     'tasks.toast.loadUsersFailed': 'Failed to load users',
     'tasks.toast.loadTasksFailed': 'Failed to load tasks',
     'tasks.toast.added': 'Task added successfully',
@@ -304,6 +326,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.tasks': '\u0417\u0430\u0434\u0430\u0447\u0438',
     'nav.roommates': '\u0421\u043e\u0441\u0435\u0434\u0438',
     'nav.settings': '\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438',
+    'auth.password': '\u041f\u0430\u0440\u043e\u043b\u044c',
     'common.save': '\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c',
     'common.cancel': '\u041e\u0442\u043c\u0435\u043d\u0430',
     'common.done': '\u0413\u043e\u0442\u043e\u0432\u043e',
@@ -312,6 +335,7 @@ const translations: Record<Language, Record<string, string>> = {
     'common.add': '\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c',
     'common.loading': '\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430...',
     'common.confirm': '\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u0438\u0435',
+    'common.today': '\u0441\u0435\u0433\u043e\u0434\u043d\u044f',
     'dashboard.welcome': '\u0421 \u0432\u043e\u0437\u0432\u0440\u0430\u0449\u0435\u043d\u0438\u0435\u043c',
     'dashboard.totalExpenses': '\u041e\u0431\u0449\u0438\u0435 \u0440\u0430\u0441\u0445\u043e\u0434\u044b',
     'expenses.title': '\u0420\u0430\u0441\u0445\u043e\u0434\u044b',
@@ -323,6 +347,11 @@ const translations: Record<Language, Record<string, string>> = {
     'balances.whoOwes': '\u041a\u0442\u043e \u043a\u043e\u043c\u0443 \u0434\u043e\u043b\u0436\u0435\u043d',
     'settings.title': '\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438',
     'notifications.title': '\u0423\u0432\u0435\u0434\u043e\u043c\u043b\u0435\u043d\u0438\u044f',
+    'notifications.noNotifications': '\u0423\u0432\u0435\u0434\u043e\u043c\u043b\u0435\u043d\u0438\u0439 \u043f\u043e\u043a\u0430 \u043d\u0435\u0442',
+    'notifications.willNotify': '\u041c\u044b \u0431\u0443\u0434\u0435\u043c \u0443\u0432\u0435\u0434\u043e\u043c\u043b\u044f\u0442\u044c \u0432\u0430\u0441 \u043e \u0437\u0430\u0434\u0430\u0447\u0430\u0445, \u0440\u0430\u0441\u0445\u043e\u0434\u0430\u0445 \u0438 \u0434\u0440\u0443\u0433\u043e\u043c',
+    'roommates.addRoommate': '\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0441\u043e\u0441\u0435\u0434\u0430',
+    'balances.settlementPaid': '\u043e\u043f\u043b\u0430\u0442\u0438\u043b',
+    'rates.noComparison': '\u041d\u0435\u0442 \u0441\u0440\u0430\u0432\u043d\u0435\u043d\u0438\u044f',
     'landing.nav.features': '\u0412\u043e\u0437\u043c\u043e\u0436\u043d\u043e\u0441\u0442\u0438',
     'landing.nav.signIn': '\u0412\u043e\u0439\u0442\u0438',
     'landing.badge': '\u2726 \u0423\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u043a\u0432\u0430\u0440\u0442\u0438\u0440\u043e\u0439 \u0441\u0442\u0430\u043b\u043e \u043f\u0440\u043e\u0449\u0435',
@@ -450,7 +479,13 @@ const translations: Record<Language, Record<string, string>> = {
     'balances.activeDebts': '\u0410\u043a\u0442\u0438\u0432\u043d\u044b\u0435 \u0434\u043e\u043b\u0433\u0438',
     'balances.memberBalances': '\u0411\u0430\u043b\u0430\u043d\u0441\u044b \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a\u043e\u0432',
     'balances.paid': '\u041e\u043f\u043b\u0430\u0447\u0435\u043d\u043e',
+    'balances.owes': '\u0434\u043e\u043b\u0436\u0435\u043d(\u043d\u0430)',
     'balances.confirm': '\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u0438\u0435',
+    'announcements.noAnnouncements': '\u041d\u0435\u0442 \u043e\u0431\u044a\u044f\u0432\u043b\u0435\u043d\u0438\u0439',
+    'announcements.empty': '\u0417\u0430\u0433\u043b\u044f\u043d\u0438\u0442\u0435 \u043f\u043e\u0437\u0436\u0435, \u0447\u0442\u043e\u0431\u044b \u0443\u0437\u043d\u0430\u0442\u044c \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u044f.',
+    'announcements.postFirst': '\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0439\u0442\u0435 \u0444\u043e\u0440\u043c\u0443 \u043d\u0438\u0436\u0435, \u0447\u0442\u043e\u0431\u044b \u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043f\u0435\u0440\u0432\u043e\u0435 \u043e\u0431\u044a\u044f\u0432\u043b\u0435\u043d\u0438\u0435.',
+    'announcements.addAnnouncement': '\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043e\u0431\u044a\u044f\u0432\u043b\u0435\u043d\u0438\u0435',
+    'announcements.pinned': '\u0417\u0430\u043a\u0440\u0435\u043f\u043b\u0435\u043d\u043e',
     'cleaning.noTasks': '\u041d\u0435\u0442 \u0437\u0430\u0434\u0430\u0447 \u043d\u0430 \u044d\u0442\u0443 \u043d\u0435\u0434\u0435\u043b\u044e.',
     'cleaning.addTaskTitle': '\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0437\u0430\u0434\u0430\u0447\u0443',
     'cleaning.taskName': '\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0437\u0430\u0434\u0430\u0447\u0438',
@@ -531,9 +566,17 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Dashboard
     'dashboard.thisMonth': 'Этот месяц',
+    'dashboard.thisMonthExpenses': 'Расходы за этот месяц',
     'dashboard.overdue': 'просрочено',
     'dashboard.thisWeek': 'На этой неделе',
     'dashboard.today': 'сегодня',
+    'dashboard.expenseAdded': 'добавлен расход {category}',
+    'dashboard.paidAmount': '{paidBy} оплатил {amount} UZS',
+    'dashboard.taskDueSoon': 'Срок задачи скоро',
+    'dashboard.daysRemaining': '{days} дней',
+    'dashboard.loadError': 'Не удалось загрузить данные панели. Попробуйте снова.',
+    'dashboard.viewAllExpenses': 'Все расходы',
+    'dashboard.checkBalances': 'Проверить баланс',
     'dashboard.youPaid': 'Вы оплатили',
     'dashboard.quickActions': 'Быстрые действия',
     'dashboard.recentActivity': 'Недавняя активность',
@@ -555,6 +598,7 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.viewBalances': 'Посмотреть балансы',
     'dashboard.exchangeRates': 'Курсы валют',
     'dashboard.activeMembers': 'Активные участники',
+    'dashboard.assignedTo': 'назначено',
 
     // Tasks
     'tasks.newTask': 'Новая задача',
@@ -564,9 +608,9 @@ const translations: Record<Language, Record<string, string>> = {
     'tasks.addTaskButton': 'Добавить задачу',
     'tasks.allClear': 'Все выполнено!',
     'tasks.noTasks': 'Сейчас нет задач. Наслаждайтесь.',
-    'tasks.status.upcoming': 'Предстоящие',
     'tasks.status.today': 'Сегодня',
     'tasks.status.overdue': 'Просрочено',
+    'tasks.status.upcoming': 'Предстоящие',
     'tasks.toast.loadUsersFailed': 'Не удалось загрузить пользователей',
     'tasks.toast.loadTasksFailed': 'Не удалось загрузить задачи',
     'tasks.toast.added': 'Задача успешно добавлена',
@@ -576,45 +620,6 @@ const translations: Record<Language, Record<string, string>> = {
     'tasks.toast.deleted': 'Задача успешно удалена',
     'tasks.toast.deleteFailed': 'Что-то пошло не так. Попробуйте снова.',
     'tasks.deleteConfirm': 'Вы уверены, что хотите удалить эту задачу? Это нельзя отменить.',
-  },
-  es: {
-    'nav.dashboard': 'Panel',
-    'nav.rates': 'Tipos de Cambio',
-    'nav.expenses': 'Gastos',
-    'nav.balances': 'Saldos',
-    'nav.cleaning': 'Limpieza',
-    'nav.tasks': 'Tareas',
-    'nav.roommates': 'Compa\u00f1eros',
-    'nav.settings': 'Ajustes',
-    'nav.announcements': 'Anuncios',
-    'common.save': 'Guardar',
-    'common.cancel': 'Cancelar',
-    'common.done': 'Hecho',
-    'common.delete': 'Eliminar',
-    'common.edit': 'Editar',
-    'common.add': 'A\u00f1adir',
-    'common.loading': 'Cargando...',
-    'dashboard.welcome': 'Bienvenido',
-    'dashboard.totalExpenses': 'Gastos totales',
-    'expenses.title': 'Gastos',
-    'expenses.addExpense': 'A\u00f1adir gasto',
-    'tasks.title': 'Tareas',
-    'cleaning.title': 'Horario de Limpieza',
-    'balances.title': 'Saldos de Gastos',
-    'balances.whoOwes': 'Qui\u00e9n debe a qui\u00e9n',
-    'settings.title': 'Ajustes',
-    'notifications.title': 'Notificaciones',
-    'rent.title': 'Cuenta regresiva de alquiler',
-    'rent.markAsPaid': 'Marcar como pagado',
-    'rent.dueDay': 'Vence el',
-    'rent.day': 'día',
-    'rent.days': 'días',
-    'rent.status.paid': 'PAGADO',
-    'rent.status.paidOn': 'Pagado el',
-    'rent.status.dueToday': '¡Vence hoy!',
-    'rent.status.untilRent': 'hasta el alquiler',
-    'rent.toast.markedPaid': 'Alquiler marcado como pagado este mes',
-    'rent.toast.markPaidFailed': 'Error al marcar el alquiler como pagado',
   },
   uz: {
     'nav.dashboard': 'Bosh sahifa',
@@ -626,6 +631,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.roommates': 'Xonadon sheriklari',
     'nav.settings': 'Sozlamalar',
     'nav.announcements': 'E\'lonlar',
+    'auth.password': 'Parol',
     'common.save': 'Saqlash',
     'common.cancel': 'Bekor qilish',
     'common.done': 'Bajarildi',
@@ -634,6 +640,7 @@ const translations: Record<Language, Record<string, string>> = {
     'common.add': "Qo'shish",
     'common.loading': 'Yuklanmoqda...',
     'common.confirm': 'Tasdiqlash',
+    'common.today': 'Bugun',
     'dashboard.welcome': 'Xush kelibsiz',
     'dashboard.totalExpenses': 'Umumiy xarajatlar',
     'expenses.title': 'Xarajatlar',
@@ -645,6 +652,11 @@ const translations: Record<Language, Record<string, string>> = {
     'balances.whoOwes': 'Kim kimga qarz',
     'settings.title': 'Sozlamalar',
     'notifications.title': 'Bildirishnomalar',
+    'notifications.noNotifications': 'Hali bildirishnomalar yo\'q',
+    'notifications.willNotify': 'Biz sizga vazifalar, xarajatlar va boshqalar haqida xabar beramiz',
+    'roommates.addRoommate': 'Xonadosh qo\'shish',
+    'balances.settlementPaid': 'to\'ladi',
+    'rates.noComparison': 'Taqqoslash yo\'q',
     'landing.nav.features': 'Imkoniyatlar',
     'landing.nav.signIn': 'Kirish',
     'landing.badge': '\u2726 Kvartal boshqaruvi soddalashtirildi',
@@ -772,7 +784,13 @@ const translations: Record<Language, Record<string, string>> = {
     'balances.activeDebts': "Faol qarzlar",
     'balances.memberBalances': "A'zolar balansi",
     'balances.paid': "To'langan",
+    'balances.owes': 'qarzdor',
     'balances.confirm': 'Tasdiqlash',
+    'announcements.noAnnouncements': "E'lonlar yo'q",
+    'announcements.empty': "Yangiliklar uchun keyinroq qaytib keling.",
+    'announcements.postFirst': "Birinchi e'lonni qo'shish uchun quyidagi formadan foydalaning.",
+    'announcements.addAnnouncement': "E'lon qo'shish",
+    'announcements.pinned': 'Mahkamlangan',
     'cleaning.noTasks': "Bu hafta uchun vazifalar yo'q.",
     'cleaning.addTaskTitle': "Tozalash vazifasini qo'shish",
     'cleaning.taskName': 'Vazifa nomi',
@@ -853,13 +871,21 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Dashboard
     'dashboard.thisMonth': 'Bu oy',
+    'dashboard.thisMonthExpenses': "Bu oygi xarajatlar",
     'dashboard.overdue': 'muddat o`tgan',
     'dashboard.thisWeek': 'Bu hafta',
     'dashboard.today': 'bugun',
+    'dashboard.expenseAdded': '{category} xarajati qo`shildi',
+    'dashboard.paidAmount': '{paidBy} {amount} UZS to`ladi',
+    'dashboard.taskDueSoon': 'Vazifa muddati yaqin',
+    'dashboard.daysRemaining': '{days} kun',
+    'dashboard.loadError': 'Dashboard ma`lumotlarini yuklab bo`lmadi. Qayta urinib ko`ring.',
+    'dashboard.viewAllExpenses': 'Barcha xarajatlar',
+    'dashboard.checkBalances': 'Kimga qarz borligini tekshiring',
     'dashboard.youPaid': 'Siz to`lagansiz',
     'dashboard.quickActions': 'Tezkor amallar',
     'dashboard.recentActivity': 'So`ngi faoliyat',
-    'dashboard.viewAll': "Ko'rish",
+    'dashboard.viewAll': "Barchasini ko'rish",
     'dashboard.monthlyOverview': 'Oylik sharh',
     'dashboard.yourContribution': 'Sizning hissangiz',
     'dashboard.noActivity': "So'ngi faoliyat yo'q",
@@ -877,6 +903,7 @@ const translations: Record<Language, Record<string, string>> = {
     'dashboard.viewBalances': 'Balanslarni ko`rish',
     'dashboard.exchangeRates': 'Valyuta kurslari',
     'dashboard.activeMembers': 'Faol a`zolar',
+    'dashboard.assignedTo': 'tayinlangan',
 
     // Tasks
     'tasks.newTask': 'Yangi vazifa',
@@ -886,9 +913,9 @@ const translations: Record<Language, Record<string, string>> = {
     'tasks.addTaskButton': "Vazifa qo'shish",
     'tasks.allClear': 'Hammasi tayyor!',
     'tasks.noTasks': "Hozircha vazifalar yo'q. Tinchi tursing!",
-    'tasks.status.upcoming': 'Kelayotgan',
     'tasks.status.today': 'Bugun',
     'tasks.status.overdue': 'Muddat o`tgan',
+    'tasks.status.upcoming': 'Kelayotgan',
     'tasks.toast.loadUsersFailed': "Foydalanuvchilarni yuklab bo'lmadi",
     'tasks.toast.loadTasksFailed': "Vazifalarni yuklab bo'lmadi",
     'tasks.toast.added': "Vazifa muvaffaqiyatli qo'shildi",
@@ -915,7 +942,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('flatmate-language') as Language | null;
-      if (saved && ['en', 'ru', 'es', 'uz'].includes(saved)) {
+      if (saved && ['en', 'ru', 'uz'].includes(saved)) {
         return saved;
       }
     }
@@ -927,9 +954,15 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('flatmate-language', lang);
   };
 
-  const t = (key: string): string => {
-    return translations[language][key] || key;
-  };
+  const t = useCallback((key: string, params?: Record<string, string | number>): string => {
+    let text = translations[language][key] || key;
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        text = text.replace(`{${k}}`, String(v));
+      });
+    }
+    return text;
+  }, [language]);
 
   return (
     <I18nContext.Provider value={{ language, setLanguage, t }}>

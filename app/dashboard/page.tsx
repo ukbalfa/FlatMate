@@ -1,16 +1,15 @@
 'use client';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { db } from '../../lib/firebase';
 import {
   collection,
-  getDocs,
+  onSnapshot,
   query,
   orderBy,
   limit,
   where,
 } from 'firebase/firestore';
-import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import Link from 'next/link';
@@ -27,7 +26,10 @@ import {
   ArrowRight,
   Wallet,
   Activity,
+  Bell,
 } from 'lucide-react';
+
+import { getMonday, formatTimeAgo } from '../../lib/utils';
 
 interface Expense {
   id: string;
@@ -75,15 +77,6 @@ interface ActivityItem {
   user?: string;
 }
 
-function getMonday(d: Date) {
-  const date = new Date(d);
-  const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-  date.setDate(diff);
-  date.setHours(0, 0, 0, 0);
-  return date.toISOString().slice(0, 10);
-}
-
 export default function DashboardPage() {
   const { userProfile } = useAuth();
   const { t } = useI18n();
@@ -91,110 +84,110 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [cleaningTasks, setCleaningTasks] = useState<CleaningTask[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentMonth] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
 
-  const generateActivityFeed = useCallback((
-    expensesData: Expense[],
-    tasksData: Task[]
-  ) => {
-    const activities: ActivityItem[] = [];
+useEffect(() => {
+    const weekStart = getMonday(new Date());
+    const unsubs: (() => void)[] = [];
+    let loadedCount = 0;
 
-    // Add recent expenses
-    expensesData.slice(0, 10).forEach((expense) => {
-      activities.push({
+    const checkAllLoaded = () => {
+      loadedCount++;
+      if (loadedCount >= 4) {
+        setLoading(false);
+      }
+    };
+
+    setLoading(true);
+
+    // Expenses
+    const expUnsub = onSnapshot(
+      query(collection(db, 'expenses'), orderBy('date', 'desc'), limit(50)),
+      (snap) => {
+        setExpenses(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Expense)));
+        checkAllLoaded();
+      }
+    );
+    unsubs.push(expUnsub);
+
+    // Tasks
+    const taskUnsub = onSnapshot(
+      query(collection(db, 'tasks'), orderBy('dueDate'), limit(100)),
+      (snap) => {
+        setTasks(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Task)));
+        checkAllLoaded();
+      }
+    );
+    unsubs.push(taskUnsub);
+
+    // Cleaning (current week)
+    const cleanUnsub = onSnapshot(
+      query(collection(db, 'cleaning'), where('weekStart', '==', weekStart)),
+      (snap) => {
+        setCleaningTasks(snap.docs.map((d) => ({ id: d.id, ...d.data() } as CleaningTask)));
+        checkAllLoaded();
+      }
+    );
+    unsubs.push(cleanUnsub);
+
+    // Users
+    const usersUnsub = onSnapshot(
+      query(collection(db, 'users'), orderBy('createdAt', 'desc')),
+      (snap) => {
+        setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() } as User)));
+        checkAllLoaded();
+      }
+    );
+    unsubs.push(usersUnsub);
+
+    return () => {
+      unsubs.forEach((unsub) => unsub());
+    };
+  }, []);
+
+  // Activity feed (derived from expenses + tasks, re-computes when they change)
+  const activityFeed = useMemo(() => {
+    const items: ActivityItem[] = [];
+    expenses.slice(0, 10).forEach((expense) => {
+      items.push({
         id: `expense-${expense.id}`,
         type: 'expense',
-        title: `${expense.category} expense added`,
-        description: `${expense.paidBy} paid ${expense.amount.toLocaleString()} UZS`,
+        title: t('dashboard.expenseAdded', { category: expense.category }),
+        description: t('dashboard.paidAmount', { paidBy: expense.paidBy, amount: expense.amount.toLocaleString() }),
         timestamp: expense.date,
         amount: expense.amount,
         user: expense.paidBy,
       });
     });
-
-    // Add tasks due soon
-    const today = new Date().toISOString().slice(0, 10);
-    tasksData
-      .filter((t) => !t.done && t.dueDate >= today)
+    const todayDate = new Date().toISOString().slice(0, 10);
+    tasks
+      .filter((task) => !task.done && task.dueDate >= todayDate)
       .slice(0, 5)
       .forEach((task) => {
         const daysUntil = Math.ceil(
           (new Date(task.dueDate).getTime() - new Date().getTime()) /
             (1000 * 60 * 60 * 24)
         );
-        activities.push({
+        items.push({
           id: `task-${task.id}`,
           type: 'task',
-          title: 'Task due soon',
-          description: `"${task.text}" assigned to ${task.assignedTo} (${
-            daysUntil === 0 ? 'Today' : `${daysUntil} days`
-          })`,
+          title: t('dashboard.taskDueSoon'),
+           description: `"${task.text}" ${t('dashboard.assignedTo')} ${task.assignedTo} (${
+             daysUntil === 0 ? t('common.today') : t('dashboard.daysRemaining', { days: daysUntil })
+           })`,
           timestamp: task.dueDate,
           user: task.assignedTo,
         });
       });
-
-    // Sort by date (most recent first)
-    activities.sort(
+    items.sort(
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
-
-    setActivities(activities.slice(0, 15));
-  }, []);
-
-  const loadDashboardData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const currentDate = new Date();
-      const weekStart = getMonday(currentDate);
-
-      const [expensesSnap, tasksSnap, cleaningSnap, usersSnap] = await Promise.all([
-        getDocs(query(collection(db, 'expenses'), orderBy('date', 'desc'), limit(50))),
-        getDocs(query(collection(db, 'tasks'), orderBy('dueDate'))),
-        getDocs(
-          query(
-            collection(db, 'cleaning'),
-            where('weekStart', '==', weekStart)
-          )
-        ),
-        getDocs(collection(db, 'users')),
-      ]);
-
-      const expensesData = expensesSnap.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as Expense)
-      );
-      const tasksData = tasksSnap.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as Task)
-      );
-      const cleaningData = cleaningSnap.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as CleaningTask)
-      );
-      const usersData = usersSnap.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as User)
-      );
-
-      setExpenses(expensesData);
-      setTasks(tasksData);
-      setCleaningTasks(cleaningData);
-      setUsers(usersData);
-
-      generateActivityFeed(expensesData, tasksData);
-    } catch (error) {
-      console.error('Failed to load dashboard data:', error);
-      toast.error('Failed to load dashboard data. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }, [generateActivityFeed]);
-
-  useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
+    return items.slice(0, 15);
+  }, [expenses, tasks, t]);
 
   // Calculate stats
   const monthExpenses = expenses.filter((e) => e.date.startsWith(currentMonth));
@@ -219,24 +212,9 @@ export default function DashboardPage() {
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
   const todaysCleaning = myCleaning.filter((c) => c.dayOfWeek === today);
 
-
-  const formatTimeAgo = (date: string) => {
-    const now = new Date();
-    const then = new Date(date);
-    const diffInDays = Math.floor(
-      (now.getTime() - then.getTime()) / (1000 * 60 * 60 * 24)
-    );
-
-    if (diffInDays === 0) return 'Today';
-    if (diffInDays === 1) return 'Yesterday';
-    if (diffInDays < 7) return `${diffInDays} days ago`;
-    if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`;
-    return then.toLocaleDateString();
-  };
-
   const stats = [
     {
-      title: t('dashboard.thisMonth'),
+      title: t('dashboard.thisMonthExpenses'),
       value: totalMonthExpenses.toLocaleString() + ' UZS',
       subtitle: t('dashboard.totalExpenses'),
       icon: Wallet,
@@ -276,11 +254,11 @@ export default function DashboardPage() {
           <motion.h1
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-3xl font-bold text-white"
+            className="text-3xl font-bold text-[#1C1400] dark:text-[#FFF5DC]"
           >
             {t('dashboard.welcome')}, {userProfile?.name || userProfile?.username}!
           </motion.h1>
-          <p className="text-gray-400 mt-2">
+          <p className="text-[#9A7C4A] dark:text-gray-400 mt-2">
             {t('dashboard.monthlyOverview')}
           </p>
         </div>
@@ -317,12 +295,12 @@ export default function DashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               whileHover={{ scale: 1.02 }}
               transition={{ delay: index * 0.1, duration: 0.2 }}
-              className="bg-[#1a1d27] border border-white/5 rounded-xl p-5 hover:border-white/10 transition-colors cursor-pointer"
+              className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-5 hover:border-[#F97316] dark:hover:border-[#F97316] transition-colors cursor-pointer"
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-gray-400 text-sm">{stat.title}</p>
-                  <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
+                  <p className="text-[#9A7C4A] dark:text-gray-400 text-sm">{stat.title}</p>
+                  <p className="text-2xl font-bold text-[#1C1400] dark:text-[#FFF5DC] mt-1">{stat.value}</p>
                   <p
                     className={`text-sm mt-1 ${
                       stat.alert ? 'text-red-400' : 'text-gray-500'
@@ -347,8 +325,8 @@ export default function DashboardPage() {
           {/* Left Column - Quick Actions & Activity */}
           <div className="lg:col-span-2 space-y-6">
             {/* Quick Actions */}
-            <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">{t('dashboard.quickActions')}</h2>
+            <div className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-6">
+              <h2 className="text-lg font-semibold text-[#1C1400] dark:text-[#FFF5DC] mb-4">{t('dashboard.quickActions')}</h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
                   {
@@ -379,12 +357,12 @@ export default function DashboardPage() {
                   <Link
                     key={action.label}
                     href={action.href}
-                    className="flex flex-col items-center gap-2 p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors group"
+                    className="flex flex-col items-center gap-2 p-4 bg-[#FFF0CC] dark:bg-[#3D2E00] rounded-lg hover:bg-[#F0D89A] dark:hover:bg-[#4D3E10] transition-colors group"
                   >
                     <div className={`${action.color} p-2.5 rounded-lg group-hover:scale-110 transition-transform`}>
                       <action.icon className="w-5 h-5 text-white" />
                     </div>
-                    <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                    <span className="text-sm text-[#7C6A3A] dark:text-gray-300 group-hover:text-[#F97316] dark:group-hover:text-white transition-colors">
                       {action.label}
                     </span>
                   </Link>
@@ -393,9 +371,9 @@ export default function DashboardPage() {
             </div>
 
             {/* Activity Feed */}
-            <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
+            <div className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-[#1C1400] dark:text-[#FFF5DC] flex items-center gap-2">
                   <Activity className="w-5 h-5 text-[#F97316]" />
                   {t('dashboard.recentActivity')}
                 </h2>
@@ -403,31 +381,31 @@ export default function DashboardPage() {
                   href="/dashboard/expenses"
                   className="text-sm text-[#F97316] hover:text-[#188a65] flex items-center gap-1"
                 >
-                  {t('dashboard.viewAll')} <ArrowRight className="w-4 h-4" />
+                      {t('dashboard.viewAllExpenses')} <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
 
               {loading ? (
                 <div className="animate-pulse space-y-3">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-14 bg-white/5 rounded-lg"></div>
+                    <div key={i} className="h-14 bg-[#FFF0CC] dark:bg-[#3D2E00] rounded-lg"></div>
                   ))}
                 </div>
-              ) : activities.length === 0 ? (
+              ) : activityFeed.length === 0 ? (
                 <EmptyState
-                  emoji="🔔"
+                  icon={<Bell className="w-8 h-8" />}
                   title={t('dashboard.noActivity')}
                   description={t('dashboard.noActivityDesc')}
                 />
               ) : (
                 <div className="space-y-3">
-                  {activities.map((activity, index) => (
+                  {activityFeed.map((activity, index) => (
                     <motion.div
                       key={activity.id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="flex items-center gap-3 p-3 hover:bg-white/5 rounded-lg transition-colors"
+                      className="flex items-center gap-3 p-3 hover:bg-[#FFF0CC] dark:hover:bg-[#3D2E00] rounded-lg transition-colors"
                     >
                       <div
                         className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -447,7 +425,7 @@ export default function DashboardPage() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm font-medium truncate">
+                        <p className="text-[#1C1400] dark:text-[#FFF5DC] text-sm font-medium truncate">
                           {activity.title}
                         </p>
                         <p className="text-gray-500 text-xs truncate">
@@ -470,9 +448,9 @@ export default function DashboardPage() {
             <RentCountdown />
 
             {/* My Tasks */}
-            <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
+            <div className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-[#1C1400] dark:text-[#FFF5DC] flex items-center gap-2">
                   <Clock className="w-5 h-5 text-blue-500" />
                   {t('dashboard.myTasks')}
                 </h2>
@@ -501,9 +479,9 @@ export default function DashboardPage() {
                       <Link
                         key={task.id}
                         href="/dashboard/tasks"
-                        className="block p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+                        className="block p-3 bg-[#FFF0CC] dark:bg-[#3D2E00] rounded-lg hover:bg-[#F0D89A] dark:hover:bg-[#4D3E10] transition-colors"
                       >
-                        <p className="text-white text-sm font-medium line-clamp-2">
+                        <p className="text-[#1C1400] dark:text-[#FFF5DC] text-sm font-medium line-clamp-2">
                           {task.text}
                         </p>
                         <div className="flex items-center justify-between mt-2">
@@ -542,9 +520,9 @@ export default function DashboardPage() {
             </div>
 
             {/* My Cleaning Schedule */}
-            <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
+            <div className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-[#1C1400] dark:text-[#FFF5DC] flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-amber-500" />
                   {t('dashboard.cleaning')}
                 </h2>
@@ -565,15 +543,15 @@ export default function DashboardPage() {
                     <Link
                       key={task.id}
                       href="/dashboard/cleaning"
-                      className="block p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+                      className="block p-3 bg-[#FFF0CC] dark:bg-[#3D2E00] rounded-lg hover:bg-[#F0D89A] dark:hover:bg-[#4D3E10] transition-colors"
                     >
-                      <p className="text-white text-sm font-medium">{task.task}</p>
+                      <p className="text-[#1C1400] dark:text-[#FFF5DC] text-sm font-medium">{task.task}</p>
                       <div className="flex items-center justify-between mt-2">
                         <span
                           className={`text-xs px-2 py-0.5 rounded-full ${
                             task.dayOfWeek === today
                               ? 'bg-amber-500/20 text-amber-400'
-                              : 'bg-white/10 text-gray-400'
+                              : 'bg-[#FFF0CC] dark:bg-[#3D2E00] text-[#9A7C4A] dark:text-gray-400'
                           }`}
                         >
                           {task.dayOfWeek === today ? t('dashboard.today') : t('cleaning.day.' + task.dayOfWeek)}
@@ -593,7 +571,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Monthly Summary */}
-            <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
+            <div className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-6">
               <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-purple-500" />
                 {t('dashboard.monthlyOverview')}
@@ -601,15 +579,15 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-400">{t('dashboard.yourContribution')}</span>
-                    <span className="text-white">
+                    <span className="text-[#9A7C4A] dark:text-gray-400">{t('dashboard.yourContribution')}</span>
+                    <span className="text-[#1C1400] dark:text-[#FFF5DC]">
                       {((myMonthExpenses / (totalMonthExpenses || 1)) * 100).toFixed(
                         0
                       )}
                       %
                     </span>
                   </div>
-                  <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-2 bg-[#FFF0CC] dark:bg-[#3D2E00] rounded-full overflow-hidden">
                     <div
                       className="h-full bg-[#F97316] rounded-full transition-all duration-500"
                       style={{
@@ -626,19 +604,19 @@ export default function DashboardPage() {
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-white/5">
+                <div className="pt-4 border-t border-[#F0D89A] dark:border-[#3D2E00]">
                   <Link
                     href="/dashboard/expenses"
-                    className="flex items-center justify-between text-sm text-gray-400 hover:text-white transition-colors"
+                    className="flex items-center justify-between text-sm text-[#9A7C4A] dark:text-gray-400 hover:text-[#F97316] dark:hover:text-white transition-colors"
                   >
-                    <span>View all expenses</span>
+                    <span>{t('dashboard.viewAllExpenses')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
                     href="/dashboard/balances"
                     className="flex items-center justify-between text-sm text-gray-400 hover:text-white transition-colors mt-3"
                   >
-                    <span>Check who owes whom</span>
+                    <span>{t('dashboard.checkBalances')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
