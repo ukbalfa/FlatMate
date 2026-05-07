@@ -36,7 +36,7 @@ export default function TestimonialsSection() {
 
   return (
     <section className="relative py-24 px-6 lg:px-8 bg-gradient-to-br from-bg-section to-bg-gradient-end dark:from-dark-bg-section dark:to-dark-bg-card">
-      <div className="max-w-5xl mx-auto" ref={ref}>
+      <div className="max-w-7xl mx-auto" ref={ref}>
         {/* Main Quote Card */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -54,9 +54,9 @@ export default function TestimonialsSection() {
               <span className="text-white font-sora font-bold text-lg">{TESTIMONIALS[0]?.avatar || 'U'}</span>
             </div>
             <div>
-              <div className="font-dm-sans font-semibold text-heading dark:text-dark-heading">
+              <p className="font-dm-sans font-semibold text-heading dark:text-dark-heading">
                 {t('landing.testimonials.author1')}
-              </div>
+              </p>
               <div className="font-dm-sans text-muted dark:text-dark-muted text-sm">
                 {t('landing.testimonials.role1')}
               </div>
@@ -85,12 +85,12 @@ export default function TestimonialsSection() {
                   </span>
                 </div>
                 <div>
-                  <div className="font-dm-sans font-semibold text-sm text-heading dark:text-dark-heading">
+                  <cite className="font-dm-sans font-semibold text-sm text-heading dark:text-dark-heading not-italic">
                     {t(testimonial.authorKey)}
-                  </div>
-                  <div className="text-xs font-dm-sans text-muted dark:text-dark-muted">
+                  </cite>
+                  <p className="text-xs font-dm-sans text-muted dark:text-dark-muted">
                     {t(testimonial.roleKey)}
-                  </div>
+                  </p>
                 </div>
               </div>
             </motion.div>
@@ -116,7 +116,8 @@ export default function TestimonialsSection() {
                 <div className="w-6 h-6 relative flex-shrink-0">
                   <Image
                     src={institution.logo}
-                    alt={institution.name}
+                    alt=""
+                    role="presentation"
                     width={24}
                     height={24}
                     className="object-contain"

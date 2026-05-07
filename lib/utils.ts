@@ -7,6 +7,10 @@ export function getMonday(d: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+export function cn(...classes: (string | undefined | null | false)[]): string {
+  return classes.filter(Boolean).join(' ');
+}
+
 export function formatTimeAgo(date: Date | string): string {
   const now = new Date();
   const d = typeof date === 'string' ? new Date(date) : date;

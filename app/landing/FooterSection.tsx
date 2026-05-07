@@ -16,17 +16,17 @@ export default function FooterSection() {
             <h4 className="font-semibold mb-4 text-sm text-white font-dm-sans">{t('landing.footer.product')}</h4>
             <ul className="space-y-3">
               <li>
-                <Link href="/dashboard" className="text-sm transition-colors hover:text-accent-honey font-dm-sans text-muted">
+                <Link href="/dashboard" className="text-sm transition-colors hover:text-accent-honey font-dm-sans text-[#D4C4A0] dark:text-[#A89270]">
                   {t('landing.footer.dashboard')}
                 </Link>
               </li>
               <li>
-                <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm transition-colors hover:text-accent-honey font-dm-sans text-muted">
+                <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm transition-colors hover:text-accent-honey font-dm-sans text-[#D4C4A0] dark:text-[#A89270]">
                   {t('landing.footer.features')}
                 </button>
               </li>
               <li>
-                <span className="text-sm font-dm-sans text-muted cursor-not-allowed opacity-60">
+                <span className="text-sm font-dm-sans text-[#D4C4A0] dark:text-[#A89270] cursor-not-allowed opacity-60">
                   {t('landing.footer.pricing')}
                 </span>
               </li>
@@ -36,12 +36,12 @@ export default function FooterSection() {
             <h4 className="font-semibold mb-4 text-sm text-white font-dm-sans">{t('landing.footer.resources')}</h4>
             <ul className="space-y-3">
               <li>
-                <span className="text-sm font-dm-sans text-muted cursor-not-allowed opacity-60">
+                <span className="text-sm font-dm-sans text-[#D4C4A0] dark:text-[#A89270] cursor-not-allowed opacity-60">
                   {t('landing.footer.blog')}
                 </span>
               </li>
               <li>
-                <span className="text-sm font-dm-sans text-muted cursor-not-allowed opacity-60">
+                <span className="text-sm font-dm-sans text-[#D4C4A0] dark:text-[#A89270] cursor-not-allowed opacity-60">
                   {t('landing.footer.support')}
                 </span>
               </li>
@@ -51,7 +51,7 @@ export default function FooterSection() {
             <h4 className="font-semibold mb-4 text-sm text-white font-dm-sans">{t('landing.footer.community')}</h4>
             <ul className="space-y-3">
               <li>
-                <span className="text-sm font-dm-sans text-muted cursor-not-allowed opacity-60">
+                <span className="text-sm font-dm-sans text-[#D4C4A0] dark:text-[#A89270] cursor-not-allowed opacity-60">
                   {t('landing.footer.telegram')}
                 </span>
               </li>
@@ -66,20 +66,20 @@ export default function FooterSection() {
                 <span className="font-dm-mono text-[10px] font-semibold text-accent-honey">v0.1.1</span>
               </span>
             </div>
-            <p className="text-xs leading-relaxed font-dm-sans text-muted">
+            <p className="text-xs leading-relaxed font-dm-sans text-[#D4C4A0] dark:text-[#A89270]">
               {t('landing.footer.tagline')}
             </p>
           </div>
         </div>
         <div className="pt-8 border-t border-dark-border/50 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm font-dm-mono text-muted">
+          <p className="text-sm font-dm-mono text-[#D4C4A0] dark:text-[#A89270]">
             © {currentYear} FlatMate · Made with ❤️ in Tashkent, Uzbekistan 🇺🇿
           </p>
           <div className="flex items-center gap-6">
-            <span className="text-xs font-dm-sans text-muted cursor-not-allowed opacity-60">
+            <span className="text-xs font-dm-sans text-[#D4C4A0] dark:text-[#A89270] cursor-not-allowed opacity-60">
               {t('landing.footer.privacy')}
             </span>
-            <span className="text-xs font-dm-sans text-muted cursor-not-allowed opacity-60">
+            <span className="text-xs font-dm-sans text-[#D4C4A0] dark:text-[#A89270] cursor-not-allowed opacity-60">
               {t('landing.footer.terms')}
             </span>
           </div>

@@ -59,11 +59,11 @@
 
 | ⚖️ &nbsp;**Balances** | 🌙 &nbsp;**Dark Mode** | 📱 &nbsp;**Responsive** |
 |:---|:---|:---|
-| Crystal-clear overview of who owes what across all shared expenses. | Full light/dark theme support via `next-themes`. Persisted across sessions. | Desktop sidebar + mobile overlay navigation — works great on every screen size. |
+| Crystal-clear overview of who owes what across all shared expenses. | Full light/dark theme support via `next-themes`. Persisted across sessions. | Desktop sidebar + mobile hamburger menu — works great on every screen size. |
 
-| 📢 &nbsp;**Announcements** | 🌐 &nbsp;**i18n** |
-|:---|:---|
-| Pin important notices. Anyone can post — admins can pin/delete. | Full 3-language support: English, Русский, O'zbek |
+| 📢 &nbsp;**Announcements** | 🌐 &nbsp;**i18n** | ♿ &nbsp;**Accessibility** |
+|:---|:---|:---|
+| Pin important notices. Anyone can post — admins can pin/delete. | Full 3-language support: English, Русский, O'zbek | WCAG 2.1 AA compliant, prefers-reduced-motion support, semantic HTML, ARIA labels |
 
 </div>
 
@@ -149,7 +149,7 @@ Browser (React Client Components)
 ```
 flatmate-dashboard/
 ├── app/
-│   ├── layout.tsx                  # Root layout — Inter font + Providers
+│   ├── layout.tsx                  # Root layout — Sora/DM Sans fonts + Providers
 │   ├── providers.tsx               # Auth, Notifications, I18n, Theme providers
 │   ├── globals.css                 # Tailwind v4 @theme tokens, fm-* helper classes
 │   ├── page.tsx                    # Public landing page
@@ -169,30 +169,43 @@ flatmate-dashboard/
 │   │   └── announcements/page.tsx  # Pinned announcements board
 │   ├── actions/
 │   │   └── deleteRoommate.ts       # Server Action (firebase-admin)
-│   └── components/                 # Shared UI components
-│       ├── ConfirmModal.tsx        # Delete/confirm dialog
-│       ├── EmptyState.tsx          # Placeholder for empty lists
-│       ├── ErrorBoundary.tsx       # React error boundary
-│       ├── LanguageSwitcher.tsx    # en / ru / uz toggle
-│       ├── NotificationsDropdown.tsx
-│       ├── RentCountdown.tsx       # Rent due date tracker
-│       ├── Skeleton.tsx            # Loading skeleton
-│       └── Spinner.tsx             # Inline spinner
+│   └── landing/                     # Landing page sections
+│       ├── HeroSection.tsx
+│       ├── FeaturesSection.tsx
+│       ├── TestimonialsSection.tsx
+│       ├── MarqueeSection.tsx
+│       ├── FooterSection.tsx
+│       └── SectionDivider.tsx
+├── components/                     # Shared UI components
+│   ├── ui/
+│   │   └── PrimaryButton.tsx       # Reusable CTA button
+│   ├── NoiseOverlay.tsx            # Shared noise texture background
+│   ├── ConfirmModal.tsx           # Delete/confirm dialog
+│   ├── EmptyState.tsx              # Placeholder for empty lists
+│   ├── ErrorBoundary.tsx          # React error boundary
+│   ├── LanguageSwitcher.tsx       # en / ru / uz toggle
+│   ├── NotificationsDropdown.tsx
+│   ├── RentCountdown.tsx            # Rent due date tracker
+│   ├── Skeleton.tsx               # Loading skeleton
+│   └── Spinner.tsx                # Inline spinner
 ├── context/
 │   ├── AuthContext.tsx             # Auth state + userProfile
-│   ├── I18nContext.tsx             # i18n (en, ru, uz)
+│   ├── I18nContext.tsx            # i18n (en, ru, uz)
 │   └── NotificationsContext.tsx    # Notification state + toasts
 ├── lib/
 │   ├── firebase.ts                 # Firebase client SDK init
+│   ├── motion.ts                  # usePrefersReducedMotion hook
 │   ├── errorLogger.ts              # Structured error logging helper
-│   ├── export.ts                   # Data export utilities
-│   ├── recurringExpensesEngine.ts  # Auto-generate recurring expenses
-│   └── utils.ts                    # Shared helpers (formatCurrency, etc.)
-├── firestore.rules                 # Firestore security rules
-├── firebase.json                   # Firebase project config
-├── next.config.ts                  # Next.js config (Turbopack)
-├── tsconfig.json                   # TypeScript config (strict)
-└── .env.local                      # 🔒 Firebase credentials (never committed)
+│   ├── export.ts                 # Data export utilities
+│   ├── recurringExpensesEngine.ts # Auto-generate recurring expenses
+│   └── utils.ts                  # Shared helpers (cn, formatCurrency, etc.)
+├── public/
+│   └── noise.svg                 # Reusable noise texture
+├── firestore.rules                # Firestore security rules
+├── firebase.json                 # Firebase project config
+├── next.config.ts                # Next.js config (Turbopack)
+├── tsconfig.json                # TypeScript config (strict)
+└── .env.local                  # 🔒 Firebase credentials (never committed)
 ```
 
 ---

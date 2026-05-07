@@ -29,7 +29,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const stored = localStorage.getItem('flatmate-theme');
     const current = stored || theme;
     document.documentElement.classList.add(current);
-  }, []);
+  }, [theme]);
 
   const setTheme = (newTheme: string) => {
     setThemeState(newTheme);
