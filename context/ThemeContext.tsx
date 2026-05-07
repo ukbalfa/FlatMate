@@ -17,16 +17,18 @@ const ThemeContext = createContext<ThemeContextType>({
 export const useTheme = () => useContext(ThemeContext);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-  const [theme, setThemeState] = useState('light');
-
-  useEffect(() => {
-    setMounted(true);
+  const [mounted] = useState(true);
+  const [theme, setThemeState] = useState(() => {
+    if (typeof window === 'undefined') return 'light';
     const saved = localStorage.getItem('flatmate-theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initialTheme = saved || (prefersDark ? 'dark' : 'light');
-    setThemeState(initialTheme);
-    document.documentElement.classList.add(initialTheme);
+    return saved || (prefersDark ? 'dark' : 'light');
+  });
+
+  useEffect(() => {
+    const stored = localStorage.getItem('flatmate-theme');
+    const current = stored || theme;
+    document.documentElement.classList.add(current);
   }, []);
 
   const setTheme = (newTheme: string) => {
