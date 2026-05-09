@@ -1,0 +1,10 @@
+export { Navbar } from './Navbar';
+export { Hero } from './Hero';
+export { HeroMockup } from './HeroMockup';
+export { FeatureCard } from './FeatureCard';
+export { FeatureNumber } from './FeatureNumber';
+export { ChorePreview } from './ChorePreview';
+export { BentoFeatures } from './BentoFeatures';
+export { ValueProp } from './ValueProp';
+export { Pricing } from './Pricing';
+export { Footer } from './Footer';

@@ -1,0 +1,65 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { useI18n } from '@/context/I18nContext';
+import { ArrowRight, Zap } from 'lucide-react';
+
+export function CTA() {
+  const { t } = useI18n();
+
+  return (
+    <section className="relative py-24 px-4 md:px-8">
+      <div className="max-w-4xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="relative p-8 md:p-16 rounded-3xl overflow-hidden"
+        >
+          {/* Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#F97316]/10 via-[#FBBF24]/5 to-transparent" />
+          <div className="absolute inset-0 bg-[#0A0A0A]/80" />
+          <div className="absolute inset-0 border border-white/[0.06] rounded-3xl" />
+
+          {/* Decorative corner accents */}
+          <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-[#F97316]/20 rounded-tl-3xl" />
+          <div className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-[#F97316]/20 rounded-br-3xl" />
+
+          <div className="relative z-10 text-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#F97316]/10 border border-[#F97316]/20 mb-6"
+            >
+              <Zap className="w-4 h-4 text-[#F97316]" />
+              <span className="text-sm font-medium text-[#F97316]">
+                Free forever for basic use
+              </span>
+            </motion.div>
+
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
+              Ready to live in harmony?
+            </h2>
+            <p className="text-white/40 max-w-md mx-auto mb-8 text-sm md:text-base">
+              Join thousands of roommates who stopped fighting over bills and started enjoying their home.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link
+                href="/login"
+                className="group px-8 py-4 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-[#F97316] to-[#FBBF24] hover:shadow-[0_0_30px_-5px_rgba(249,115,22,0.4)] transition-all duration-300 flex items-center gap-2"
+              >
+                {t('landing.hero.getStarted') || 'Get Started Free'}
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}

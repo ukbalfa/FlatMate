@@ -343,6 +343,16 @@ html.dark .fm-select {
   50% { box-shadow: 0 0 0 6px rgba(249,115,22,0); }
 }
 
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.2); }
+}
+
+@keyframes pulse-slower {
+  0%, 100% { opacity: 0.1; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(1.1); }
+}
+
 @keyframes marquee-scroll {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
@@ -362,6 +372,14 @@ html.dark .fm-select {
 
 .animate-pulse-orange {
   animation: pulse-orange 1.5s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 8s ease-in-out infinite;
+}
+
+.animate-pulse-slower {
+  animation: pulse-slower 10s ease-in-out infinite 1s;
 }
 
 .animate-marquee {
