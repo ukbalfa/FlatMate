@@ -9,7 +9,7 @@ This file contains high-signal, repo-specific instructions to help AI agents wor
 - **External APIs**: Live exchange rates are polled from `open.er-api.com`.
 
 ## Provider Composition
-- **Root layout** (`app/layout.tsx`) wraps children with `ThemeProvider` (next-themes, storage key `flatmate-theme`) **outside** `Providers`, then `Providers` (`app/providers.tsx`) composes `AuthProvider -> NotificationsProvider -> I18nProvider` + Sonner toaster.
+- **Root layout** (`app/layout.tsx`) wraps children with `ClientThemeProvider` (custom ThemeContext, storage key `flatmate-theme`) **outside** `Providers`, then `Providers` (`app/providers.tsx`) composes `AuthProvider -> NotificationsProvider -> I18nProvider` + Sonner toaster.
 - **Dashboard layout** (`app/dashboard/layout.tsx`) is the route guard - redirects unauthenticated users to `/login`.
 - **Root layout** is the only server component; all other pages/layouts use `'use client'`.
 
@@ -17,7 +17,7 @@ This file contains high-signal, repo-specific instructions to help AI agents wor
 - **Tailwind CSS v4**: Theme tokens defined via `@theme` in `app/globals.css`.
 - **Brand Accent**: `#F97316` (`var(--color-accent)`).
 - **CSS Helper Classes**: `.fm-card`, `.fm-btn-primary`, `.fm-input`, etc. defined in `globals.css`.
-- **Dark/Light Mode**: Managed by `next-themes` via `ThemeProvider` in root layout (`app/layout.tsx`), NOT in `app/providers.tsx`.
+- **Dark/Light Mode**: Managed by custom `ThemeContext` via `ClientThemeProvider` in root layout (`app/layout.tsx`), NOT in `app/providers.tsx`.
 - **Animations**: Use Framer Motion for complex transitions/interactions and CSS helper classes (e.g., `animate-fade-in`, `stagger-1`) defined in `globals.css` for simpler cases.
 
 ## Data Conventions

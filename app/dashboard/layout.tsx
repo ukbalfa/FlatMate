@@ -74,19 +74,22 @@ function SidebarContent({ user, setSidebarOpen, handleLogout }: { user: Dashboar
   const pathname = usePathname();
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-[#050505] border-r border-white/5">
       {/* Logo */}
-      <div className="flex items-center justify-center h-16 border-b border-border dark:border-dark-border font-[family-name:var(--font-sora)] font-extrabold text-lg text-heading">
-        <span className="text-[#1C1400] dark:text-[#FFF5DC] flex items-center gap-1.5">
-          <svg className="w-5 h-5 text-accent" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z"/>
-          </svg>
-          FlatMate
+      <Link href="/" className="flex items-center justify-center h-20 border-b border-white/5 font-space-grotesk font-extrabold text-2xl text-white hover:text-white/80 transition-colors group">
+        <span className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-gradient-citrus flex items-center justify-center text-white text-lg font-bold group-hover:scale-110 transition-transform shadow-[0_0_15px_-3px_#F97316]">
+            F
+          </div>
+          flatmate
         </span>
-      </div>
+      </Link>
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 px-3 space-y-1">
+      <nav className="flex-1 py-6 px-4 space-y-1.5 overflow-y-auto">
+        <div className="px-3 pb-2 text-[10px] uppercase tracking-widest font-dm-mono text-white/30">
+          Main Menu
+        </div>
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
           return (
@@ -97,14 +100,14 @@ function SidebarContent({ user, setSidebarOpen, handleLogout }: { user: Dashboar
             >
               <Link
                 href={link.href}
-                className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-all duration-200 ${
+                className={`flex items-center gap-3 px-4 py-3 text-sm rounded-xl transition-all duration-300 ${
                   isActive
-                    ? 'bg-gradient-to-r from-[rgba(249,115,22,0.15)] to-[rgba(251,191,36,0.1)] text-[#F97316] font-bold border-l-[3px] border-[#F97316] font-[family-name:var(--font-sora)]'
-                    : 'text-[#9A7C4A] dark:text-[#9A7C4A] hover:bg-[#FFF0CC] dark:hover:bg-[#2A1E00] hover:text-[#1C1400] dark:hover:text-[#FFF5DC] font-[family-name:var(--font-dm-sans)] font-medium'
+                    ? 'bg-white/10 text-white font-bold border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] font-dm-sans'
+                    : 'text-white/50 hover:bg-white/5 hover:text-white font-dm-sans font-medium border border-transparent'
                 }`}
                 onClick={() => setSidebarOpen(false)}
               >
-                <link.icon className={`w-5 h-5 ${isActive ? 'text-[#F97316]' : ''}`} />
+                <link.icon className={`w-5 h-5 ${isActive ? 'text-[#F97316]' : 'opacity-70'}`} />
                 {link.label.split('.').pop()?.replace(/([A-Z])/g, ' $1').trim()}
               </Link>
             </motion.div>
@@ -114,21 +117,21 @@ function SidebarContent({ user, setSidebarOpen, handleLogout }: { user: Dashboar
 
       {/* User info + logout */}
       {user && (
-        <div className="p-4 border-t border-[#F0D89A] dark:border-[#3D2E00]">
-          <div className="flex items-center gap-3 mb-3 px-2 bg-[#FFF0CC] dark:bg-[#2A1E00] rounded-2xl p-3 border border-[#F0D89A] dark:border-[#3D2E00]">
+        <div className="p-4 border-t border-white/5 bg-[#0A0A0A]">
+          <div className="flex items-center gap-3 mb-3 px-3 py-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md">
             <span
-              className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 gradient-citrus font-[family-name:var(--font-sora)]"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-black text-sm font-bold flex-shrink-0 bg-[#ccff00] shadow-[0_0_20px_-5px_#ccff00] font-space-grotesk"
             >
               {user.name?.[0] || user.username?.[0] || '?'}
             </span>
             <div className="min-w-0">
-              <div className="text-sm font-semibold truncate font-[family-name:var(--font-sora)] text-heading">{user.name || user.username}</div>
-              <div className="text-xs capitalize font-[family-name:var(--font-dm-sans)] text-muted">{user.role}</div>
+              <div className="text-sm font-bold truncate font-space-grotesk text-white">{user.name || user.username}</div>
+              <div className="text-[10px] uppercase tracking-widest font-dm-mono text-white/40">{user.role}</div>
             </div>
           </div>
           <button
             onClick={() => handleLogout()}
-            className="flex items-center justify-center gap-2 w-full py-2 px-3 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-[rgba(239,68,68,0.1)] hover:text-[#EF4444] font-[family-name:var(--font-dm-sans)] text-muted"
+            className="flex items-center justify-center gap-2 w-full py-2.5 px-3 text-sm font-bold rounded-xl transition-all duration-200 hover:bg-red-500/10 hover:text-red-400 font-dm-sans text-white/50 border border-transparent hover:border-red-500/20"
           >
             <LogOut className="w-4 h-4" />
             Logout
@@ -189,9 +192,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex min-h-screen bg-[#FFFBF0] dark:bg-[#1C1000]">
+    <div className="flex min-h-screen bg-[#050505] text-white">
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col w-[240px] flex-shrink-0 bg-[#FFF8E8] dark:bg-[#231900] border-r border-[#F0D89A]">
+      <aside className="hidden lg:flex flex-col w-[260px] flex-shrink-0 bg-[#050505]">
         <SidebarContent user={dashboardUser} setSidebarOpen={setSidebarOpen} handleLogout={handleLogout} />
       </aside>
 
@@ -202,7 +205,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+            className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -212,11 +215,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <AnimatePresence>
         {sidebarOpen && (
           <motion.aside
-            initial={{ x: -240 }}
+            initial={{ x: -260 }}
             animate={{ x: 0 }}
-            exit={{ x: -240 }}
-            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] as const }}
-            className="fixed top-0 left-0 z-50 h-full w-[240px] bg-[#FFF8E8] dark:bg-[#231900] shadow-2xl lg:hidden"
+            exit={{ x: -260 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as const }}
+            className="fixed top-0 left-0 z-50 h-full w-[260px] shadow-[20px_0_40px_rgba(0,0,0,0.5)] lg:hidden bg-[#050505] border-r border-white/5"
           >
             <SidebarContent user={dashboardUser} setSidebarOpen={setSidebarOpen} handleLogout={handleLogout} />
           </motion.aside>
@@ -224,12 +227,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </AnimatePresence>
 
       {/* Main area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#0A0A0A] rounded-tl-3xl border-t border-l border-white/5 lg:mt-2 lg:mb-2 lg:mr-2 shadow-2xl relative overflow-hidden">
+        
+        {/* Glow Effects */}
+        <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-[#F97316]/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-[#84CC16]/5 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.02] pointer-events-none mix-blend-overlay" />
+
         {/* Topbar */}
-        <header className="flex items-center h-16 px-5 bg-[rgba(255,251,240,0.85)] dark:bg-[rgba(28,16,0,0.85)] backdrop-blur-md border-b border-[#F0D89A] sticky top-0 z-30">
+        <header className="flex items-center h-20 px-6 sm:px-8 border-b border-white/5 sticky top-0 z-30 bg-[#0A0A0A]/80 backdrop-blur-xl">
           {/* Left: hamburger (mobile only) */}
           <button
-            className="lg:hidden p-2 rounded-lg transition-colors mr-3 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-[#FFF0CC] text-muted"
+            className="lg:hidden p-2 rounded-xl transition-colors mr-4 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-white/10 text-white/70 border border-white/10"
             onClick={() => setSidebarOpen(true)}
             aria-label="Toggle sidebar"
           >
@@ -237,48 +246,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
 
           {/* Page title */}
-          <h1 className="text-base tracking-tight font-[family-name:var(--font-sora)] font-bold text-lg text-heading">
-            <span className="text-[#1C1400] dark:text-[#FFF5DC]">{pageTitle.split('.').pop()?.replace(/([A-Z])/g, ' $1').trim()}</span>
+          <h1 className="text-xl sm:text-2xl tracking-tight font-space-grotesk font-bold text-white flex items-center gap-3">
+            <span className="inline-block w-2 h-6 bg-[#F97316] rounded-full" />
+            {pageTitle.split('.').pop()?.replace(/([A-Z])/g, ' $1').trim()}
           </h1>
 
           <div className="flex-1" />
 
           {/* Right: theme toggle + bell + user */}
-          <button
-            onClick={() => {
-              setTheme(isDark ? 'light' : 'dark');
-            }}
-            className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 mr-3 hover:scale-105 active:scale-95 bg-bg-section/60 dark:bg-dark-bg-section/80 border border-border dark:border-dark-border"
-            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            aria-label="Toggle dark mode"
-          >
-            <motion.div
-              initial={false}
-              animate={{ rotate: isDark ? 0 : 180, scale: isDark ? 1 : 0.9 }}
-              transition={{ duration: 0.3 }}
-            >
-              {isDark ? (
-                <Moon className="w-5 h-5 text-accent-honey" />
-              ) : (
-                <Sun className="w-5 h-5 text-accent" />
-              )}
-            </motion.div>
-          </button>
+          {/* Removing Theme Toggle since we are forcing dark mode */}
 
-          <NotificationsDropdown />
-
-          <LanguageSwitcher />
+          <div className="bg-white/5 border border-white/10 rounded-full flex items-center p-1.5 px-3 gap-2">
+             <NotificationsDropdown />
+             <div className="w-[1px] h-4 bg-white/20" />
+             <LanguageSwitcher />
+          </div>
 
           {dashboardUser && (
-            <span className="text-sm font-semibold hidden sm:block text-heading font-[family-name:var(--font-dm-sans)]">
-              {dashboardUser.name || dashboardUser.username}
-            </span>
+            <div className="hidden sm:flex items-center gap-3 ml-6 pl-6 border-l border-white/10">
+              <div className="text-right">
+                 <div className="text-sm font-bold text-white font-space-grotesk">{dashboardUser.name || dashboardUser.username}</div>
+                 <div className="text-[10px] text-white/40 uppercase tracking-widest font-dm-mono">{dashboardUser.role}</div>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-[#ccff00] border border-[#ccff00]/50 text-black flex items-center justify-center font-bold shadow-[0_0_15px_-3px_#ccff00]">
+                 {dashboardUser.name?.[0] || dashboardUser.username?.[0] || '?'}
+              </div>
+            </div>
           )}
         </header>
 
         {/* Main content */}
-        <main className="flex-1 p-6 sm:p-8 page-enter bg-[#FFFBF0] dark:bg-[#1C1000]">
-          <div className="max-w-5xl mx-auto w-full">
+        <main className="flex-1 p-6 sm:p-8 overflow-y-auto page-enter relative z-10 custom-scrollbar">
+          <div className="max-w-6xl mx-auto w-full">
             <ErrorBoundary>{children}</ErrorBoundary>
           </div>
         </main>

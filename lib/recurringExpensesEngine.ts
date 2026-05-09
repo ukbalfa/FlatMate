@@ -105,11 +105,16 @@ function advanceDate(date: Date, pattern: 'daily' | 'weekly' | 'monthly' | 'year
   } else if (pattern === 'weekly') {
     date.setDate(date.getDate() + 7);
   } else if (pattern === 'monthly') {
+    const currentDay = date.getDate();
+    const nextMonth = new Date(date);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    const maxDayInNextMonth = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).getDate();
+    const targetDay = Math.min(currentDay, maxDayInNextMonth);
     date.setMonth(date.getMonth() + 1);
+    date.setDate(targetDay);
   } else if (pattern === 'yearly') {
     date.setFullYear(date.getFullYear() + 1);
   } else {
-    // Default to monthly if invalid pattern
     date.setMonth(date.getMonth() + 1);
   }
 }

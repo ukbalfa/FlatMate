@@ -1,27 +1,31 @@
 @import "tailwindcss";
 
 @theme {
+  /* Force a universal dark mode/high contrast aesthetic for internal pages */
+  --color-bg-page: #050505;
+  --color-bg-section: #0A0A0A;
+  --color-bg-card: rgba(255, 255, 255, 0.03);
+  --color-bg-sidebar: #080808;
+  --color-bg-input: rgba(255, 255, 255, 0.05);
+  
+  --color-heading: #FFFFFF;
+  --color-body: rgba(255, 255, 255, 0.7);
+  --color-muted: rgba(255, 255, 255, 0.4);
+  
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-light: rgba(255, 255, 255, 0.05);
+  
   --color-accent: #F97316;
   --color-accent-hover: #EA6D0E;
   --color-accent-lime: #84CC16;
   --color-accent-honey: #FBBF24;
-  --color-heading: #1C1400;
-  --color-body: #4A3B1A;
-  --color-muted: #9A7C4A;
-  --color-border: #F0D89A;
-  --color-border-light: #FFF0CC;
-  --color-bg-page: #FFFBF0;
-  --color-bg-section: #FFF5DC;
-  --color-bg-card: #FFFFFF;
-  --color-bg-sidebar: #FFF8E8;
-  --color-bg-input: #FFFFFF;
   --color-danger: #EF4444;
   --color-warning: #FBBF24;
   --color-success: #84CC16;
-  --color-watermark: #E8E8E8;
+  --color-watermark: rgba(255, 255, 255, 0.03);
   --color-accent-dark: #B45309;
-  --color-body-light: #7C6A3A;
-  --color-body-dark: #5A4A2A;
+  --color-body-light: rgba(255, 255, 255, 0.9);
+  --color-body-dark: rgba(255, 255, 255, 0.5);
   --font-sans: var(--font-dm-sans);
 
   /* Typography scale */
@@ -35,20 +39,20 @@
   --leading-snug: 1.375;
   --leading-relaxed: 1.625;
 
-  /* Dark theme values */
-  --color-dark-heading: #FFF5DC;
-  --color-dark-body: #d4c4a0;
-  --color-dark-muted: #9A7C4A;
-  --color-dark-border: #3D2E00;
-  --color-dark-border-light: #2A1E00;
-  --color-dark-bg-page: #1C1000;
-  --color-dark-bg-section: #231900;
-  --color-dark-bg-card: #2A1E00;
-  --color-dark-bg-sidebar: #231900;
-  --color-dark-bg-input: #2A1E00;
-  --color-dark-watermark: rgba(255, 245, 220, 0.12);
-  --color-dark-footer: #0a0500;
-  --color-bg-gradient-end: #FFF0C0;
+  /* Dark theme values (matching the forced theme above) */
+  --color-dark-heading: #FFFFFF;
+  --color-dark-body: rgba(255, 255, 255, 0.7);
+  --color-dark-muted: rgba(255, 255, 255, 0.4);
+  --color-dark-border: rgba(255, 255, 255, 0.1);
+  --color-dark-border-light: rgba(255, 255, 255, 0.05);
+  --color-dark-bg-page: #050505;
+  --color-dark-bg-section: #0A0A0A;
+  --color-dark-bg-card: rgba(255, 255, 255, 0.03);
+  --color-dark-bg-sidebar: #080808;
+  --color-dark-bg-input: rgba(255, 255, 255, 0.05);
+  --color-dark-watermark: rgba(255, 255, 255, 0.03);
+  --color-dark-footer: #000000;
+  --color-bg-gradient-end: #0A0A0A;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -91,31 +95,29 @@ html.dark h1, html.dark h2, html.dark h3, html.dark h4, html.dark h5, html.dark 
 .fm-card {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: 24px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
-  transition: border-color 200ms ease, box-shadow 200ms ease;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .fm-card:hover {
-  border-color: rgba(249,115,22,0.4);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  border-color: rgba(249,115,22,0.3);
+  box-shadow: 0 8px 32px rgba(249,115,22,0.1);
+  transform: translateY(-2px);
 }
 
 html.dark .fm-card {
   background: var(--color-dark-bg-card);
   border-color: var(--color-dark-border);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
 }
 
 html.dark .fm-card:hover {
-  border-color: rgba(249,115,22,0.5);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
-}
-
-html.dark .fm-card:hover {
-  border-color: rgba(249,115,22,0.5);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  border-color: rgba(249,115,22,0.4);
+  box-shadow: 0 8px 40px rgba(249,115,22,0.15);
+  transform: translateY(-2px);
 }
 
 /* -- Buttons -- */
@@ -196,14 +198,15 @@ html.dark .fm-btn-ghost:hover {
 .fm-input {
   background: var(--color-bg-input);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 0.6rem 0.85rem;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
   color: var(--color-heading);
   font-size: 0.875rem;
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
   outline: none;
   width: 100%;
   font-family: inherit;
+  backdrop-filter: blur(8px);
 }
 
 .fm-input:focus {
@@ -236,15 +239,16 @@ html.dark .fm-input:focus {
 .fm-select {
   background: var(--color-bg-input);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 0.6rem 0.85rem;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
   color: var(--color-heading);
   font-size: 0.875rem;
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
   outline: none;
   appearance: none;
   cursor: pointer;
   font-family: inherit;
+  backdrop-filter: blur(8px);
 }
 
 .fm-select:focus {

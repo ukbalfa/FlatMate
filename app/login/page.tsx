@@ -35,9 +35,13 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(username)) {
       setError('Please enter a valid email address');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
       return;
     }
     try {
@@ -67,7 +71,35 @@ export default function LoginPage() {
       router.push('/dashboard');
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Unknown error');
-      setError(error.message || 'An error occurred');
+      let message = 'An error occurred';
+      const code = (err as { code?: string }).code;
+      if (code) {
+        switch (code) {
+          case 'auth/user-not-found':
+            message = 'No account found with this email';
+            break;
+          case 'auth/wrong-password':
+            message = 'Incorrect password';
+            break;
+          case 'auth/email-already-in-use':
+            message = 'An account already exists with this email';
+            break;
+          case 'auth/weak-password':
+            message = 'Password is too weak';
+            break;
+          case 'auth/invalid-email':
+            message = 'Invalid email address';
+            break;
+          case 'auth/operation-not-allowed':
+            message = 'Operation not allowed';
+            break;
+          default:
+            message = error.message || 'An error occurred';
+        }
+      } else {
+        message = error.message || 'An error occurred';
+      }
+      setError(message);
     }
   };
 

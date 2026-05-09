@@ -9,7 +9,7 @@ export default function FooterSection() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative py-16 px-6 lg:px-8 bg-heading dark:bg-dark-footer overflow-hidden">
+    <footer className="relative py-16 px-6 lg:px-8 bg-heading dark:bg-dark-footer">
       <div className="relative z-10 max-w-7xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
           <div>
@@ -85,11 +85,13 @@ export default function FooterSection() {
           </div>
         </div>
       </div>
-      {/* Watermark */}
-      <div className="w-full overflow-hidden leading-none pt-8 relative z-0">
-        <span className="block text-[clamp(80px,17vw,220px)] font-bold tracking-tighter uppercase text-white/[0.04] whitespace-nowrap select-none pointer-events-none font-space-grotesk leading-[0.85]">
-          FLATMATE
-        </span>
+      {/* Watermark - professional style */}
+      <div className="absolute bottom-0 left-0 right-0 h-40 overflow-visible pointer-events-none">
+        <div className="absolute inset-0 flex items-end justify-center">
+          <span className="text-[clamp(100px,22vw,280px)] font-bold text-white/[0.06] select-none whitespace-nowrap font-dm-sans tracking-[0.15em]">
+            flatmate
+          </span>
+        </div>
       </div>
     </footer>
   );

@@ -239,16 +239,16 @@ export default function RoommatesPage() {
     <div className="min-h-screen text-[#1C1400] dark:text-[#FFF5DC]">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 w-full gap-4">
-          <h2 className="text-xl font-bold text-[#1C1400] dark:text-[#FFF5DC]">Manage Roommates</h2>
+          <h2 className="text-xl font-bold text-[#1C1400] dark:text-[#FFF5DC]">{t('roommates.title')}</h2>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-[#9A7C4A] dark:text-gray-400">Sort by:</span>
+            <span className="text-sm text-[#9A7C4A] dark:text-gray-400">{t('roommates.sortBy')}:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'date' | 'name')}
               className="appearance-none bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] text-[#1C1400] dark:text-[#FFF5DC] text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block px-4 py-2 outline-none cursor-pointer hover:bg-[#FFF0CC] dark:hover:bg-[#2A1E00] transition-colors shadow-sm"
             >
-              <option value="date">Date Joined</option>
-              <option value="name">Alphabetical</option>
+              <option value="date">{t('roommates.dateJoined')}</option>
+              <option value="name">{t('roommates.alphabetical')}</option>
             </select>
           </div>
         </div>

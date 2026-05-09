@@ -109,7 +109,7 @@ describe('export utilities', () => {
       ];
       exportExpensesToCSV(expenses);
 
-      expect(capturedContent).toContain('Date,Category,Amount (UZS),Paid By,Note');
+      expect(capturedContent).toContain('Date,Category,Amount,Paid By,Note');
       expect(capturedContent).toContain('2025-06-01,Food,500,Bob,Lunch');
 
       global.Blob = OriginalBlob;

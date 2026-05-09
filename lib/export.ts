@@ -12,7 +12,7 @@ export function exportExpensesToCSV(expenses: Expense[], filename?: string): voi
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
-  const headers = ['Date', 'Category', 'Amount (UZS)', 'Paid By', 'Note'];
+  const headers = ['Date', 'Category', 'Amount', 'Paid By', 'Note'];
 
   const rows = sorted.map((expense) => [
     expense.date,

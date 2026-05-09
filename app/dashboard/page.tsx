@@ -250,15 +250,15 @@ useEffect(() => {
     <div className="min-h-screen">
       <div className="max-w-6xl mx-auto">
         {/* Welcome Header */}
-        <div className="mb-8">
+        <div className="mb-10 text-center sm:text-left">
           <motion.h1
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-3xl font-bold text-[#1C1400] dark:text-[#FFF5DC]"
+            className="text-4xl font-space-grotesk font-bold text-white tracking-tight"
           >
-            {t('dashboard.welcome')}, {userProfile?.name || userProfile?.username}!
+            {t('dashboard.welcome')}, <span className="text-transparent bg-clip-text bg-gradient-citrus">{userProfile?.name || userProfile?.username}</span>!
           </motion.h1>
-          <p className="text-[#9A7C4A] dark:text-gray-400 mt-2">
+          <p className="text-white/50 mt-3 font-dm-sans text-lg">
             {t('dashboard.monthlyOverview')}
           </p>
         </div>
@@ -293,27 +293,28 @@ useEffect(() => {
               key={stat.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              whileHover={{ scale: 1.02 }}
-              transition={{ delay: index * 0.1, duration: 0.2 }}
-              className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-5 hover:border-[#F97316] dark:hover:border-[#F97316] transition-colors cursor-pointer"
+              whileHover={{ scale: 1.02, y: -5 }}
+              transition={{ delay: index * 0.1, duration: 0.3 }}
+              className="bg-white/5 border border-white/10 rounded-[2rem] p-6 hover:border-white/30 transition-all cursor-pointer backdrop-blur-xl relative overflow-hidden group"
             >
-              <div className="flex items-start justify-between">
+              <div className={`absolute top-0 right-0 w-32 h-32 ${stat.color.replace('bg-', 'bg-').replace('-500', '-500/20')} rounded-full blur-3xl group-hover:scale-150 transition-transform duration-500`} />
+              <div className="flex items-start justify-between relative z-10">
                 <div>
-                  <p className="text-[#9A7C4A] dark:text-gray-400 text-sm">{stat.title}</p>
-                  <p className="text-2xl font-bold text-[#1C1400] dark:text-[#FFF5DC] mt-1">{stat.value}</p>
+                  <p className="text-white/50 text-sm font-dm-mono uppercase tracking-widest">{stat.title}</p>
+                  <p className="text-3xl font-bold text-white mt-2 font-space-grotesk">{stat.value}</p>
                   <p
-                    className={`text-sm mt-1 ${
-                      stat.alert ? 'text-red-400' : 'text-gray-500'
+                    className={`text-sm mt-2 font-dm-sans ${
+                      stat.alert ? 'text-red-400' : 'text-white/40'
                     }`}
                   >
                     {stat.subtitle}
                   </p>
                   {stat.trend && (
-                    <p className="text-xs text-[#F97316] mt-1">{stat.trend}</p>
+                    <p className="text-xs text-[#ccff00] mt-1 font-dm-mono">{stat.trend}</p>
                   )}
                 </div>
-                <div className={`${stat.color} p-2.5 rounded-lg`}>
-                  <stat.icon className="w-5 h-5 text-white" />
+                <div className={`${stat.color.replace('bg-', 'bg-').replace('-500', '-500')} p-3 rounded-2xl shadow-lg`}>
+                  <stat.icon className="w-6 h-6 text-white" />
                 </div>
               </div>
             </motion.div>
@@ -325,9 +326,10 @@ useEffect(() => {
           {/* Left Column - Quick Actions & Activity */}
           <div className="lg:col-span-2 space-y-6">
             {/* Quick Actions */}
-            <div className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-6">
-              <h2 className="text-lg font-semibold text-[#1C1400] dark:text-[#FFF5DC] mb-4">{t('dashboard.quickActions')}</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8 backdrop-blur-xl relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              <h2 className="text-xl font-bold text-white mb-6 font-space-grotesk">{t('dashboard.quickActions')}</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[
                   {
                     label: t('dashboard.addExpense'),
@@ -357,12 +359,12 @@ useEffect(() => {
                   <Link
                     key={action.label}
                     href={action.href}
-                    className="flex flex-col items-center gap-2 p-4 bg-[#FFF0CC] dark:bg-[#3D2E00] rounded-lg hover:bg-[#F0D89A] dark:hover:bg-[#4D3E10] transition-colors group"
+                    className="flex flex-col items-center gap-3 p-5 bg-black/40 rounded-2xl hover:bg-white/10 transition-all duration-300 group/action border border-white/5 hover:border-white/20 hover:scale-[1.02]"
                   >
-                    <div className={`${action.color} p-2.5 rounded-lg group-hover:scale-110 transition-transform`}>
-                      <action.icon className="w-5 h-5 text-white" />
+                    <div className={`${action.color} p-3 rounded-xl group-hover/action:scale-110 group-hover/action:rotate-3 transition-transform duration-300 shadow-lg`}>
+                      <action.icon className="w-6 h-6 text-white" />
                     </div>
-                    <span className="text-sm text-[#7C6A3A] dark:text-gray-300 group-hover:text-[#F97316] dark:group-hover:text-white transition-colors">
+                    <span className="text-sm font-dm-sans text-white/60 group-hover/action:text-white transition-colors text-center">
                       {action.label}
                     </span>
                   </Link>
@@ -371,24 +373,24 @@ useEffect(() => {
             </div>
 
             {/* Activity Feed */}
-            <div className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-[#1C1400] dark:text-[#FFF5DC] flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-[#F97316]" />
+            <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8 backdrop-blur-xl">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-white flex items-center gap-3 font-space-grotesk">
+                  <Activity className="w-6 h-6 text-[#F97316]" />
                   {t('dashboard.recentActivity')}
                 </h2>
                 <Link
                   href="/dashboard/expenses"
-                  className="text-sm text-[#F97316] hover:text-[#188a65] flex items-center gap-1"
+                  className="text-sm text-[#F97316] hover:text-[#EA6D0E] flex items-center gap-1 font-dm-mono uppercase tracking-widest"
                 >
                       {t('dashboard.viewAllExpenses')} <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
 
               {loading ? (
-                <div className="animate-pulse space-y-3">
+                <div className="animate-pulse space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-14 bg-[#FFF0CC] dark:bg-[#3D2E00] rounded-lg"></div>
+                    <div key={i} className="h-16 bg-white/5 rounded-2xl"></div>
                   ))}
                 </div>
               ) : activityFeed.length === 0 ? (
@@ -398,41 +400,41 @@ useEffect(() => {
                   description={t('dashboard.noActivityDesc')}
                 />
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {activityFeed.map((activity, index) => (
                     <motion.div
                       key={activity.id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="flex items-center gap-3 p-3 hover:bg-[#FFF0CC] dark:hover:bg-[#3D2E00] rounded-lg transition-colors"
+                      className="flex items-center gap-4 p-4 bg-black/20 hover:bg-white/5 border border-transparent hover:border-white/10 rounded-2xl transition-all duration-300 group"
                     >
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform ${
                           activity.type === 'expense'
-                            ? 'bg-[#F97316]/20 text-[#F97316]'
+                            ? 'bg-[#F97316]/20 text-[#F97316] border border-[#F97316]/30'
                             : activity.type === 'task'
-                            ? 'bg-blue-500/20 text-blue-500'
-                            : 'bg-amber-500/20 text-amber-500'
+                            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                            : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                         }`}
                       >
                         {activity.type === 'expense' ? (
-                          <Receipt className="w-5 h-5" />
+                          <Receipt className="w-6 h-6" />
                         ) : activity.type === 'task' ? (
-                          <CheckSquare className="w-5 h-5" />
+                          <CheckSquare className="w-6 h-6" />
                         ) : (
-                          <Sparkles className="w-5 h-5" />
+                          <Sparkles className="w-6 h-6" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[#1C1400] dark:text-[#FFF5DC] text-sm font-medium truncate">
+                        <p className="text-white text-sm font-bold font-space-grotesk truncate">
                           {activity.title}
                         </p>
-                        <p className="text-gray-500 text-xs truncate">
+                        <p className="text-white/50 text-sm font-dm-sans truncate mt-0.5">
                           {activity.description}
                         </p>
                       </div>
-                      <span className="text-xs text-gray-500 flex-shrink-0">
+                      <span className="text-xs text-white/30 font-dm-mono flex-shrink-0">
                         {formatTimeAgo(activity.timestamp)}
                       </span>
                     </motion.div>
@@ -445,16 +447,19 @@ useEffect(() => {
           {/* Right Column - Rent, Tasks & Cleaning */}
           <div className="space-y-6">
             {/* Rent Countdown */}
-            <RentCountdown />
+            <div className="bg-white/5 border border-white/10 rounded-[2rem] p-6 backdrop-blur-xl">
+               <RentCountdown />
+            </div>
 
             {/* My Tasks */}
-            <div className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-[#1C1400] dark:text-[#FFF5DC] flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-blue-500" />
+            <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8 backdrop-blur-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="flex items-center justify-between mb-6 relative z-10">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2 font-space-grotesk">
+                  <Clock className="w-5 h-5 text-blue-400" />
                   {t('dashboard.myTasks')}
                 </h2>
-                <span className="px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-medium">
+                <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold font-dm-mono">
                   {myTasks.length} {t('dashboard.pending')}
                 </span>
               </div>
@@ -466,7 +471,7 @@ useEffect(() => {
                   description={t('dashboard.noPendingTasks')}
                 />
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3 relative z-10">
                   {myTasks.slice(0, 5).map((task) => {
                     const daysUntil = Math.ceil(
                       (new Date(task.dueDate).getTime() - new Date().getTime()) /
@@ -479,19 +484,19 @@ useEffect(() => {
                       <Link
                         key={task.id}
                         href="/dashboard/tasks"
-                        className="block p-3 bg-[#FFF0CC] dark:bg-[#3D2E00] rounded-lg hover:bg-[#F0D89A] dark:hover:bg-[#4D3E10] transition-colors"
+                        className="block p-4 bg-black/40 border border-white/5 rounded-2xl hover:bg-white/10 hover:border-white/20 transition-all"
                       >
-                        <p className="text-[#1C1400] dark:text-[#FFF5DC] text-sm font-medium line-clamp-2">
+                        <p className="text-white text-sm font-bold font-dm-sans line-clamp-2">
                           {task.text}
                         </p>
-                        <div className="flex items-center justify-between mt-2">
+                        <div className="flex items-center justify-between mt-3">
                           <span
-                            className={`text-xs px-2 py-0.5 rounded-full ${
+                            className={`text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-full font-dm-mono ${
                               isOverdue
-                                ? 'bg-red-500/20 text-red-400'
+                                ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                                 : isToday
-                                ? 'bg-amber-500/20 text-amber-400'
-                                : 'bg-blue-500/20 text-blue-400'
+                                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                             }`}
                           >
                             {isOverdue
@@ -500,7 +505,7 @@ useEffect(() => {
                               ? t('dashboard.today')
                               : `${daysUntil} ${t('dashboard.days')}`}
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-white/30 font-dm-mono">
                             {task.dueDate}
                           </span>
                         </div>
@@ -510,7 +515,7 @@ useEffect(() => {
                   {myTasks.length > 5 && (
                     <Link
                       href="/dashboard/tasks"
-                      className="block text-center text-sm text-[#F97316] hover:text-[#188a65] py-2"
+                      className="block text-center text-sm font-bold text-blue-400 hover:text-blue-300 py-3 mt-2 font-dm-sans"
                     >
                       {t('dashboard.viewMore')} {myTasks.length - 5} {t('dashboard.more')} {t('dashboard.tasks')} →
                     </Link>
@@ -520,13 +525,14 @@ useEffect(() => {
             </div>
 
             {/* My Cleaning Schedule */}
-            <div className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-[#1C1400] dark:text-[#FFF5DC] flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-amber-500" />
+            <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8 backdrop-blur-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="flex items-center justify-between mb-6 relative z-10">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2 font-space-grotesk">
+                  <Sparkles className="w-5 h-5 text-amber-400" />
                   {t('dashboard.cleaning')}
                 </h2>
-                <span className="px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-medium">
+                <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold font-dm-mono">
                   {myCleaning.length} {t('dashboard.tasks')}
                 </span>
               </div>
@@ -538,27 +544,27 @@ useEffect(() => {
                   description={t('dashboard.noCleaningDesc')}
                 />
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3 relative z-10">
                   {myCleaning.map((task) => (
                     <Link
                       key={task.id}
                       href="/dashboard/cleaning"
-                      className="block p-3 bg-[#FFF0CC] dark:bg-[#3D2E00] rounded-lg hover:bg-[#F0D89A] dark:hover:bg-[#4D3E10] transition-colors"
+                      className="block p-4 bg-black/40 border border-white/5 rounded-2xl hover:bg-white/10 hover:border-white/20 transition-all"
                     >
-                      <p className="text-[#1C1400] dark:text-[#FFF5DC] text-sm font-medium">{task.task}</p>
-                      <div className="flex items-center justify-between mt-2">
+                      <p className="text-white text-sm font-bold font-dm-sans">{task.task}</p>
+                      <div className="flex items-center justify-between mt-3">
                         <span
-                          className={`text-xs px-2 py-0.5 rounded-full ${
+                          className={`text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-full font-dm-mono ${
                             task.dayOfWeek === today
-                              ? 'bg-amber-500/20 text-amber-400'
-                              : 'bg-[#FFF0CC] dark:bg-[#3D2E00] text-[#9A7C4A] dark:text-gray-400'
+                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                              : 'bg-white/5 text-white/50 border border-white/10'
                           }`}
                         >
                           {task.dayOfWeek === today ? t('dashboard.today') : t('cleaning.day.' + task.dayOfWeek)}
                         </span>
                         <span
-                          className={`text-xs ${
-                            task.done ? 'text-green-400' : 'text-gray-500'
+                          className={`text-xs font-bold font-dm-sans ${
+                            task.done ? 'text-green-400' : 'text-white/30'
                           }`}
                         >
                           {task.done ? t('common.done') : t('dashboard.pending')}
@@ -571,50 +577,53 @@ useEffect(() => {
             </div>
 
             {/* Monthly Summary */}
-            <div className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-6">
-              <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-purple-500" />
+            <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8 backdrop-blur-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+              <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2 font-space-grotesk relative z-10">
+                <TrendingUp className="w-5 h-5 text-purple-400" />
                 {t('dashboard.monthlyOverview')}
               </h2>
-              <div className="space-y-4">
+              <div className="space-y-5 relative z-10">
                 <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-[#9A7C4A] dark:text-gray-400">{t('dashboard.yourContribution')}</span>
-                    <span className="text-[#1C1400] dark:text-[#FFF5DC]">
+                  <div className="flex justify-between text-sm mb-2 font-dm-sans">
+                    <span className="text-white/50">{t('dashboard.yourContribution')}</span>
+                    <span className="text-white font-bold">
                       {((myMonthExpenses / (totalMonthExpenses || 1)) * 100).toFixed(
                         0
                       )}
                       %
                     </span>
                   </div>
-                  <div className="h-2 bg-[#FFF0CC] dark:bg-[#3D2E00] rounded-full overflow-hidden">
+                  <div className="h-3 bg-black/40 rounded-full overflow-hidden border border-white/5">
                     <div
-                      className="h-full bg-[#F97316] rounded-full transition-all duration-500"
+                      className="h-full bg-gradient-citrus rounded-full transition-all duration-1000 relative"
                       style={{
                         width: `${Math.min(
                           (myMonthExpenses / (totalMonthExpenses || 1)) * 100,
                           100
                         )}%`,
                       }}
-                    />
+                    >
+                      <div className="absolute inset-0 bg-white/20 w-1/2 rounded-full blur-sm" />
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-[10px] text-white/30 mt-2 font-dm-mono tracking-widest uppercase">
                     {myMonthExpenses.toLocaleString()} of{' '}
                     {totalMonthExpenses.toLocaleString()} UZS
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-[#F0D89A] dark:border-[#3D2E00]">
+                <div className="pt-5 border-t border-white/10">
                   <Link
                     href="/dashboard/expenses"
-                    className="flex items-center justify-between text-sm text-[#9A7C4A] dark:text-gray-400 hover:text-[#F97316] dark:hover:text-white transition-colors"
+                    className="flex items-center justify-between text-sm font-bold text-white/50 hover:text-white transition-colors py-2"
                   >
                     <span>{t('dashboard.viewAllExpenses')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
                     href="/dashboard/balances"
-                    className="flex items-center justify-between text-sm text-gray-400 hover:text-white transition-colors mt-3"
+                    className="flex items-center justify-between text-sm font-bold text-white/50 hover:text-white transition-colors py-2"
                   >
                     <span>{t('dashboard.checkBalances')}</span>
                     <ArrowRight className="w-4 h-4" />
