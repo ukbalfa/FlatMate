@@ -51,15 +51,15 @@
 
 | 🏠 &nbsp;**Dashboard** | 💸 &nbsp;**Expenses** | 🧹 &nbsp;**Cleaning** |
 |:---|:---|:---|
-| Rent countdown, monthly spend overview, live exchange rate ticker, pinned announcements, and real-time activity feed. | Add, categorise, and split shared costs. **Recurring expenses** auto-generate monthly. Real-time summaries keep everyone in the loop. | Admin-curated weekly chore list. Any roommate can mark tasks complete — auto-resets each week. |
+| Real-time metrics, rent countdown, monthly spend overview, live exchange rate ticker, pinned announcements, and activity feed. Modern dark bento grid UI with glassmorphic cards. | Add, categorise, and split shared costs. **Recurring expenses** auto-generate monthly. Real-time summaries keep everyone in the loop. | Admin-curated weekly chore list. Any roommate can mark tasks complete — auto-resets each week. |
 
 | ✅ &nbsp;**Tasks** | 👥 &nbsp;**Roommates** | 💱 &nbsp;**Rates** |
 |:---|:---|:---|
 | Shared to-do list with due dates, assignees, and smart **Upcoming / Today / Overdue** badges. | Profile cards with Telegram & Instagram links. Admins can create, edit, and remove accounts. | Live USD / UZS / EUR rates from `open.er-api.com`, refreshed every 10 minutes with a built-in converter. |
 
-| ⚖️ &nbsp;**Balances** | 🌙 &nbsp;**Dark Mode** | 📱 &nbsp;**Responsive** |
+| ⚖️ &nbsp;**Balances** | 🎨 &nbsp;**Modern UI** | 📱 &nbsp;**Responsive** |
 |:---|:---|:---|
-| Crystal-clear overview of who owes what across all shared expenses. | Full light/dark theme support via `next-themes`. Persisted across sessions. | Desktop sidebar + mobile hamburger menu — works great on every screen size. |
+| Crystal-clear overview of who owes what across all shared expenses. | **Bold dark aesthetic** with citrus accents (#F97316), glassmorphic glass cards, smooth animations, and glowing depth effects. | Desktop sidebar + mobile hamburger menu — works great on every screen size. |
 
 | 📢 &nbsp;**Announcements** | 🌐 &nbsp;**i18n** | ♿ &nbsp;**Accessibility** |
 |:---|:---|:---|
