@@ -150,6 +150,15 @@ export interface Flat {
 }
 
 // ---------------------------------------------------------------------------
+// Flat document (Firestore, created during onboarding / bootstrap)
+// ---------------------------------------------------------------------------
+export interface FlatDoc {
+  createdBy: string;
+  createdAt: string;
+  members: string[];
+}
+
+// ---------------------------------------------------------------------------
 // Activity Item (dashboard home page)
 // ---------------------------------------------------------------------------
 export interface ActivityItem {
