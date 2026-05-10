@@ -280,7 +280,7 @@ export default function LoginPage() {
                 onClick={() => handleTabChange('signin')}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
                   activeTab === 'signin'
-                    ? 'bg-white dark:bg-gray-600 text-[#0a0a0a] dark:text-gray-100 shadow-sm'
+                    ? 'bg-[#F97316] text-white shadow-sm'
                     : 'text-[#6b7280] dark:text-gray-400 hover:text-[#0a0a0a] dark:hover:text-gray-100'
                 }`}
               >
@@ -290,7 +290,7 @@ export default function LoginPage() {
                 onClick={() => handleTabChange('signup')}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
                   activeTab === 'signup'
-                    ? 'bg-white dark:bg-gray-600 text-[#0a0a0a] dark:text-gray-100 shadow-sm'
+                    ? 'bg-[#F97316] text-white shadow-sm'
                     : 'text-[#6b7280] dark:text-gray-400 hover:text-[#0a0a0a] dark:hover:text-gray-100'
                 }`}
               >
