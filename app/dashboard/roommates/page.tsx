@@ -70,7 +70,7 @@ function formatMonth(val: unknown): string {
 
 export default function RoommatesPage() {
   const { t } = useI18n();
-  const { userProfile, setShowFlatModal } = useAuth();
+  const { userProfile } = useAuth();
   const isAdmin = userProfile?.role === 'admin';
   const [users, setUsers] = useState<Roommate[]>([]);
   const [name, setName] = useState('');
