@@ -30,6 +30,7 @@ import { Spinner } from "../../components/Spinner";
 import { SkeletonList } from "../../components/Skeleton";
 import { EmptyState } from "../../components/EmptyState";
 import { toast } from "sonner";
+import { Avatar } from "../../components/Avatar";
 import { useAuth } from "../../../context/AuthContext";
 import { useI18n } from "../../../context/I18nContext";
 import { logError } from "../../../lib/errorLogger";
@@ -112,7 +113,7 @@ export default function ExpensesPage() {
     };
 
     fetchRoommates();
-  }, [userProfile?.flatId, userProfile?.uid, t]);
+  }, [userProfile, t]);
 
   // Load budget limits from Firestore
   useEffect(() => {
@@ -142,7 +143,7 @@ export default function ExpensesPage() {
     };
 
     fetchBudgets();
-  }, [userProfile?.flatId, t]);
+  }, [userProfile, t]);
 
   const isAdmin = userProfile?.role === "admin";
 
@@ -152,6 +153,7 @@ export default function ExpensesPage() {
     
     const q = query(
       collection(db, "expenses"),
+      where("flatId", "==", userProfile?.flatId),
       orderBy("date", "desc"),
       limit(limitCount)
     );
@@ -178,6 +180,7 @@ export default function ExpensesPage() {
     try {
       const q = query(
         collection(db, "recurringExpenses"),
+        where("flatId", "==", userProfile?.flatId),
         orderBy("createdAt", "desc"),
         limit(200)
       );
@@ -191,8 +194,10 @@ export default function ExpensesPage() {
   };
 
   useEffect(() => {
+    if (!userProfile?.flatId) return;
     loadRecurringExpenses();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userProfile]);
 
   // Prepare data for analytics
   const monthlyData = Array.from({ length: 12 }, (_, i) => {
@@ -430,11 +435,12 @@ export default function ExpensesPage() {
                   {splitWith.length > 0 ? (
                     <div className="flex -space-x-1">
                       {splitWith.map((user) => (
-                        <img
+                        <Avatar
                           key={user.id}
                           src={user.avatar}
-                          alt={user.name}
-                          className="w-6 h-6 rounded-full border-2 border-white"
+                          name={user.name}
+                          size={1.5}
+                          className="border-2 border-white"
                         />
                       ))}
                     </div>

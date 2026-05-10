@@ -6,6 +6,31 @@ import { auth, db } from '../lib/firebase';
 import { logError } from '../lib/errorLogger';
 import type { UserProfile } from '../lib/types';
 
+const PROFILE_STORAGE_KEY = 'user';
+
+function getCachedProfile(): UserProfile | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const cached = localStorage.getItem(PROFILE_STORAGE_KEY);
+    return cached ? (JSON.parse(cached) as UserProfile) : null;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedProfile(profile: UserProfile | null) {
+  if (typeof window === 'undefined') return;
+  try {
+    if (profile) {
+      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+    } else {
+      localStorage.removeItem(PROFILE_STORAGE_KEY);
+    }
+  } catch {
+    // localStorage may be unavailable
+  }
+}
+
 interface AuthContextType {
   user: FirebaseUser | null;
   userProfile: UserProfile | null;
@@ -28,8 +53,8 @@ export function useAuth() {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(getCachedProfile);
+  const [loading, setLoading] = useState(!getCachedProfile());
   const [showFlatModal, setShowFlatModal] = useState(false);
 
   useEffect(() => {
@@ -39,17 +64,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const docRef = doc(db, 'users', firebaseUser.uid);
           const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            setUserProfile({ uid: firebaseUser.uid, ...docSnap.data() } as UserProfile);
-          } else {
-            setUserProfile({ uid: firebaseUser.uid, username: firebaseUser.email || 'Unknown' });
-          }
+          const profile = docSnap.exists()
+            ? ({ uid: firebaseUser.uid, ...docSnap.data() } as UserProfile)
+            : { uid: firebaseUser.uid, username: firebaseUser.email || 'Unknown' };
+          setUserProfile(profile);
+          setCachedProfile(profile);
         } catch (error) {
           logError(error, 'AuthContext');
-          setUserProfile({ uid: firebaseUser.uid, username: firebaseUser.email || 'Unknown' });
+          const fallback = { uid: firebaseUser.uid, username: firebaseUser.email || 'Unknown' };
+          setUserProfile(fallback);
+          setCachedProfile(fallback);
         }
       } else {
         setUserProfile(null);
+        setCachedProfile(null);
       }
       setLoading(false);
     });

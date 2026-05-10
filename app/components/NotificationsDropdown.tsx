@@ -7,6 +7,7 @@ import type { Notification } from '../../lib/types';
 import { useI18n } from '../../context/I18nContext';
 import { useRouter } from 'next/navigation';
 import { formatTimeAgo } from '../../lib/utils';
+import { logError } from '../../lib/errorLogger';
 import ConfirmModal from './ConfirmModal';
 
 const typeIcons = {
@@ -45,15 +46,17 @@ export default function NotificationsDropdown() {
   }, []);
 
   const handleNotificationClick = async (notification: Notification) => {
-    if (!notification.read) {
-      await markAsRead(notification.id);
+    try {
+      if (!notification.read) {
+        await markAsRead(notification.id);
+      }
+      if (notification.link) {
+        router.push(notification.link);
+      }
+      setIsOpen(false);
+    } catch (error) {
+      logError(error, 'Notifications.handleClick');
     }
-    
-    if (notification.link) {
-      router.push(notification.link);
-    }
-    
-    setIsOpen(false);
   };
 
   return (

@@ -29,7 +29,6 @@ export default function RatesPage() {
   useEffect(() => {
     const fetchRates = async () => {
       // In a real app, fetch from different APIs based on source
-      console.log(`Fetching ${source} rates...`);
       // Simulate API delay
       const timer = setTimeout(() => {
         setRates({
@@ -44,8 +43,7 @@ export default function RatesPage() {
     fetchRates();
   }, [source]);
 
-  const handleConvert = (from: string, to: string, amount: number) => {
-    console.log(`Converting ${amount} ${from} to ${to}`);
+  const handleConvert = (_from: string, _to: string, _amount: number) => {
     // In a real app, perform the conversion and update state
   };
 

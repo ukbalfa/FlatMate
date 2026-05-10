@@ -153,7 +153,7 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.color.blue': 'Blue',
     'settings.color.amber': 'Amber',
     'settings.color.purple': 'Purple',
-    'settings.color.teal': 'Teal',
+    'settings.color.teal': 'Orange',
     'settings.color.rose': 'Rose',
     'settings.toast.profileLoadFailed': 'Failed to load profile',
     'settings.toast.profileUpdated': 'Profile updated successfully',

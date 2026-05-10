@@ -96,6 +96,7 @@ export interface Settlement {
   note?: string;
   status: "pending" | "completed";
   createdAt: string;
+  flatId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -108,6 +109,7 @@ export interface CleaningTask {
   dayOfWeek: string;
   weekStart: string;
   done: boolean;
+  flatId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -120,6 +122,7 @@ export interface Task {
   assignedTo: string;
   dueDate: string;
   createdBy: string;
+  flatId?: string;
 }
 
 // ---------------------------------------------------------------------------

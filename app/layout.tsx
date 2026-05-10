@@ -1,4 +1,4 @@
-import { Sora, DM_Sans, DM_Mono, Bebas_Neue, Space_Grotesk, Syne, Cormorant_Garamond } from "next/font/google";
+import { Sora, DM_Sans, DM_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import ClientThemeProvider from "../components/ClientThemeProvider";
@@ -25,31 +25,10 @@ const dmMono = DM_Mono({
   display: 'swap',
 });
 
-const bebasNeue = Bebas_Neue({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-bebas",
-  display: 'swap',
-});
-
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   weight: ["700"],
   variable: "--font-space-grotesk",
-  display: 'swap',
-});
-
-const syne = Syne({
-  subsets: ["latin"],
-  weight: ["800"],
-  variable: "--font-syne",
-  display: 'swap',
-});
-
-const cormorantGaramond = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["700"],
-  variable: "--font-cormorant-garamond",
   display: 'swap',
 });
 
@@ -166,7 +145,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Preload critical assets */}
         <link rel="preload" href="/assets/noise.svg" as="image" />
       </head>
-      <body className={`${sora.variable} ${dmSans.variable} ${dmMono.variable} ${bebasNeue.variable} ${spaceGrotesk.variable} ${syne.variable} ${cormorantGaramond.variable} font-sans`} suppressHydrationWarning>
+      <body className={`${sora.variable} ${dmSans.variable} ${dmMono.variable} ${spaceGrotesk.variable} font-sans`} suppressHydrationWarning>
         <ClientThemeProvider>
           <LangSync />
           <Providers>{children}</Providers>

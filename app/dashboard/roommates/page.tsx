@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth, db } from '../../../lib/firebase';
-import { collection, getDocs, updateDoc, doc, setDoc, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, doc, setDoc, query, orderBy, where } from 'firebase/firestore';
 import { Plus, Phone, ExternalLink, X, Edit2, Send, Trash2, Copy } from 'lucide-react';
 import { SkeletonCard } from '../../components/Skeleton';
 import { toast } from 'sonner';
@@ -20,7 +20,7 @@ const COLORS = [
   { name: 'Blue', value: 'blue', class: 'bg-blue-500' },
   { name: 'Amber', value: 'amber', class: 'bg-amber-400' },
   { name: 'Purple', value: 'purple', class: 'bg-purple-500' },
-  { name: 'Teal', value: 'teal', class: 'bg-[#F97316]' },
+  { name: 'Orange', value: 'teal', class: 'bg-[#F97316]' },
   { name: 'Rose', value: 'rose', class: 'bg-rose-500' },
 ];
 
@@ -90,16 +90,21 @@ export default function RoommatesPage() {
   const [roommateToDelete, setRoommateToDelete] = useState<Roommate | null>(null);
 
   const fetchUsers = async () => {
-    const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
+    if (!userProfile?.flatId) return;
+    const snap = await getDocs(query(collection(db, 'users'), where('flatId', '==', userProfile.flatId), orderBy('createdAt', 'desc')));
     setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Roommate)));
   };
 
   useEffect(() => {
+    if (!userProfile?.flatId) {
+      setLoading(false);
+      return;
+    }
     let mounted = true;
     const run = async () => {
       setLoading(true);
       try {
-        const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
+        const snap = await getDocs(query(collection(db, 'users'), where('flatId', '==', userProfile!.flatId), orderBy('createdAt', 'desc')));
         if (!mounted) return;
         setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Roommate)));
       } catch (error) {
@@ -114,7 +119,8 @@ export default function RoommatesPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userProfile?.flatId]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,6 +146,7 @@ export default function RoommatesPage() {
         telegram: sanitizeSocialHandle(telegram),
         instagram: sanitizeSocialHandle(instagram),
         joinedAt: new Date().toISOString(),
+        flatId: userProfile?.flatId,
       });
       setName(''); setSurname(''); setUsername(''); setPassword('');
       setColor('blue'); setOccupation(''); setPhone(''); setTelegram(''); setInstagram('');

@@ -33,10 +33,11 @@ export default function CleaningPage() {
   const weekStart = getMonday(new Date());
 
   useEffect(() => {
+    if (!userProfile?.flatId) return;
     let mounted = true;
     const loadUsers = async () => {
       try {
-        const snap = await getDocs(collection(db, 'users'));
+        const snap = await getDocs(query(collection(db, 'users'), where('flatId', '==', userProfile!.flatId)));
         if (!mounted) return;
         setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Roommate)));
       } catch (error) {
@@ -49,10 +50,12 @@ export default function CleaningPage() {
     return () => {
       mounted = false;
     };
-  }, [t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userProfile?.flatId, t]);
 
   useEffect(() => {
-    const q = query(collection(db, 'cleaning'), where('weekStart', '==', weekStart));
+    if (!userProfile?.flatId) return;
+    const q = query(collection(db, 'cleaning'), where('flatId', '==', userProfile.flatId), where('weekStart', '==', weekStart));
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
@@ -68,13 +71,13 @@ export default function CleaningPage() {
     );
     
     return () => unsubscribe();
-  }, [weekStart, t]);
+  }, [userProfile?.flatId, weekStart, t]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!task || !dayOfWeek || !assignedTo) return;
     try {
-      await addDoc(collection(db, 'cleaning'), { task, assignedTo, dayOfWeek, weekStart, done: false });
+      await addDoc(collection(db, 'cleaning'), { task, assignedTo, dayOfWeek, weekStart, done: false, flatId: userProfile?.flatId });
       setTask('');
       setDayOfWeek('Monday');
       setAssignedTo('');

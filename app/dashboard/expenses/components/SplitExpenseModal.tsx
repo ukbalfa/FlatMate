@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Users, X } from "lucide-react";
+import { Avatar } from "../../../components/Avatar";
 import type { SplitMember } from "../../../../lib/types";
 
 interface SplitExpenseModalProps {
@@ -82,10 +83,10 @@ export const SplitExpenseModal = (
                   selectedRoommates.some((r) => r.id === roommate.id) ? "bg-white/10" : ""
                 }`}
               >
-                <img
+                <Avatar
                   src={roommate.avatar}
-                  alt={roommate.name}
-                  className="w-10 h-10 rounded-full"
+                  name={roommate.name}
+                  size={2.5}
                 />
                 <div className="flex-1">
                   <p className="text-white font-medium">{roommate.name}</p>

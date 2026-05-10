@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '../../../lib/firebase';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, limit } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, limit, where } from 'firebase/firestore';
 import { Trash2 } from 'lucide-react';
 import { Spinner } from '../../components/Spinner';
 import { SkeletonList } from '../../components/Skeleton';
@@ -40,19 +40,21 @@ export default function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
 
-  const fetchUsers = async () => {
-    try {
-      const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
-      setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Roommate)));
-    } catch (error) {
-      logError(error, 'Tasks.fetchUsers');
-      toast.error(t('tasks.toast.loadUsersFailed'));
-    }
-  };
-
   useEffect(() => {
+    if (!userProfile?.flatId) return;
+
+    const loadUsers = async () => {
+      try {
+        const snap = await getDocs(query(collection(db, 'users'), where('flatId', '==', userProfile!.flatId), orderBy('createdAt', 'desc')));
+        setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Roommate)));
+      } catch (error) {
+        logError(error, 'Tasks.fetchUsers');
+        toast.error(t('tasks.toast.loadUsersFailed'));
+      }
+    };
+
     let mounted = true;
-    const q = query(collection(db, 'tasks'), orderBy('dueDate'), limit(100));
+    const q = query(collection(db, 'tasks'), where('flatId', '==', userProfile.flatId), orderBy('dueDate'), limit(100));
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
@@ -69,14 +71,14 @@ export default function TasksPage() {
       }
     );
     
-    fetchUsers();
+    loadUsers();
     
     return () => {
       mounted = false;
       unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [userProfile?.flatId]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,6 +92,7 @@ export default function TasksPage() {
         dueDate,
         createdBy: userProfile?.username || '',
         createdAt: new Date().toISOString(),
+        flatId: userProfile?.flatId,
       });
       setText('');
       setDueDate('');

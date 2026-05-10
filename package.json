@@ -10,13 +10,11 @@
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
-    "@mantine/core": "^9.1.1",
     "firebase": "^12.11.0",
     "firebase-admin": "^13.7.0",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.14.0",
     "next": "16.2.2",
-    "next-themes": "^0.4.6",
     "react": "19.2.4",
     "react-circular-progressbar": "^2.2.0",
     "react-dom": "19.2.4",

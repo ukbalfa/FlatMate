@@ -23,6 +23,7 @@ import NotificationsDropdown from '../components/NotificationsDropdown';
 import { useI18n } from '../../context/I18nContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { logError } from '../../lib/errorLogger';
 import FlatConnectionModal from '../components/FlatConnectionModal';
 
 const navLinks = [
@@ -183,8 +184,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [loading, user, userProfile?.flatId, setShowFlatModal]);
 
   const handleLogout = async () => {
-    await signOut(auth);
-    router.replace("/login");
+    try {
+      await signOut(auth);
+      router.replace("/login");
+    } catch (error) {
+      logError(error, 'Layout.logout');
+    }
   };
 
   const dashboardUser = mapToDashboardUser(userProfile);

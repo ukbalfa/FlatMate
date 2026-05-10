@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Trash2, Repeat, Paperclip } from "lucide-react";
+import { Avatar } from "../../../components/Avatar";
 import type { Expense, SplitMember } from "../../../../lib/types";
 
 interface ExpenseCardProps {
@@ -43,6 +44,7 @@ export const ExpenseCard = ({ expense, onDelete, isAdmin }: ExpenseCardProps) =>
 
     {expense.receiptUrl && (
       <div className="mt-3 relative">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={expense.receiptUrl}
           alt="Receipt"
@@ -55,12 +57,12 @@ export const ExpenseCard = ({ expense, onDelete, isAdmin }: ExpenseCardProps) =>
     {expense.splitWith && expense.splitWith.length > 0 && (
       <div className="mt-3 flex -space-x-2">
         {expense.splitWith.map((user: SplitMember) => (
-          <img
+          <Avatar
             key={user.id}
             src={user.avatar}
-            alt={user.name}
-            className="w-8 h-8 rounded-full border-2 border-white/20"
-            title={user.name}
+            name={user.name}
+            size={2}
+            className="border-2 border-white/20"
           />
         ))}
       </div>

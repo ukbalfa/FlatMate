@@ -48,6 +48,11 @@ export default function DashboardPage() {
   });
 
 useEffect(() => {
+    if (!userProfile?.flatId) {
+      setLoading(false);
+      return;
+    }
+
     const weekStart = getMonday(new Date());
     const unsubs: (() => void)[] = [];
     let loadedCount = 0;
@@ -63,7 +68,7 @@ useEffect(() => {
 
     // Expenses
     const expUnsub = onSnapshot(
-      query(collection(db, 'expenses'), orderBy('date', 'desc'), limit(50)),
+      query(collection(db, 'expenses'), where('flatId', '==', userProfile.flatId), orderBy('date', 'desc'), limit(50)),
       (snap) => {
         setExpenses(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Expense)));
         checkAllLoaded();
@@ -73,7 +78,7 @@ useEffect(() => {
 
     // Tasks
     const taskUnsub = onSnapshot(
-      query(collection(db, 'tasks'), orderBy('dueDate'), limit(100)),
+      query(collection(db, 'tasks'), where('flatId', '==', userProfile.flatId), orderBy('dueDate'), limit(100)),
       (snap) => {
         setTasks(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Task)));
         checkAllLoaded();
@@ -83,7 +88,7 @@ useEffect(() => {
 
     // Cleaning (current week)
     const cleanUnsub = onSnapshot(
-      query(collection(db, 'cleaning'), where('weekStart', '==', weekStart)),
+      query(collection(db, 'cleaning'), where('flatId', '==', userProfile.flatId), where('weekStart', '==', weekStart)),
       (snap) => {
         setCleaningTasks(snap.docs.map((d) => ({ id: d.id, ...d.data() } as CleaningTask)));
         checkAllLoaded();
@@ -93,7 +98,7 @@ useEffect(() => {
 
     // Users
     const usersUnsub = onSnapshot(
-      query(collection(db, 'users'), orderBy('createdAt', 'desc')),
+      query(collection(db, 'users'), where('flatId', '==', userProfile.flatId), orderBy('createdAt', 'desc')),
       (snap) => {
         setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Roommate)));
         checkAllLoaded();
@@ -104,7 +109,7 @@ useEffect(() => {
     return () => {
       unsubs.forEach((unsub) => unsub());
     };
-  }, []);
+  }, [userProfile?.flatId]);
 
   // Activity feed (derived from expenses + tasks, re-computes when they change)
   const activityFeed = useMemo(() => {

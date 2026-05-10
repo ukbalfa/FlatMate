@@ -58,10 +58,11 @@ export default function BalancesPage() {
   const [submittingSettlement, setSubmittingSettlement] = useState(false);
 
   const loadData = useCallback(async () => {
+    if (!userProfile?.flatId) return;
     setLoading(true);
     try {
       // Load users
-       const usersSnap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
+       const usersSnap = await getDocs(query(collection(db, 'users'), where('flatId', '==', userProfile.flatId), orderBy('createdAt', 'desc')));
       setUsers(
         usersSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Roommate))
       );
@@ -69,6 +70,7 @@ export default function BalancesPage() {
       // Load expenses for selected month
        const expensesQuery = query(
          collection(db, 'expenses'),
+         where('flatId', '==', userProfile.flatId),
          where('date', '>=', `${selectedMonth}-01`),
          where('date', '<=', `${selectedMonth}-31`),
          orderBy('date', 'desc'),
@@ -82,6 +84,7 @@ export default function BalancesPage() {
       // Load settlements
        const settlementsQuery = query(
          collection(db, 'settlements'),
+         where('flatId', '==', userProfile.flatId),
          where('date', '>=', `${selectedMonth}-01`),
          where('date', '<=', `${selectedMonth}-31`),
          orderBy('date', 'desc'),
@@ -97,7 +100,7 @@ export default function BalancesPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedMonth, t]);
+  }, [userProfile?.flatId, selectedMonth, t]);
 
   useEffect(() => {
     loadData();
@@ -123,6 +126,7 @@ export default function BalancesPage() {
         note: settlementForm.note,
         status: 'completed',
         createdAt: new Date().toISOString(),
+        flatId: userProfile?.flatId,
       });
       toast.success(t('balances.toast.paymentRecorded'));
 
