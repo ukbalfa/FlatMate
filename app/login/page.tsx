@@ -3,14 +3,13 @@ import { useI18n } from '../../context/I18nContext';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
   signInWithCustomToken,
   GoogleAuthProvider,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, collection, getDocs, limit as fsLimit, query } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import { motion } from 'framer-motion';
 import { Check, Eye, EyeOff } from 'lucide-react';
@@ -133,6 +132,23 @@ export default function LoginPage() {
     script.setAttribute('data-onauth', 'onTelegramAuth(user)');
     script.setAttribute('data-request-access', 'write');
     document.body.appendChild(script);
+
+    // Reset loading state after 30s in case user closes the Telegram popup
+    setTimeout(() => setIsLoading(false), 30000);
+
+    // Try to hide the Telegram widget auto-generated button
+    // so our custom button is the only one visible
+    const widgetCheck = setInterval(() => {
+      const iframe = document.querySelector('iframe[src*="telegram.org"]');
+      if (iframe && iframe.parentElement) {
+        clearInterval(widgetCheck);
+        iframe.parentElement.style.height = '0';
+        iframe.parentElement.style.overflow = 'hidden';
+      }
+    }, 200);
+
+    // Stop checking after 10 seconds
+    setTimeout(() => clearInterval(widgetCheck), 10000);
   };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
