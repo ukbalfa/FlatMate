@@ -1,21 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import admin from 'firebase-admin';
 import crypto from 'crypto';
+import { getAdminApp } from '../../../lib/firebase-admin';
 
-function getAdminApp(): admin.app.App {
-  if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      }),
-    });
-  }
-  return admin.app();
-}
-
-function verifyTelegramHash(data: Record<string, string>, botToken: string): boolean {
+function verifyTelegramHash(data: Record<string, string | undefined>, botToken: string): boolean {
   const { hash, ...fields } = data;
   const sorted = Object.keys(fields)
     .filter((k) => fields[k] != null)
@@ -29,6 +17,11 @@ function verifyTelegramHash(data: Record<string, string>, botToken: string): boo
 
 export async function POST(request: NextRequest) {
   try {
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    if (!botToken) {
+      return NextResponse.json({ error: 'Telegram bot not configured' }, { status: 500 });
+    }
+
     const body = await request.json();
     const { id, first_name, last_name, username, photo_url, auth_date, hash } = body;
 
@@ -40,15 +33,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid auth_date' }, { status: 400 });
     }
 
+    if (Number(auth_date) > Math.floor(Date.now() / 1000)) {
+      return NextResponse.json({ error: 'Auth date is in the future' }, { status: 400 });
+    }
+
     // Replay protection: auth_date must be within 5 minutes
     const now = Math.floor(Date.now() / 1000);
     if (now - Number(auth_date) > 300) {
       return NextResponse.json({ error: 'Auth data expired' }, { status: 400 });
-    }
-
-    const botToken = process.env.TELEGRAM_BOT_TOKEN;
-    if (!botToken) {
-      return NextResponse.json({ error: 'Telegram bot not configured' }, { status: 500 });
     }
 
     if (!verifyTelegramHash({ id, first_name, last_name, username, photo_url, auth_date, hash }, botToken)) {

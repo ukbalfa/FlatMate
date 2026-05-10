@@ -3,6 +3,7 @@
 import admin from 'firebase-admin';
 import type { DecodedIdToken } from 'firebase-admin/auth';
 import { revalidatePath } from 'next/cache';
+import { getAdminApp } from '../../lib/firebase-admin';
 
 interface DeleteRoommateResult {
   success: boolean;
@@ -12,19 +13,6 @@ interface DeleteRoommateResult {
 interface UserData {
   role?: string;
   flatId?: string;
-}
-
-function getAdminApp(): admin.app.App {
-  if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      }),
-    });
-  }
-  return admin.app();
 }
 
 export async function deleteRoommateAction(uid: string, idToken: string): Promise<DeleteRoommateResult> {
