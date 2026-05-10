@@ -164,11 +164,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const { t } = useI18n();
   const [authTimeout, setAuthTimeout] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pageTitle = pageNames[pathname] ? t(pageNames[pathname]) : t("nav.dashboard");
 
   useEffect(() => {
+    setMounted(true);
     const timer = setTimeout(() => setAuthTimeout(true), 10000);
     return () => clearTimeout(timer);
+     
   }, []);
 
   useEffect(() => {
@@ -194,7 +197,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const dashboardUser = mapToDashboardUser(userProfile);
 
-  if (loading && !authTimeout) {
+  if (!mounted || (loading && !authTimeout)) {
     return <LoadingScreen />;
   }
 
