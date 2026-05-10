@@ -19,7 +19,7 @@ export function generateInviteCode(): string {
 }
 
 export default function FlatConnectionModal() {
-  const { userProfile, setShowFlatModal } = useAuth();
+  const { userProfile, setShowFlatModal, refreshUserProfile } = useAuth();
   const { t } = useI18n();
   const [tab, setTab] = useState<'create' | 'join'>('create');
   const [joinCode, setJoinCode] = useState('');
@@ -27,28 +27,31 @@ export default function FlatConnectionModal() {
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleCreate = async () => {
+  const handleCreate = async (retryCount = 0) => {
     if (!userProfile?.uid) return;
     setLoading(true);
     try {
       const code = generateInviteCode();
-      // Ensure code is unique
       const existing = await getDoc(doc(db, 'flats', code));
       if (existing.exists()) {
-        // Collision — try again
-        return handleCreate();
+        return handleCreate(retryCount);
       }
       await setDoc(doc(db, 'flats', code), {
         createdBy: userProfile.uid,
         createdAt: new Date().toISOString(),
         members: [userProfile.uid],
       });
-      // Update current user's flatId
       await setDoc(doc(db, 'users', userProfile.uid), { flatId: code }, { merge: true });
+      await refreshUserProfile();
       setGeneratedCode(code);
       toast.success(t('onboarding.flatCreated'));
-    } catch (error) {
+    } catch (error: unknown) {
       logError(error, 'FlatConnection.create');
+      const err = error as { code?: string };
+      if (err.code === 'permission-denied' && retryCount === 0) {
+        await new Promise((r) => setTimeout(r, 1500));
+        return handleCreate(retryCount + 1);
+      }
       toast.error(t('settings.toast.somethingWrong'));
     } finally {
       setLoading(false);
@@ -70,6 +73,7 @@ export default function FlatConnectionModal() {
         return;
       }
       await setDoc(doc(db, 'users', userProfile.uid), { flatId: code }, { merge: true });
+      await refreshUserProfile();
       toast.success(t('common.done'));
       setShowFlatModal(false);
     } catch (error) {
