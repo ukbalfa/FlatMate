@@ -54,7 +54,7 @@ export default function TasksPage() {
     };
 
     let mounted = true;
-    const q = query(collection(db, 'tasks'), where('flatId', '==', userProfile.flatId), orderBy('dueDate'), limit(100));
+    const q = query(collection(db, 'tasks'), where('flatId', '==', userProfile.flatId), orderBy('dueDate', 'desc'), limit(100));
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {

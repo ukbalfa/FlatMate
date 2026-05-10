@@ -78,7 +78,7 @@ useEffect(() => {
 
     // Tasks
     const taskUnsub = onSnapshot(
-      query(collection(db, 'tasks'), where('flatId', '==', userProfile.flatId), orderBy('dueDate'), limit(100)),
+      query(collection(db, 'tasks'), where('flatId', '==', userProfile.flatId), orderBy('dueDate', 'desc'), limit(100)),
       (snap) => {
         setTasks(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Task)));
         checkAllLoaded();
