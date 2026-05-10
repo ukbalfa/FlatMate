@@ -1,0 +1,2 @@
+# Agent skill scripts are development tooling, not app code
+.agents/** linguist-vendored
