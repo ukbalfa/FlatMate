@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signInWithPopup,
   signInWithCustomToken,
   GoogleAuthProvider,
@@ -14,6 +15,7 @@ import { auth, db } from '../../lib/firebase';
 import { motion } from 'framer-motion';
 import { Check, Eye, EyeOff } from 'lucide-react';
 import { logError } from '../../lib/errorLogger';
+import { toast } from 'sonner';
 
 declare global {
   interface Window {
@@ -23,8 +25,10 @@ declare global {
 
 export default function LoginPage() {
   const { t } = useI18n();
-  const [username, setUsername] = useState('');
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [pageReady, setPageReady] = useState(false);
@@ -41,7 +45,6 @@ export default function LoginPage() {
     return () => unsubscribe();
   }, [router]);
 
-  // Handle Telegram callback
   const handleTelegramAuth = useCallback(async (tgUser: Record<string, string>) => {
     setIsLoading(true);
     setError('');
@@ -65,7 +68,6 @@ export default function LoginPage() {
     }
   }, [t]);
 
-  // Expose Telegram callback globally (Telegram Widget calls this)
   useEffect(() => {
     window.onTelegramAuth = handleTelegramAuth;
     return () => { delete window.onTelegramAuth; };
@@ -122,7 +124,6 @@ export default function LoginPage() {
       setIsLoading(false);
       return;
     }
-    // Trigger Telegram widget by programmatically creating the script
     const script = document.createElement('script');
     script.src = 'https://telegram.org/js/telegram-widget.js?22';
     script.setAttribute('data-telegram-login', botUsername);
@@ -131,11 +132,8 @@ export default function LoginPage() {
     script.setAttribute('data-request-access', 'write');
     document.body.appendChild(script);
 
-    // Reset loading state after 30s in case user closes the Telegram popup
     setTimeout(() => setIsLoading(false), 30000);
 
-    // Try to hide the Telegram widget auto-generated button
-    // so our custom button is the only one visible
     const widgetCheck = setInterval(() => {
       const iframe = document.querySelector('iframe[src*="telegram.org"]');
       if (iframe && iframe.parentElement) {
@@ -145,16 +143,15 @@ export default function LoginPage() {
       }
     }, 200);
 
-    // Stop checking after 10 seconds
     setTimeout(() => clearInterval(widgetCheck), 10000);
   };
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
+  const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(username)) {
+    if (!emailRegex.test(email)) {
       setError(t('login.errorValidEmail'));
       setIsLoading(false);
       return;
@@ -165,7 +162,7 @@ export default function LoginPage() {
       return;
     }
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, username, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
       if (!userDoc.exists()) {
         setError(t('login.userProfileNotFound'));
@@ -189,6 +186,57 @@ export default function LoginPage() {
     }
   };
 
+  const handleEmailSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!name.trim()) {
+      setError(t('common.fillAllFields'));
+      setIsLoading(false);
+      return;
+    }
+    if (!emailRegex.test(email)) {
+      setError(t('login.errorValidEmail'));
+      setIsLoading(false);
+      return;
+    }
+    if (password.length < 8) {
+      setError(t('login.passwordMinLength'));
+      setIsLoading(false);
+      return;
+    }
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await ensureUserProfile(userCredential.user.uid, {
+        email,
+        name: name.trim(),
+      });
+      toast.success(t('login.signUpSuccess'));
+      router.push('/dashboard');
+    } catch (err) {
+      const code = (err as { code?: string }).code;
+      let message = t('login.errorGeneric');
+      switch (code) {
+        case 'auth/email-already-in-use': message = t('login.emailInUse'); break;
+        case 'auth/invalid-email': message = t('login.invalidEmail'); break;
+        case 'auth/weak-password': message = t('login.weakPassword'); break;
+        default: message = (err as Error).message || t('login.errorGeneric');
+      }
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTabChange = (tab: 'signin' | 'signup') => {
+    setActiveTab(tab);
+    setError('');
+    setEmail('');
+    setPassword('');
+    setName('');
+  };
+
   const bullets = [
     t('login.bulletTrackExpenses'),
     t('login.bulletCleaningSchedules'),
@@ -197,7 +245,6 @@ export default function LoginPage() {
 
   return (
     <div className={`min-h-screen flex transition-opacity duration-500 bg-white ${pageReady ? 'opacity-100' : 'opacity-0'}`}>
-      {/* Left — branding */}
       <div className="hidden lg:flex flex-col items-center justify-between w-1/2 px-16 py-12 bg-[#f9fafb] dark:bg-gray-900">
         <div></div>
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="text-left max-w-md">
@@ -217,23 +264,47 @@ export default function LoginPage() {
             ))}
           </div>
         </motion.div>
-        <div className="text-xs text-gray-400 dark:text-gray-500">© {new Date().getFullYear()} FlatMate · Tashkent 🇺🇿</div>
+        <div className="text-xs text-gray-400 dark:text-gray-500">© {new Date().getFullYear()} FlatMate · Tashkent</div>
       </div>
 
-      {/* Right — form */}
       <div className="flex items-center justify-center w-full lg:w-1/2 px-6 py-12 bg-white dark:bg-gray-800">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="w-full max-w-sm">
-          {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2 mb-8">
             <span className="w-3 h-3 rounded-full bg-[#F97316]"></span>
             <span className="text-2xl font-bold text-[#0a0a0a] dark:text-gray-100">FlatMate</span>
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-[#0a0a0a] dark:text-gray-100 mb-2">{t('login.welcomeBack')}</h2>
-            <p className="text-sm text-[#6b7280] dark:text-gray-400 mb-8">{t('login.signInToAccount')}</p>
+            <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg mb-6">
+              <button
+                onClick={() => handleTabChange('signin')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                  activeTab === 'signin'
+                    ? 'bg-white dark:bg-gray-600 text-[#0a0a0a] dark:text-gray-100 shadow-sm'
+                    : 'text-[#6b7280] dark:text-gray-400 hover:text-[#0a0a0a] dark:hover:text-gray-100'
+                }`}
+              >
+                {t('login.signInTab')}
+              </button>
+              <button
+                onClick={() => handleTabChange('signup')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                  activeTab === 'signup'
+                    ? 'bg-white dark:bg-gray-600 text-[#0a0a0a] dark:text-gray-100 shadow-sm'
+                    : 'text-[#6b7280] dark:text-gray-400 hover:text-[#0a0a0a] dark:hover:text-gray-100'
+                }`}
+              >
+                {t('login.createAccountTab')}
+              </button>
+            </div>
 
-            {/* Google Button */}
+            <h2 className="text-2xl font-bold text-[#0a0a0a] dark:text-gray-100 mb-2">
+              {activeTab === 'signin' ? t('login.welcomeBack') : t('login.createAccountTitle')}
+            </h2>
+            <p className="text-sm text-[#6b7280] dark:text-gray-400 mb-8">
+              {activeTab === 'signin' ? t('login.signInToAccount') : t('login.createAccountSubtitle')}
+            </p>
+
             <button
               onClick={handleGoogleSignIn}
               disabled={isLoading}
@@ -243,7 +314,6 @@ export default function LoginPage() {
               {t('login.continueWithGoogle')}
             </button>
 
-            {/* Telegram Button */}
             <button
               onClick={handleTelegramClick}
               disabled={isLoading}
@@ -253,22 +323,33 @@ export default function LoginPage() {
               {t('login.continueWithTelegram')}
             </button>
 
-            {/* Divider */}
             <div className="flex items-center gap-3 mb-6">
               <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
               <span className="text-xs text-[#6b7280] dark:text-gray-400">{t('login.orSignInWithEmail')}</span>
               <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
             </div>
 
-            {/* Email Form */}
-            <form onSubmit={handleEmailSubmit} className="space-y-4">
+            <form onSubmit={activeTab === 'signin' ? handleEmailSignIn : handleEmailSignUp} className="space-y-4">
+              {activeTab === 'signup' && (
+                <div>
+                  <label className="block text-sm text-[#6b7280] dark:text-gray-400 mb-2">{t('login.fullName')}</label>
+                  <input
+                    type="text"
+                    placeholder={t('login.fullName')}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-3 text-[#0a0a0a] dark:text-gray-100 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                    required
+                  />
+                </div>
+              )}
               <div>
                 <label className="block text-sm text-[#6b7280] dark:text-gray-400 mb-2">{t('login.emailAddress')}</label>
                 <input
                   type="email"
                   placeholder={t('login.emailPlaceholder')}
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-3 text-[#0a0a0a] dark:text-gray-100 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
                   required
                 />
@@ -298,13 +379,21 @@ export default function LoginPage() {
                 disabled={isLoading}
                 className="w-full bg-[#0a0a0a] dark:bg-gray-700 text-white rounded-lg px-4 py-3 font-medium hover:bg-gray-800 dark:hover:bg-gray-600 transition disabled:opacity-60"
               >
-{t('login.signIn')}
+                {activeTab === 'signin' ? t('login.signIn') : t('login.createAccount')}
               </button>
               {error && <div className="text-red-500 dark:text-red-400 text-sm text-center mt-2">{error}</div>}
             </form>
 
-            <div className="mt-4 text-xs text-gray-400 dark:text-gray-500 text-center">
-              {t('login.credentialsByAdmin')}
+            <div className="mt-4 text-center">
+              <span className="text-xs text-[#6b7280] dark:text-gray-400">
+                {activeTab === 'signin' ? t('login.noAccountYet') : t('login.alreadyHaveAccount')}{' '}
+                <button
+                  onClick={() => handleTabChange(activeTab === 'signin' ? 'signup' : 'signin')}
+                  className="text-[#F97316] hover:underline font-medium"
+                >
+                  {activeTab === 'signin' ? t('login.switchToSignUp') : t('login.switchToSignIn')}
+                </button>
+              </span>
             </div>
           </div>
         </motion.div>
