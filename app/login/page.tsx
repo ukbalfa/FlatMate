@@ -107,7 +107,6 @@ export default function LoginPage() {
       } else {
         logError(err, 'Login.googleSignIn');
         setError(t('login.errorGoogleFailed'));
-        void msg;
       }
     } finally {
       setIsLoading(false);
@@ -176,13 +175,13 @@ export default function LoginPage() {
       router.push('/dashboard');
     } catch (err) {
       const code = (err as { code?: string }).code;
-      let message = 'An error occurred';
+      let message = t('login.errorGeneric');
       switch (code) {
         case 'auth/user-not-found': message = t('login.errorNoAccount'); break;
         case 'auth/wrong-password': message = t('login.errorWrongPassword'); break;
         case 'auth/invalid-email': message = t('login.errorInvalidEmail'); break;
         case 'auth/invalid-credential': message = t('login.errorInvalidCredential'); break;
-        default: message = (err as Error).message || 'An error occurred';
+        default: message = (err as Error).message || t('login.errorGeneric');
       }
       setError(message);
     } finally {
