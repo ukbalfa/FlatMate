@@ -1,12 +1,26 @@
 'use client';
 import { useI18n } from '../../context/I18nContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signInWithCustomToken,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+} from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, getDocs, limit as fsLimit, query } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import { motion } from 'framer-motion';
 import { Check, Eye, EyeOff } from 'lucide-react';
+import { logError } from '../../lib/errorLogger';
+
+declare global {
+  interface Window {
+    onTelegramAuth?: (user: Record<string, string>) => void;
+  }
+}
 
 export default function LoginPage() {
   const { t } = useI18n();
@@ -15,8 +29,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [pageReady, setPageReady] = useState(false);
-  const [isSetupMode, setIsSetupMode] = useState(false);
-  const [hasExistingUsers, setHasExistingUsers] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -25,81 +38,140 @@ export default function LoginPage() {
         router.replace('/dashboard');
       }
       setTimeout(() => setPageReady(true), 50);
-      getDocs(query(collection(db, 'users'), fsLimit(1)))
-        .then(snap => { if (!snap.empty) setHasExistingUsers(true); })
-        .catch(() => {});
     });
     return () => unsubscribe();
   }, [router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Handle Telegram callback
+  const handleTelegramAuth = useCallback(async (tgUser: Record<string, string>) => {
+    setIsLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/auth/telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tgUser),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Telegram authentication failed');
+        return;
+      }
+      await signInWithCustomToken(auth, data.token);
+      // AuthContext's onAuthStateChanged will pick up the session
+    } catch (err) {
+      logError(err, 'Login.telegramAuth');
+      setError('Telegram authentication failed');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Expose Telegram callback globally (Telegram Widget calls this)
+  useEffect(() => {
+    window.onTelegramAuth = handleTelegramAuth;
+    return () => { delete window.onTelegramAuth; };
+  }, [handleTelegramAuth]);
+
+  const ensureUserProfile = async (uid: string, extraData?: Record<string, unknown>) => {
+    const docRef = doc(db, 'users', uid);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      await setDoc(docRef, {
+        username: extraData?.email || uid,
+        name: extraData?.name || undefined,
+        role: 'roommate',
+        joinedAt: new Date().toISOString(),
+        avatar: extraData?.avatar || undefined,
+      });
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const firebaseUser = result.user;
+      await ensureUserProfile(firebaseUser.uid, {
+        email: firebaseUser.email,
+        name: firebaseUser.displayName,
+        avatar: firebaseUser.photoURL,
+      });
+      router.push('/dashboard');
+    } catch (err: unknown) {
+      const code = (err as { code?: string }).code;
+      const msg = (err as Error).message;
+      if (code === 'auth/account-exists-with-different-credential') {
+        setError('An account with this email already exists. Sign in with email/password instead, then link Google in settings.');
+      } else if (code === 'auth/popup-closed-by-user') {
+        // User closed popup — do nothing
+      } else {
+        logError(err, 'Login.googleSignIn');
+        setError(msg || 'Google sign-in failed');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTelegramClick = () => {
+    setIsLoading(true);
+    setError('');
+    const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME;
+    if (!botUsername) {
+      setError('Telegram login not configured');
+      setIsLoading(false);
+      return;
+    }
+    // Trigger Telegram widget by programmatically creating the script
+    const script = document.createElement('script');
+    script.src = 'https://telegram.org/js/telegram-widget.js?22';
+    script.setAttribute('data-telegram-login', botUsername);
+    script.setAttribute('data-size', 'large');
+    script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+    script.setAttribute('data-request-access', 'write');
+    document.body.appendChild(script);
+  };
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     setError('');
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(username)) {
       setError('Please enter a valid email address');
+      setIsLoading(false);
       return;
     }
     if (password.length < 6) {
       setError('Password must be at least 6 characters');
+      setIsLoading(false);
       return;
     }
     try {
-      if (isSetupMode && hasExistingUsers) {
-        setError('Admin already exists. Please sign in.');
-        return;
-      }
-      if (isSetupMode) {
-        const userCred = await createUserWithEmailAndPassword(auth, username, password);
-        const newUserData = {
-          username,
-          name: 'Admin',
-          role: 'admin',
-          color: 'Blue',
-          joinedAt: new Date().toISOString()
-        };
-        await setDoc(doc(db, 'users', userCred.user.uid), newUserData);
-        router.push('/dashboard');
-        return;
-      }
       const userCredential = await signInWithEmailAndPassword(auth, username, password);
       const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
       if (!userDoc.exists()) {
         setError('User profile not found');
+        setIsLoading(false);
         return;
       }
       router.push('/dashboard');
     } catch (err) {
-      const error = err instanceof Error ? err : new Error('Unknown error');
-      let message = 'An error occurred';
       const code = (err as { code?: string }).code;
-      if (code) {
-        switch (code) {
-          case 'auth/user-not-found':
-            message = 'No account found with this email';
-            break;
-          case 'auth/wrong-password':
-            message = 'Incorrect password';
-            break;
-          case 'auth/email-already-in-use':
-            message = 'An account already exists with this email';
-            break;
-          case 'auth/weak-password':
-            message = 'Password is too weak';
-            break;
-          case 'auth/invalid-email':
-            message = 'Invalid email address';
-            break;
-          case 'auth/operation-not-allowed':
-            message = 'Operation not allowed';
-            break;
-          default:
-            message = error.message || 'An error occurred';
-        }
-      } else {
-        message = error.message || 'An error occurred';
+      let message = 'An error occurred';
+      switch (code) {
+        case 'auth/user-not-found': message = 'No account found with this email'; break;
+        case 'auth/wrong-password': message = 'Incorrect password'; break;
+        case 'auth/invalid-email': message = 'Invalid email address'; break;
+        case 'auth/invalid-credential': message = 'Invalid email or password'; break;
+        default: message = (err as Error).message || 'An error occurred';
       }
       setError(message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -110,20 +182,11 @@ export default function LoginPage() {
   ];
 
   return (
-    <div
-      className={`min-h-screen flex transition-opacity duration-500 bg-white ${
-        pageReady ? 'opacity-100' : 'opacity-0'
-      }`}
-    >
-      {/* Left — branding (hidden on mobile) */}
+    <div className={`min-h-screen flex transition-opacity duration-500 bg-white ${pageReady ? 'opacity-100' : 'opacity-0'}`}>
+      {/* Left — branding */}
       <div className="hidden lg:flex flex-col items-center justify-between w-1/2 px-16 py-12 bg-[#f9fafb] dark:bg-gray-900">
         <div></div>
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="text-left max-w-md"
-        >
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="text-left max-w-md">
           <div className="flex items-center gap-2 mb-2">
             <span className="w-3 h-3 rounded-full bg-[#F97316]"></span>
             <h1 className="text-2xl font-bold text-[#0a0a0a] dark:text-gray-100">FlatMate</h1>
@@ -145,12 +208,7 @@ export default function LoginPage() {
 
       {/* Right — form */}
       <div className="flex items-center justify-center w-full lg:w-1/2 px-6 py-12 bg-white dark:bg-gray-800">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="w-full max-w-sm"
-        >
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="w-full max-w-sm">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2 mb-8">
             <span className="w-3 h-3 rounded-full bg-[#F97316]"></span>
@@ -159,20 +217,47 @@ export default function LoginPage() {
 
           <div>
             <h2 className="text-2xl font-bold text-[#0a0a0a] dark:text-gray-100 mb-2">Welcome back</h2>
-            <p className="text-sm text-[#6b7280] dark:text-gray-400 mb-8">Sign in with your credentials</p>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <p className="text-sm text-[#6b7280] dark:text-gray-400 mb-8">Sign in to your account</p>
+
+            {/* Google Button */}
+            <button
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-3 text-[#0a0a0a] dark:text-gray-100 font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition disabled:opacity-60 mb-3"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+              Continue with Google
+            </button>
+
+            {/* Telegram Button */}
+            <button
+              onClick={handleTelegramClick}
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-3 bg-[#0088cc] hover:bg-[#0077b5] rounded-lg px-4 py-3 text-white font-medium transition disabled:opacity-60 mb-6"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+              Continue with Telegram
+            </button>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+              <span className="text-xs text-[#6b7280] dark:text-gray-400">or sign in with email</span>
+              <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+            </div>
+
+            {/* Email Form */}
+            <form onSubmit={handleEmailSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm text-[#6b7280] dark:text-gray-400 mb-2">Email Address</label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    placeholder="e.g., admin@flatmate.com"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-3 text-[#0a0a0a] dark:text-gray-100 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
-                    required
-                  />
-                </div>
+                <input
+                  type="email"
+                  placeholder="e.g., admin@flatmate.com"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-3 text-[#0a0a0a] dark:text-gray-100 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                  required
+                />
               </div>
               <div>
                 <label className="block text-sm text-[#6b7280] dark:text-gray-400 mb-2">{t('auth.password')}</label>
@@ -196,19 +281,14 @@ export default function LoginPage() {
               </div>
               <button
                 type="submit"
-                className="w-full bg-[#0a0a0a] dark:bg-gray-700 text-white rounded-lg px-4 py-3 font-medium hover:bg-gray-800 dark:hover:bg-gray-600 transition"
+                disabled={isLoading}
+                className="w-full bg-[#0a0a0a] dark:bg-gray-700 text-white rounded-lg px-4 py-3 font-medium hover:bg-gray-800 dark:hover:bg-gray-600 transition disabled:opacity-60"
               >
-                {isSetupMode ? "Create Admin Account" : "Sign in"}
+                Sign in
               </button>
               {error && <div className="text-red-500 dark:text-red-400 text-sm text-center mt-2">{error}</div>}
-              <button
-                type="button"
-                onClick={() => setIsSetupMode(!isSetupMode)}
-                className="mt-4 text-xs text-gray-500 hover:text-white transition-colors"
-              >
-                Developer? {isSetupMode ? "Back to Login" : "Initialize First Admin"}
-              </button>
             </form>
+
             <div className="mt-4 text-xs text-gray-400 dark:text-gray-500 text-center">
               Credentials are provided by your admin
             </div>
