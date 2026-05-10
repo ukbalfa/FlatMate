@@ -2,7 +2,6 @@
 
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface MonthlyData {
   month: string;

@@ -30,52 +30,9 @@ import {
 } from 'lucide-react';
 
 import { getMonday, formatTimeAgo } from '../../lib/utils';
+import type { Expense, Task, CleaningTask, Roommate, ActivityItem } from '../../lib/types';
 
-interface Expense {
-  id: string;
-  amount: number;
-  category: string;
-  paidBy: string;
-  date: string;
-  note?: string;
-  createdAt?: string;
-}
 
-interface Task {
-  id: string;
-  text: string;
-  done: boolean;
-  assignedTo: string;
-  dueDate: string;
-  createdBy: string;
-}
-
-interface CleaningTask {
-  id: string;
-  task: string;
-  assignedTo: string;
-  dayOfWeek: string;
-  weekStart: string;
-  done: boolean;
-}
-
-interface User {
-  id?: string;
-  username: string;
-  name: string;
-  surname?: string;
-  color?: string;
-}
-
-interface ActivityItem {
-  id: string;
-  type: 'expense' | 'task' | 'cleaning' | 'settlement';
-  title: string;
-  description: string;
-  timestamp: string;
-  amount?: number;
-  user?: string;
-}
 
 export default function DashboardPage() {
   const { userProfile } = useAuth();
@@ -83,7 +40,7 @@ export default function DashboardPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [cleaningTasks, setCleaningTasks] = useState<CleaningTask[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<Roommate[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentMonth] = useState(() => {
     const d = new Date();
@@ -138,7 +95,7 @@ useEffect(() => {
     const usersUnsub = onSnapshot(
       query(collection(db, 'users'), orderBy('createdAt', 'desc')),
       (snap) => {
-        setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() } as User)));
+        setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Roommate)));
         checkAllLoaded();
       }
     );

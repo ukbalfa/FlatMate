@@ -2,7 +2,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Check, X, Receipt, CheckSquare, Sparkles, Wallet, AlertCircle } from 'lucide-react';
-import { useNotifications, Notification } from '../../context/NotificationsContext';
+import { useNotifications } from '../../context/NotificationsContext';
+import type { Notification } from '../../lib/types';
 import { useI18n } from '../../context/I18nContext';
 import { useRouter } from 'next/navigation';
 import { formatTimeAgo } from '../../lib/utils';

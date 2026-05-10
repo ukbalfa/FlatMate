@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { ArrowUpDown } from "lucide-react";
 
 interface ConverterFormProps {
@@ -8,11 +8,20 @@ interface ConverterFormProps {
   onConvert: (from: string, to: string, amount: number) => void;
 }
 
+const MOCK_RATE = 12500;
+
 export const ConverterForm = ({ currencies, onConvert }: ConverterFormProps) => {
   const [fromCurrency, setFromCurrency] = useState("USD");
   const [toCurrency, setToCurrency] = useState("UZS");
   const [amount, setAmount] = useState("");
-  const [result, setResult] = useState<number | null>(null);
+
+  const result = useMemo(() => {
+    const amountNum = parseFloat(amount);
+    if (!isNaN(amountNum) && amountNum > 0) {
+      return amountNum * MOCK_RATE;
+    }
+    return null;
+  }, [amount]);
 
   const handleConvert = () => {
     const amountNum = parseFloat(amount);
@@ -25,14 +34,6 @@ export const ConverterForm = ({ currencies, onConvert }: ConverterFormProps) => 
     setFromCurrency(toCurrency);
     setToCurrency(fromCurrency);
   };
-
-  // Mock conversion for demo
-  useEffect(() => {
-    if (amount) {
-      const mockRate = 12500; // USD to UZS mock rate
-      setResult(parseFloat(amount) * mockRate);
-    }
-  }, [amount, fromCurrency, toCurrency]);
 
   return (
     <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-xl p-6">

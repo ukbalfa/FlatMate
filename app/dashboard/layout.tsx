@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect, memo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useTheme } from '../../context/ThemeContext';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -13,8 +12,6 @@ import {
   Users,
   Menu,
   LogOut,
-  Sun,
-  Moon,
   Settings,
   Wallet,
   Megaphone,
@@ -162,12 +159,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, userProfile, loading } = useAuth();
-  const { resolvedTheme, setTheme } = useTheme();
   const pathname = usePathname();
   const { t } = useI18n();
   const [authTimeout, setAuthTimeout] = useState(false);
   const pageTitle = pageNames[pathname] ? t(pageNames[pathname]) : t("nav.dashboard");
-  const isDark = resolvedTheme === "dark";
 
   useEffect(() => {
     const timer = setTimeout(() => setAuthTimeout(true), 10000);

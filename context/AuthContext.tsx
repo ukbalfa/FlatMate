@@ -4,20 +4,7 @@ import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { logError } from '../lib/errorLogger';
-
-interface UserProfile {
-  uid: string;
-  username: string;
-  flatId?: string;
-  name?: string;
-  role?: 'admin' | 'roommate';
-  color?: string;
-  occupation?: string;
-  phone?: string;
-  telegram?: string;
-  instagram?: string;
-  joinedAt?: string;
-}
+import type { UserProfile } from '../lib/types';
 
 interface AuthContextType {
   user: FirebaseUser | null;

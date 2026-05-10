@@ -109,6 +109,45 @@ export function Footer() {
           </div>
         </div>
       </div>
+
+      {/* Decorative brand wordmark — SVG full-bleed */}
+      <div
+        style={{
+          width: '100vw',
+          marginLeft: '50%',
+          transform: 'translateX(-50%)',
+          overflow: 'hidden',
+          lineHeight: 0,
+          paddingTop: '4rem',
+          pointerEvents: 'none',
+          userSelect: 'none',
+          color: '#fff',
+        }}
+      >
+        <svg
+          width="100%"
+          viewBox="0 0 1000 160"
+          preserveAspectRatio="xMidYMid meet"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ display: 'block' }}
+        >
+          <text
+            x="500"
+            y="140"
+            textAnchor="middle"
+            textLength="1000"
+            lengthAdjust="spacingAndGlyphs"
+            fontFamily="'Cormorant Garamond', serif"
+            fontWeight="700"
+            fontSize="160"
+            fill="currentColor"
+            opacity="0.07"
+            letterSpacing="-2"
+          >
+            flatmate
+          </text>
+        </svg>
+      </div>
     </footer>
   );
 }

@@ -437,6 +437,10 @@ html.dark .fm-select {
   font-family: var(--font-space-grotesk), system-ui, sans-serif;
 }
 
+.font-syne {
+  font-family: var(--font-syne), system-ui, sans-serif;
+}
+
 /* -- Shadow Utilities -- */
 .shadow-glow {
   box-shadow: 0 4px 20px rgba(249, 115, 22, 0.12);

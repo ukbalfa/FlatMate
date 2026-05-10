@@ -11,35 +11,16 @@ import ConfirmModal from '../../components/ConfirmModal';
 import { toast } from 'sonner';
 import { useAuth } from '../../../context/AuthContext';
 import { useI18n } from '../../../context/I18nContext';
+import { useNotifications } from '../../../context/NotificationsContext';
 import { logError } from '../../../lib/errorLogger';
+import type { Roommate, Task } from '../../../lib/types';
 
-interface User {
-  id?: string;
-  username: string;
-  password?: string;
-  name: string;
-  surname?: string;
-  role: 'admin' | 'roommate';
-  color: string;
-  occupation?: string;
-  phone?: string;
-  telegram?: string;
-  instagram?: string;
-  joinedAt: string;
-}
 
-interface Task {
-  id: string;
-  text: string;
-  done: boolean;
-  assignedTo: string;
-  dueDate: string;
-  createdBy: string;
-}
 
 export default function TasksPage() {
   const { userProfile } = useAuth();
   const { t } = useI18n();
+  const { createNotification } = useNotifications();
 
   const getBadgeLabel = (dueDate: string) => {
     const today = new Date();
@@ -52,7 +33,7 @@ export default function TasksPage() {
   };
 
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<Roommate[]>([]);
   const [text, setText] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
@@ -62,7 +43,7 @@ export default function TasksPage() {
   const fetchUsers = async () => {
     try {
       const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
-      setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as User)));
+      setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Roommate)));
     } catch (error) {
       logError(error, 'Tasks.fetchUsers');
       toast.error(t('tasks.toast.loadUsersFailed'));
@@ -114,6 +95,25 @@ export default function TasksPage() {
       setDueDate('');
       setAssignedTo('');
       toast.success(t('tasks.toast.added'));
+
+      // Notify the assigned user
+      if (assignedTo !== userProfile?.username) {
+        const assignedUser = users.find((u) => u.username === assignedTo);
+        if (assignedUser) {
+          try {
+            await createNotification({
+              userId: assignedUser.id,
+              title: 'New Task Assigned',
+              message: `"${text}" — due ${new Date(dueDate).toLocaleDateString()}`,
+              type: 'task',
+              read: false,
+              link: '/dashboard/tasks',
+            });
+          } catch (notifError) {
+            logError(notifError, 'Tasks.createNotification');
+          }
+        }
+      }
     } catch (error) {
       logError(error, 'Tasks.add');
       toast.error(t('tasks.toast.addFailed'));

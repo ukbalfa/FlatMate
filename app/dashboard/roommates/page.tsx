@@ -11,22 +11,10 @@ import { toast } from 'sonner';
 import { useI18n } from '../../../context/I18nContext';
 import { useAuth } from '../../../context/AuthContext';
 import { logError } from '../../../lib/errorLogger';
+import type { Roommate } from '../../../lib/types';
 import { deleteRoommateAction } from '../../actions/deleteRoommate';
 
-interface User {
-  id?: string;
-  username: string;
-  password?: string;
-  name: string;
-  surname?: string;
-  role: 'admin' | 'roommate';
-  color: string;
-  occupation?: string;
-  phone?: string;
-  telegram?: string;
-  instagram?: string;
-  joinedAt: string | FirestoreTimestamp;
-}
+
 
 const COLORS = [
   { name: 'Blue', value: 'blue', class: 'bg-blue-500' },
@@ -83,7 +71,7 @@ function formatMonth(val: unknown): string {
 export default function RoommatesPage() {
   const { t } = useI18n();
   const { userProfile } = useAuth();
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<Roommate[]>([]);
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [username, setUsername] = useState('');
@@ -96,13 +84,13 @@ export default function RoommatesPage() {
   const [adding, setAdding] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Partial<User>>({});
+  const [editForm, setEditForm] = useState<Partial<Roommate>>({});
   const [sortBy, setSortBy] = useState<'date' | 'name'>('date');
-  const [roommateToDelete, setRoommateToDelete] = useState<User | null>(null);
+  const [roommateToDelete, setRoommateToDelete] = useState<Roommate | null>(null);
 
   const fetchUsers = async () => {
     const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
-    setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as User)));
+    setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Roommate)));
   };
 
   useEffect(() => {
@@ -112,7 +100,7 @@ export default function RoommatesPage() {
       try {
         const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
         if (!mounted) return;
-        setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as User)));
+        setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Roommate)));
       } catch (error) {
         if (!mounted) return;
       logError(error, 'Roommates.fetchUsers');
@@ -165,7 +153,7 @@ export default function RoommatesPage() {
     }
   };
 
-  const startEdit = (u: User) => {
+  const startEdit = (u: Roommate) => {
     setEditingId(u.id ?? null);
     setEditForm({
       occupation: u.occupation || '', phone: u.phone || '',
@@ -229,9 +217,9 @@ export default function RoommatesPage() {
     return 0;
   };
 
-  const sortedRoommates = [...users].sort((a, b) =>
+const sortedRoommates = [...users].sort((a, b) =>
     sortBy === 'name'
-      ? a.name.localeCompare(b.name)
+      ? (a.name ?? '').localeCompare(b.name ?? '')
       : toTimestamp(b.joinedAt) - toTimestamp(a.joinedAt)
   );
 

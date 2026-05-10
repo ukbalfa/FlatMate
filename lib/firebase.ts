@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { getFirestore, type Firestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getAuth, type Auth } from 'firebase/auth';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 function getFirebaseApp(): FirebaseApp | null {
   if (getApps().length) return getApp();
@@ -50,7 +51,19 @@ function getSafeAuth(app: FirebaseApp | null): Auth {
   return getAuth(app);
 }
 
+function getSafeStorage(app: FirebaseApp | null): FirebaseStorage {
+  if (!app) {
+    return new Proxy({} as FirebaseStorage, {
+      get: () => {
+        throw new Error('Firebase not configured');
+      },
+    });
+  }
+  return getStorage(app);
+}
+
 const db = getSafeFirestore(app);
 const auth = getSafeAuth(app);
+const storage = getSafeStorage(app);
 
-export { db, auth };
+export { db, auth, storage };

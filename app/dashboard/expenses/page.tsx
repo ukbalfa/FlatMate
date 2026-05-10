@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { db } from "../../../lib/firebase";
+import { AnimatePresence } from "framer-motion";
+import { db, storage } from "../../../lib/firebase";
 import {
   collection,
   addDoc,
@@ -14,60 +14,31 @@ import {
   getDocs,
   limit,
   serverTimestamp,
+  where,
+  writeBatch,
 } from "firebase/firestore";
 import {
-  Trash2,
-  Repeat,
-  ChevronDown,
-  ChevronUp,
-  RefreshCw,
-  Plus,
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
+import {
   Download,
-  PieChart,
-  BarChart2,
+  Plus,
 } from "lucide-react";
 import { Spinner } from "../../components/Spinner";
 import { SkeletonList } from "../../components/Skeleton";
 import { EmptyState } from "../../components/EmptyState";
-import ConfirmModal from "../../components/ConfirmModal";
 import { toast } from "sonner";
 import { useAuth } from "../../../context/AuthContext";
 import { useI18n } from "../../../context/I18nContext";
 import { logError } from "../../../lib/errorLogger";
+import type { Expense, RecurringExpense, SplitMember } from "../../../lib/types";
 import { ExpenseCard } from "./components/ExpenseCard";
 import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
 import { BudgetTracker } from "./components/BudgetTracker";
 import { ReceiptUpload } from "./components/ReceiptUpload";
 import { SplitExpenseModal } from "./components/SplitExpenseModal";
-
-interface Expense {
-  id: string;
-  amount: number;
-  category: string;
-  description: string;
-  paidBy: string;
-  date: string;
-  note?: string;
-  receiptUrl?: string;
-  isRecurring?: boolean;
-  splitWith?: Array<{ id: string; name: string; avatar: string }>;
-  recurrencePattern?: "monthly" | "weekly" | "yearly";
-  recurrenceEndDate?: string;
-  parentExpenseId?: string;
-}
-
-interface RecurringExpense {
-  id: string;
-  amount: number;
-  category: string;
-  paidBy: string;
-  startDate: string;
-  endDate?: string;
-  pattern: "monthly" | "weekly" | "yearly";
-  note?: string;
-  createdAt: string;
-  nextDueDate: string;
-}
 
 const CATEGORIES = [
   { name: "Rent", color: "#F97316" },
@@ -77,9 +48,13 @@ const CATEGORIES = [
   { name: "Misc", color: "#6B7280" },
 ];
 
-function getCategoryColor(category: string) {
-  return CATEGORIES.find((c) => c.name === category)?.color || "#6B7280";
-}
+const DEFAULT_BUDGET_LIMITS: Record<string, number> = {
+  Rent: 500000,
+  Groceries: 300000,
+  Utilities: 200000,
+  Internet: 150000,
+  Misc: 100000,
+};
 
 function getMonth(date: string) {
   return date.slice(0, 7);
@@ -89,7 +64,7 @@ export default function ExpensesPage() {
   const { t } = useI18n();
   const { userProfile } = useAuth();
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
+  const [_recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Rent");
@@ -101,33 +76,73 @@ export default function ExpensesPage() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   });
-  const [isRecurring, setIsRecurring] = useState(false);
-  const [recurrencePattern, setRecurrencePattern] = useState<"monthly" | "weekly" | "yearly">(
-    "monthly"
-  );
-  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
-  const [showRecurringSection, setShowRecurringSection] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [generatingRecurring, setGeneratingRecurring] = useState(false);
   const [showSplitModal, setShowSplitModal] = useState(false);
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const [splitWith, setSplitWith] = useState<
-    Array<{ id: string; name: string; avatar: string }>
-  >([]);
+  const [splitWith, setSplitWith] = useState<SplitMember[]>([]);
+  const [budgetLimits, setBudgetLimits] = useState<Record<string, number>>({});
+  const [receiptUrl, setReceiptUrl] = useState("");
+  const [limitCount, setLimitCount] = useState(50);
 
-  // Mock roommates data - replace with real data from context
-  const roommates = [
-    {
-      id: "1",
-      name: "Alice",
-      avatar: "https://i.pravatar.cc/150?img=3",
-    },
-    {
-      id: "2",
-      name: "Bob",
-      avatar: "https://i.pravatar.cc/150?img=5",
-    },
-  ];
+  
+
+  // Load roommates who share this user's flat
+  const [roommates, setRoommates] = useState<SplitMember[]>([]);
+
+  useEffect(() => {
+    if (!userProfile?.flatId) return;
+
+    const fetchRoommates = async () => {
+      try {
+        const q = query(collection(db, "users"), where("flatId", "==", userProfile!.flatId));
+        const snap = await getDocs(q);
+        const data = snap.docs.map((doc) => {
+          const userData = doc.data();
+          return {
+            id: doc.id,
+            name: userData.name || userData.username || "Unknown",
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name || userData.username || "?")}&background=F97316&color=fff&size=150`,
+          };
+        });
+        // Exclude current user from split list
+        setRoommates(data.filter((r) => r.id !== userProfile!.uid));
+      } catch (error) {
+        logError(error, "Expenses.loadRoommates");
+        toast.error(t("expenses.toast.loadRoommatesFailed"));
+      }
+    };
+
+    fetchRoommates();
+  }, [userProfile?.flatId, userProfile?.uid, t]);
+
+  // Load budget limits from Firestore
+  useEffect(() => {
+    if (!userProfile?.flatId) return;
+
+    const fetchBudgets = async () => {
+      try {
+        const docSnap = await getDocs(
+          query(collection(db, "flats"), where("flatId", "==", userProfile!.flatId))
+        );
+        if (!docSnap.empty) {
+          const firstDoc = docSnap.docs[0];
+          if (firstDoc) {
+            const flatData = firstDoc.data() as { budgets?: Record<string, number> };
+            if (flatData.budgets) {
+              setBudgetLimits(flatData.budgets);
+              return;
+            }
+          }
+        }
+      } catch (error) {
+        logError(error, "Expenses.loadBudgets");
+        toast.error(t("expenses.toast.loadBudgetsFailed"));
+      }
+      // Fallback to defaults if no document or budgets field
+      setBudgetLimits(DEFAULT_BUDGET_LIMITS);
+    };
+
+    fetchBudgets();
+  }, [userProfile?.flatId, t]);
 
   const isAdmin = userProfile?.role === "admin";
 
@@ -138,7 +153,7 @@ export default function ExpensesPage() {
     const q = query(
       collection(db, "expenses"),
       orderBy("date", "desc"),
-      limit(200)
+      limit(limitCount)
     );
     
     const unsubscribe = onSnapshot(
@@ -156,7 +171,7 @@ export default function ExpensesPage() {
     );
     
     return () => unsubscribe();
-  }, [userProfile?.flatId, t]);
+  }, [userProfile?.flatId, limitCount, t]);
 
   // Load recurring expenses
   const loadRecurringExpenses = async () => {
@@ -200,14 +215,6 @@ export default function ExpensesPage() {
     return { ...cat, value: total };
   });
 
-  const budgetLimits = {
-    Rent: 500000,
-    Groceries: 300000,
-    Utilities: 200000,
-    Internet: 150000,
-    Misc: 100000,
-  };
-
   const filteredExpenses = expenses
     .filter((e) => getMonth(e.date) === selectedMonth)
     .filter((e) => filter === "All" || e.category === filter);
@@ -225,13 +232,6 @@ export default function ExpensesPage() {
     setSubmitting(true);
     
     try {
-      let receiptUrl = "";
-      if (receiptFile) {
-        // In a real app, upload to Firebase Storage here
-        // For now, we'll just use a placeholder
-        receiptUrl = "https://via.placeholder.com/400x200?text=Receipt";
-      }
-      
       await addDoc(collection(db, "expenses"), {
         flatId: userProfile?.flatId || "",
         amount: parsedAmount,
@@ -247,14 +247,36 @@ export default function ExpensesPage() {
       });
       
       toast.success(t("expenses.toast.added"));
-      
+
+      // Notify split members about the shared expense
+      if (splitWith.length > 0) {
+        try {
+          const batch = writeBatch(db);
+          splitWith.forEach((member) => {
+            const notifRef = doc(collection(db, "notifications"));
+            batch.set(notifRef, {
+              userId: member.id,
+              title: "New Shared Expense",
+              message: `${userProfile?.name || userProfile?.username} added a ${parsedAmount.toLocaleString()} UZS expense for ${category}.`,
+              type: "expense",
+              read: false,
+              link: "/dashboard/expenses",
+              createdAt: serverTimestamp(),
+            });
+          });
+          await batch.commit();
+        } catch (notifError) {
+          logError(notifError, "Expenses.createNotifications");
+        }
+      }
+
       // Reset form
       setAmount("");
       setDescription("");
       setCategory("Rent");
       setDate(new Date().toISOString().slice(0, 10));
       setNote("");
-      setReceiptFile(null);
+      setReceiptUrl("");
       setSplitWith([]);
     } catch (error) {
       logError(error, "Expenses.add");
@@ -275,20 +297,27 @@ export default function ExpensesPage() {
   };
 
   const handleUploadReceipt = async (file: File): Promise<string> => {
-    // In a real app, upload to Firebase Storage
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve("https://via.placeholder.com/400x200?text=Receipt");
-      }, 1000);
-    });
+    if (!userProfile?.flatId) {
+      toast.error("Cannot upload receipt: no flat assigned");
+      return "";
+    }
+    try {
+      const fileRef = storageRef(
+        storage,
+        `receipts/${userProfile.flatId}/${Date.now()}_${file.name}`
+      );
+      await uploadBytes(fileRef, file);
+      const downloadURL = await getDownloadURL(fileRef);
+      return downloadURL;
+    } catch (error) {
+      logError(error, "Expenses.uploadReceipt");
+      toast.error("Failed to upload receipt");
+      return "";
+    }
   };
 
-  const handleSplit = (
-    roommates: Array<{ id: string; name: string; avatar: string }>,
-    amountPerPerson: number
-  ) => {
+  const handleSplit = (roommates: SplitMember[]) => {
     setSplitWith(roommates);
-    // In a real app, you would calculate the split amounts here
   };
 
   return (
@@ -316,7 +345,7 @@ export default function ExpensesPage() {
                 key={cat.name}
                 category={cat.name}
                 spent={spent}
-                limit={budgetLimits[cat.name as keyof typeof budgetLimits]}
+                limit={budgetLimits[cat.name as keyof typeof budgetLimits] ?? DEFAULT_BUDGET_LIMITS[cat.name as keyof typeof DEFAULT_BUDGET_LIMITS] ?? 100000}
                 color={cat.color}
               />
             );
@@ -325,7 +354,7 @@ export default function ExpensesPage() {
 
         {/* Add Expense Form */}
         <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-xl p-6">
-          <h2 className="font-display text-xl mb-6">Add Expense</h2>
+          <h2 className="font-display text-xl mb-6">{t('expenses.addExpenseTitle')}</h2>
           
           <form onSubmit={handleAdd} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -410,7 +439,7 @@ export default function ExpensesPage() {
                       ))}
                     </div>
                   ) : (
-                    <span>Select roommates</span>
+                    <span>{t('expenses.selectRoommates')}</span>
                   )}
                   <Plus className="w-4 h-4" />
                 </button>
@@ -420,7 +449,7 @@ export default function ExpensesPage() {
             {/* Receipt Upload */}
             <div className="mt-4">
               <label className="block text-sm text-white/80 mb-2">Receipt</label>
-              <ReceiptUpload onUpload={handleUploadReceipt} />
+              <ReceiptUpload onUpload={handleUploadReceipt} onFileURL={setReceiptUrl} />
             </div>
 
             <button
@@ -431,10 +460,10 @@ export default function ExpensesPage() {
               {submitting ? (
                 <>
                   <Spinner />
-                  Processing...
+                  {t('common.processing') || 'Processing...'}
                 </>
               ) : (
-                "Add Expense"
+                t('expenses.addExpense')
               )}
             </button>
           </form>
@@ -443,14 +472,14 @@ export default function ExpensesPage() {
         {/* Expense List */}
         <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-xl p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="font-display text-xl">Recent Expenses</h2>
+            <h2 className="font-display text-xl">{t('expenses.recentExpenses')}</h2>
             <div className="flex gap-2">
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
                 className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-2 focus:ring-amber-400 outline-none"
               >
-                <option value="All" className="bg-[#121212]">All Categories</option>
+                <option value="All" className="bg-[#121212]">{t('expenses.allCategories')}</option>
                 {CATEGORIES.map((cat) => (
                   <option key={cat.name} value={cat.name} className="bg-[#121212]">
                     {cat.name}
@@ -485,6 +514,16 @@ export default function ExpensesPage() {
                 />
               ))}
             </AnimatePresence>
+          )}
+          {!loading && expenses.length >= limitCount && (
+            <div className="flex justify-center mt-6">
+              <button
+                onClick={() => setLimitCount((prev) => prev + 50)}
+                className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-lg font-medium transition border border-white/10"
+              >
+                Load More
+              </button>
+            </div>
           )}
         </div>
 

@@ -6,9 +6,10 @@ import { useState } from "react";
 
 interface ReceiptUploadProps {
   onUpload: (file: File) => Promise<string>;
+  onFileURL?: (url: string) => void;
 }
 
-export const ReceiptUpload = ({ onUpload }: ReceiptUploadProps) => {
+export const ReceiptUpload = ({ onUpload, onFileURL }: ReceiptUploadProps) => {
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -25,6 +26,7 @@ export const ReceiptUpload = ({ onUpload }: ReceiptUploadProps) => {
       try {
         const url = await onUpload(file);
         setPreview(URL.createObjectURL(file));
+        onFileURL?.(url);
       } finally {
         setUploading(false);
       }

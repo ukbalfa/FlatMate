@@ -17,18 +17,7 @@ import {
 } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 import { logError } from '../lib/errorLogger';
-
-export interface Notification {
-  id: string;
-  userId: string;
-  title: string;
-  message: string;
-  type: 'task' | 'expense' | 'cleaning' | 'settlement' | 'system';
-  read: boolean;
-  createdAt: string;
-  link?: string;
-  data?: Record<string, unknown>;
-}
+import type { Notification } from '../lib/types';
 
 interface NotificationsContextType {
   notifications: Notification[];

@@ -2,50 +2,70 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function to check if the requesting user is an admin
+    // Helper: get the requesting user's flatId
+    function getUserFlatId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.flatId;
+    }
+
+    // Helper: check if the requesting user is an admin
     function isAdmin() {
       return request.auth != null
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Users: self-read/write, admin-read-all, admin-delete
+    // Users: same-flat read, self-only update, admin create
     match /users/{userId} {
       allow read: if request.auth != null
-        && (request.auth.uid == userId || isAdmin());
+        && (request.auth.uid == userId || isAdmin() || getUserFlatId() == resource.data.flatId);
       allow create: if request.auth != null;
       allow update: if request.auth != null
-        && (request.auth.uid == userId || isAdmin());
+        && request.auth.uid == userId;
       allow delete: if isAdmin();
     }
 
-    // Expenses: authenticated read/write
+    // Tenant-isolated collections: user can only access documents belonging to their flat
+    function tenantIsolated() {
+      return request.auth != null
+        && (getUserFlatId() == resource.data.flatId)
+        && (getUserFlatId() == request.resource.data.flatId);
+    }
+    
+    function tenantRead() {
+      return request.auth != null && getUserFlatId() == resource.data.flatId;
+    }
+    
+    function tenantCreate() {
+      return request.auth != null && getUserFlatId() == request.resource.data.flatId;
+    }
+
     match /expenses/{docId} {
-      allow read, write: if request.auth != null;
+      allow read, update, delete: if tenantRead();
+      allow create: if tenantCreate();
     }
 
-    // Tasks: authenticated read/write
-    match /tasks/{docId} {
-      allow read, write: if request.auth != null;
-    }
-
-    // Cleaning schedule: authenticated read/write
-    match /cleaning/{docId} {
-      allow read, write: if request.auth != null;
-    }
-
-    // Announcements: authenticated read/write
-    match /announcements/{docId} {
-      allow read, write: if request.auth != null;
-    }
-
-    // Settlements: authenticated read/write
-    match /settlements/{docId} {
-      allow read, write: if request.auth != null;
-    }
-
-    // Recurring expenses: authenticated read/write
     match /recurringExpenses/{docId} {
-      allow read, write: if request.auth != null;
+      allow read, update, delete: if tenantRead();
+      allow create: if tenantCreate();
+    }
+
+    match /tasks/{docId} {
+      allow read, update, delete: if tenantRead();
+      allow create: if tenantCreate();
+    }
+
+    match /cleaning/{docId} {
+      allow read, update, delete: if tenantRead();
+      allow create: if tenantCreate();
+    }
+
+    match /announcements/{docId} {
+      allow read, update, delete: if tenantRead();
+      allow create: if tenantCreate();
+    }
+
+    match /settlements/{docId} {
+      allow read, update, delete: if tenantRead();
+      allow create: if tenantCreate();
     }
 
     // Notifications: user can only read/write their own
@@ -58,9 +78,10 @@ service cloud.firestore {
         && resource.data.userId == request.auth.uid;
     }
 
-    // Settings: authenticated read/write
+    // Settings: authenticated read/write (admin-only for writes)
     match /settings/{docId} {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
     }
   }
 }

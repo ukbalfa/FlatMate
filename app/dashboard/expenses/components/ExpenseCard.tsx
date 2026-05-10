@@ -2,17 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Trash2, Repeat, Paperclip } from "lucide-react";
-
-interface Expense {
-  id: string;
-  amount: number;
-  category: string;
-  description: string;
-  date: string;
-  receiptUrl?: string;
-  splitWith?: Array<{ id: string; name: string; avatar: string }>;
-  isRecurring?: boolean;
-}
+import type { Expense, SplitMember } from "../../../../lib/types";
 
 interface ExpenseCardProps {
   expense: Expense;
@@ -64,7 +54,7 @@ export const ExpenseCard = ({ expense, onDelete, isAdmin }: ExpenseCardProps) =>
 
     {expense.splitWith && expense.splitWith.length > 0 && (
       <div className="mt-3 flex -space-x-2">
-        {expense.splitWith.map((user) => (
+        {expense.splitWith.map((user: SplitMember) => (
           <img
             key={user.id}
             src={user.avatar}

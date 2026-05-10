@@ -2,22 +2,18 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '../../../lib/firebase';
-import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc, getDocs, limit } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc, getDocs, limit, serverTimestamp, where, Timestamp } from 'firebase/firestore';
 import { useAuth } from '../../../context/AuthContext';
 import { useI18n } from '../../../context/I18nContext';
 import { useNotifications } from '../../../context/NotificationsContext';
 import { logError } from '../../../lib/errorLogger';
+import type { Announcement } from '../../../lib/types';
 import { Pin, Trash2, Megaphone } from 'lucide-react';
 import { toast } from 'sonner';
 import ConfirmModal from '../../components/ConfirmModal';
 
-interface Announcement {
+interface AnnouncementWithUI extends Announcement {
   id: string;
-  title: string;
-  content: string;
-  createdBy: string;
-  createdAt: string;
-  pinned: boolean;
   color: 'teal' | 'amber' | 'red' | 'blue';
 }
 
@@ -39,7 +35,7 @@ export default function AnnouncementsPage() {
   const { userProfile } = useAuth();
   const { t } = useI18n();
   const { createNotification } = useNotifications();
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [announcements, setAnnouncements] = useState<AnnouncementWithUI[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmModal, setConfirmModal] = useState<{isOpen: boolean, action: (() => void) | null, message: string}>({isOpen: false, action: null, message: ''});
 
@@ -51,19 +47,27 @@ export default function AnnouncementsPage() {
   const isAdmin = userProfile?.role === 'admin';
 
   useEffect(() => {
-    const q = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(50));
+    if (!userProfile?.flatId) return;
+    const q = query(
+      collection(db, 'announcements'),
+      where('flatId', '==', userProfile.flatId),
+      orderBy('createdAt', 'desc'),
+      limit(50)
+    );
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Announcement));
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AnnouncementWithUI));
       // Sort pinned first
       const sorted = [...data].sort((a, b) => {
-        if (a.pinned === b.pinned) return 0;
-        return a.pinned ? -1 : 1;
+        const aPinned = a.isPinned ?? false;
+        const bPinned = b.isPinned ?? false;
+        if (aPinned === bPinned) return 0;
+        return aPinned ? -1 : 1;
       });
       setAnnouncements(sorted);
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [userProfile?.flatId]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,31 +82,36 @@ export default function AnnouncementsPage() {
     const sanitizedContent = content.replace(/<[^>]*>/g, '');
 
     try {
-       const newDoc = {
-         title,
-         content,
-         color,
-         pinned,
-         createdBy: userProfile?.username || 'admin',
-         createdAt: new Date().toISOString(),
-       };
-
-      await addDoc(collection(db, 'announcements'), newDoc);
+      await addDoc(collection(db, 'announcements'), {
+        flatId: userProfile?.flatId || '',
+        title,
+        content,
+        color,
+        isPinned: pinned,
+        authorId: userProfile?.uid || '',
+        authorName: userProfile?.name || userProfile?.username || 'Admin',
+        createdAt: serverTimestamp(),
+      });
       toast.success('Announcement posted');
 
-      const usersSnap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
-      usersSnap.docs.forEach(async (userDoc) => {
-        if (userDoc.id !== userProfile?.uid) {
-          await createNotification({
-            userId: userDoc.id,
-            title: sanitizedTitle,
-            message: sanitizedContent.substring(0, 100),
-            type: 'system',
-            read: false,
-            link: '/dashboard/announcements',
-          });
-        }
-      });
+      // Notify flat members (exclude self)
+      if (userProfile?.flatId) {
+        const usersSnap = await getDocs(
+          query(collection(db, 'users'), where('flatId', '==', userProfile.flatId))
+        );
+        usersSnap.docs.forEach(async (userDoc) => {
+          if (userDoc.id !== userProfile?.uid) {
+            await createNotification({
+              userId: userDoc.id,
+              title: sanitizedTitle,
+              message: sanitizedContent.substring(0, 100),
+              type: 'system',
+              read: false,
+              link: '/dashboard/announcements',
+            });
+          }
+        });
+      }
 
       setTitle('');
       setContent('');
@@ -115,7 +124,7 @@ export default function AnnouncementsPage() {
 
   const handleTogglePin = async (id: string, currentPinned: boolean) => {
     try {
-      await updateDoc(doc(db, 'announcements', id), { pinned: !currentPinned });
+      await updateDoc(doc(db, 'announcements', id), { isPinned: !currentPinned });
     } catch (error) {
       logError(error, 'Announcements.togglePin');
     }
@@ -137,8 +146,9 @@ export default function AnnouncementsPage() {
     });
   };
 
-  const formatDate = (isoString: string) => {
-    return new Date(isoString).toLocaleString(undefined, { 
+  const formatDate = (createdAt: unknown) => {
+    const date = createdAt instanceof Timestamp ? createdAt.toDate() : new Date(createdAt as string);
+    return date.toLocaleString(undefined, { 
       month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
     });
   };
@@ -183,7 +193,7 @@ export default function AnnouncementsPage() {
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-semibold text-white">{a.title}</h3>
-                      {a.pinned && (
+                      {a.isPinned && (
                         <span className="flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-white/10 text-gray-300">
                           <Pin className="w-3 h-3" />
                           {t('announcements.pinned')}
@@ -193,21 +203,23 @@ export default function AnnouncementsPage() {
                     {isAdmin && (
                       <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity absolute top-4 right-4">
                         <button
-                          onClick={() => handleTogglePin(a.id, a.pinned)}
-                          className={`p-1.5 rounded-lg transition-colors ${a.pinned ? 'text-[#F97316] bg-[#F97316]/10' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
+                          onClick={() => handleTogglePin(a.id, a.isPinned ?? false)}
+                          className={`p-1.5 rounded-lg transition-colors ${a.isPinned ? 'text-[#F97316] bg-[#F97316]/10' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
                           title="Toggle pin"
                           aria-label="Toggle pin"
                         >
                           <Pin className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => handleDelete(a.id)}
-                          className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
-                          title="Delete"
-                          aria-label="Delete announcement"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {(userProfile?.uid === a.authorId || isAdmin) && (
+                          <button
+                            onClick={() => handleDelete(a.id)}
+                            className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                            title="Delete"
+                            aria-label="Delete announcement"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -215,21 +227,23 @@ export default function AnnouncementsPage() {
                   <p className="text-gray-300 whitespace-pre-wrap mb-4 text-sm">{a.content}</p>
                   
                   <div className="flex items-center text-xs text-gray-500">
-                    <span className="font-medium text-gray-400">{a.createdBy}</span>
+                    <span className="font-medium text-gray-400">{a.authorName}</span>
                     <span className="mx-2">•</span>
                     <span>{formatDate(a.createdAt)}</span>
                   </div>
                   
                   {/* For mobile where hover doesn't work well */}
-                  {isAdmin && (
+                  {(userProfile?.uid === a.authorId || isAdmin) && (
                     <div className="flex lg:hidden items-center gap-4 mt-4 pt-4 border-t border-white/[0.06]">
-                      <button
-                        onClick={() => handleTogglePin(a.id, a.pinned)}
-                        className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${a.pinned ? 'text-[#F97316]' : 'text-gray-400'}`}
-                      >
-                        <Pin className="w-4 h-4" />
-                        {a.pinned ? 'Unpin' : 'Pin'}
-                      </button>
+                      {isAdmin && (
+                        <button
+                          onClick={() => handleTogglePin(a.id, a.isPinned ?? false)}
+                          className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${a.isPinned ? 'text-[#F97316]' : 'text-gray-400'}`}
+                        >
+                          <Pin className="w-4 h-4" />
+                          {a.isPinned ? 'Unpin' : 'Pin'}
+                        </button>
+                      )}
                       <button
                         onClick={() => handleDelete(a.id)}
                         className="flex items-center gap-1.5 text-xs font-medium text-red-400"

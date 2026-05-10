@@ -8,7 +8,7 @@
 
 <br/>
 
-[![Version](https://img.shields.io/badge/version-0.1.1-F97316?style=for-the-badge&logo=github)](https://github.com/ukbalfa/FlatMate/releases)
+[![Version](https://img.shields.io/badge/version-0.2.0-F97316?style=for-the-badge&logo=github)](https://github.com/ukbalfa/FlatMate/releases)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=000)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=fff)](https://www.typescriptlang.org)
@@ -51,15 +51,15 @@
 
 | 🏠 &nbsp;**Dashboard** | 💸 &nbsp;**Expenses** | 🧹 &nbsp;**Cleaning** |
 |:---|:---|:---|
-| Real-time metrics, rent countdown, monthly spend overview, live exchange rate ticker, pinned announcements, and activity feed. Modern dark bento grid UI with glassmorphic cards. | Add, categorise, and split shared costs. **Recurring expenses** auto-generate monthly. Real-time summaries keep everyone in the loop. | Admin-curated weekly chore list. Any roommate can mark tasks complete — auto-resets each week. |
+| Real-time metrics, rent countdown, monthly spend overview, live exchange rate ticker, pinned announcements, and activity feed. Modern dark bento grid UI with glassmorphic cards. | Add, categorise, and split shared costs. **Recurring expenses** auto-generate monthly. Paginated real-time list with "Load More". Real-time summaries keep everyone in the loop. | Admin-curated weekly chore list. Any roommate can mark tasks complete — auto-resets each week. |
 
 | ✅ &nbsp;**Tasks** | 👥 &nbsp;**Roommates** | 💱 &nbsp;**Rates** |
 |:---|:---|:---|
-| Shared to-do list with due dates, assignees, and smart **Upcoming / Today / Overdue** badges. | Profile cards with Telegram & Instagram links. Admins can create, edit, and remove accounts. | Live USD / UZS / EUR rates from `open.er-api.com`, refreshed every 10 minutes with a built-in converter. |
+| Shared to-do list with due dates, assignees, and smart **Upcoming / Today / Overdue** badges. Task assignment notifications. | Profile cards with Telegram & Instagram links. Admins can create, edit, and remove accounts. | Live USD / UZS / EUR rates from `open.er-api.com`, refreshed every 10 minutes with a built-in converter. |
 
-| ⚖️ &nbsp;**Balances** | 🎨 &nbsp;**Modern UI** | 📱 &nbsp;**Responsive** |
+| ⚖️ &nbsp;**Balances** | 🔒 &nbsp;**Security** | 📱 &nbsp;**Responsive** |
 |:---|:---|:---|
-| Crystal-clear overview of who owes what across all shared expenses. | **Bold dark aesthetic** with citrus accents (#F97316), glassmorphic glass cards, smooth animations, and glowing depth effects. | Desktop sidebar + mobile hamburger menu — works great on every screen size. |
+| Crystal-clear overview of who owes what across all shared expenses. | Full tenant isolation via Firestore security rules — flat members only see their own flat's data. | Desktop sidebar + mobile hamburger menu — works great on every screen size. |
 
 | 📢 &nbsp;**Announcements** | 🌐 &nbsp;**i18n** | ♿ &nbsp;**Accessibility** |
 |:---|:---|:---|
@@ -257,6 +257,9 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 FIREBASE_PROJECT_ID=your_project_id
 FIREBASE_CLIENT_EMAIL=your_service_account@your_project.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+
+# Sentry (optional — error monitoring)
+NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn
 ```
 
 > ⚠️ **Never commit `.env.local` to version control.** It is in `.gitignore` by default.
@@ -267,10 +270,11 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY----
 
 1. Go to the [Firebase Console](https://console.firebase.google.com/) and create a new project.
 2. Enable **Cloud Firestore** in production mode.
-3. Deploy the included security rules:
+3. **Deploy the included security rules** (strict tenant isolation — do not skip):
    ```bash
    firebase deploy --only firestore:rules
    ```
+   > These rules enforce **tenant isolation** by `flatId`: users can only read/write documents belonging to their flat. See `firestore.rules` for details.
 4. Seed an initial `users` document. Each record should contain:
 
    | Field | Type | Description |
@@ -317,7 +321,7 @@ Contributions are welcome! Here's how to get involved:
 
 <div align="center">
 
-Built with ❤️ for shared living &nbsp;·&nbsp; **v0.1.1**
+Built with ❤️ for shared living &nbsp;·&nbsp; **v0.2.0**
 
 </div>
 

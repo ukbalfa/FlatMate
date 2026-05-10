@@ -1,17 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { User, Users, X } from "lucide-react";
-
-interface Roommate {
-  id: string;
-  name: string;
-  avatar: string;
-}
+import { Users, X } from "lucide-react";
+import type { SplitMember } from "../../../../lib/types";
 
 interface SplitExpenseModalProps {
-  roommates: Roommate[];
-  onSplit: (splitWith: Roommate[], amount: number) => void;
+  roommates: SplitMember[];
+  onSplit: (splitWith: SplitMember[], amount: number) => void;
   onClose: () => void;
   totalAmount: number;
 }
@@ -20,11 +15,11 @@ export const SplitExpenseModal = (
   { roommates, onSplit, onClose, totalAmount }:
   SplitExpenseModalProps
 ) => {
-  const [selectedRoommates, setSelectedRoommates] = useState<Roommate[]>([]);
+  const [selectedRoommates, setSelectedRoommates] = useState<SplitMember[]>([]);
   const [splitMethod, setSplitMethod] = useState<"equal" | "custom">("equal");
   const [customAmounts, setCustomAmounts] = useState<Record<string, number>>({});
 
-  const toggleRoommate = (roommate: Roommate) => {
+  const toggleRoommate = (roommate: SplitMember) => {
     setSelectedRoommates((prev) =>
       prev.some((r) => r.id === roommate.id)
         ? prev.filter((r) => r.id !== roommate.id)

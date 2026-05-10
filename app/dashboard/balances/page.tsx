@@ -16,7 +16,9 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '../../../context/AuthContext';
 import { useI18n } from '../../../context/I18nContext';
+import { useNotifications } from '../../../context/NotificationsContext';
 import { logError } from '../../../lib/errorLogger';
+import type { Roommate, Expense, Settlement } from '../../../lib/types';
 import { Spinner } from '../../components/Spinner';
 import { SkeletonTable } from '../../components/Skeleton';
 import { EmptyState } from '../../components/EmptyState';
@@ -32,38 +34,13 @@ import {
   Calendar,
 } from 'lucide-react';
 
-interface User {
-  id?: string;
-  username: string;
-  name: string;
-  surname?: string;
-  color?: string;
-}
 
-interface Expense {
-  id: string;
-  amount: number;
-  category: string;
-  paidBy: string;
-  date: string;
-  note?: string;
-}
-
-interface Settlement {
-  id: string;
-  from: string;
-  to: string;
-  amount: number;
-  date: string;
-  note?: string;
-  status: 'pending' | 'completed';
-  createdAt: string;
-}
 
 export default function BalancesPage() {
   const { t } = useI18n();
   const { userProfile } = useAuth();
-  const [users, setUsers] = useState<User[]>([]);
+  const { createNotification } = useNotifications();
+  const [users, setUsers] = useState<Roommate[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +63,7 @@ export default function BalancesPage() {
       // Load users
        const usersSnap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
       setUsers(
-        usersSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as User))
+        usersSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Roommate))
       );
 
       // Load expenses for selected month
@@ -148,6 +125,24 @@ export default function BalancesPage() {
         createdAt: new Date().toISOString(),
       });
       toast.success(t('balances.toast.paymentRecorded'));
+
+      // Notify the recipient
+      const recipientUser = users.find((u) => u.username === settlementForm.to);
+      if (recipientUser && recipientUser.id !== userProfile?.uid) {
+        try {
+          await createNotification({
+            userId: recipientUser.id,
+            title: 'Payment Recorded',
+            message: `${userProfile?.name || userProfile?.username} recorded a payment of ${Number(settlementForm.amount).toLocaleString()} UZS to you.`,
+            type: 'settlement',
+            read: false,
+            link: '/dashboard/balances',
+          });
+        } catch (notifError) {
+          logError(notifError, 'Balances.createNotification');
+        }
+      }
+
       setShowSettlementModal(false);
       setSettlementForm({ from: '', to: '', amount: '', note: '' });
       loadData();
@@ -178,34 +173,75 @@ export default function BalancesPage() {
 
   const balances = useMemo(() => {
     if (users.length === 0) return [];
-    const totalExp = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-    const sharePerPerson = totalExp / users.length;
-    const userStats: Record<string, { paid: number; name: string; sent: number; received: number }> = {};
+
+    const totalUsers = users.length;
+
+    // Build uid → username lookup for split member resolution
+    const uidToUsername: Record<string, string> = {};
+    users.forEach((u) => { uidToUsername[u.id] = u.username; });
+
+    const userStats: Record<string, { paid: number; name: string; sent: number; received: number; netBalance: number }> = {};
     users.forEach((u) => {
-      userStats[u.username] = { paid: 0, name: u.name || u.username, sent: 0, received: 0 };
+      userStats[u.username] = { paid: 0, name: u.name || u.username, sent: 0, received: 0, netBalance: 0 };
     });
+
+    // Track total amount paid by each user (display only)
     expenses.forEach((e) => {
-      const userStat = userStats[e.paidBy];
-      if (userStat) {
-        userStat.paid += Number(e.amount) || 0;
+      const stat = userStats[e.paidBy];
+      if (stat) {
+        stat.paid += Number(e.amount) || 0;
       }
     });
+
+    // Track settlements
     settlements.forEach((s) => {
-        const fromUser = userStats[s.from];
-        if(fromUser) {
-            fromUser.sent += Number(s.amount) || 0;
+      const fromUser = userStats[s.from];
+      if (fromUser) fromUser.sent += Number(s.amount) || 0;
+      const toUser = userStats[s.to];
+      if (toUser) toUser.received += Number(s.amount) || 0;
+    });
+
+    // Calculate net balance from expense splits
+    expenses.forEach((e) => {
+      const amount = Number(e.amount) || 0;
+      if (amount <= 0) return;
+      const payer = e.paidBy;
+
+      if (!e.splitWith || e.splitWith.length === 0) {
+        // Flat-wide equal split
+        const share = amount / totalUsers;
+        users.forEach((u) => {
+          if (u.username === payer) {
+            const stat = userStats[u.username];
+            if (stat) stat.netBalance += amount - share;
+          } else {
+            const stat = userStats[u.username];
+            if (stat) stat.netBalance -= share;
+          }
+        });
+      } else {
+        // Split only among designated members + payer
+        const shareAmount = Math.round(amount / (e.splitWith.length + 1));
+
+        if (userStats[payer]) {
+          userStats[payer].netBalance += amount - shareAmount;
         }
-        const toUser = userStats[s.to];
-        if(toUser) {
-            toUser.received += Number(s.amount) || 0;
-        }
-    })
+
+        e.splitWith.forEach((member) => {
+          const username = uidToUsername[member.id];
+          if (username && userStats[username]) {
+            userStats[username].netBalance -= shareAmount;
+          }
+        });
+      }
+    });
+
     return Object.entries(userStats).map(([username, stats]) => ({
       user: username,
       name: stats.name,
       paid: stats.paid,
-      owed: sharePerPerson,
-      netBalance: stats.paid - sharePerPerson - stats.sent + stats.received,
+      owed: 0,
+      netBalance: Math.round(stats.netBalance - stats.received + stats.sent),
     }));
   }, [expenses, users, settlements]);
 

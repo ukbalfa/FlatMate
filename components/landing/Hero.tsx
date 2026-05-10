@@ -1,13 +1,21 @@
 'use client';
 
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useI18n } from '@/context/I18nContext';
 import { ArrowUpRight, ArrowRight, Receipt, CheckCircle, Zap, TrendingUp, Sparkles } from 'lucide-react';
 
-// Animated particle component
-function Particle({ delay, size, x, y }: { delay: number; size: number; x: string; y: string }) {
+const PARTICLE_CONFIGS = [
+  { delay: 0, size: 4, x: '10%', y: '20%' },
+  { delay: 1, size: 3, x: '85%', y: '15%' },
+  { delay: 2, size: 5, x: '70%', y: '60%' },
+  { delay: 0.5, size: 3, x: '25%', y: '70%' },
+  { delay: 1.5, size: 4, x: '50%', y: '85%' },
+  { delay: 3, size: 2, x: '90%', y: '40%' },
+] as const;
+
+function Particle({ delay, size, x, y, duration }: { delay: number; size: number; x: string; y: string; duration: number }) {
   return (
     <motion.div
       className="absolute rounded-full bg-white/[0.03]"
@@ -18,7 +26,7 @@ function Particle({ delay, size, x, y }: { delay: number; size: number; x: strin
         scale: [1, 1.1, 1],
       }}
       transition={{
-        duration: 4 + Math.random() * 3,
+        duration,
         repeat: Infinity,
         delay,
         ease: 'easeInOut',
@@ -36,6 +44,16 @@ export function Hero() {
   });
   const y = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
+  const particles = useMemo(() => {
+    return PARTICLE_CONFIGS.map((config, i) => (
+      <Particle
+        key={i}
+        {...config}
+        duration={4 + (i * 0.5) % 3}
+      />
+    ));
+  }, []);
 
   return (
     <section
@@ -60,12 +78,7 @@ export function Hero() {
 
       {/* Floating particles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <Particle delay={0} size={4} x="10%" y="20%" />
-        <Particle delay={1} size={3} x="85%" y="15%" />
-        <Particle delay={2} size={5} x="70%" y="60%" />
-        <Particle delay={0.5} size={3} x="25%" y="70%" />
-        <Particle delay={1.5} size={4} x="50%" y="85%" />
-        <Particle delay={3} size={2} x="90%" y="40%" />
+        {particles}
       </div>
 
       <motion.div style={{ y, opacity }} className="relative z-10 flex flex-col items-center px-4 w-full max-w-5xl">

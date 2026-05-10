@@ -9,32 +9,13 @@ import ConfirmModal from '../../components/ConfirmModal';
 import { Trash2 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { logError } from '../../../lib/errorLogger';
+import type { Roommate, CleaningTask } from '../../../lib/types';
 
-interface User {
-  id?: string;
-  username: string;
-  password?: string;
-  name: string;
-  surname?: string;
-  role: 'admin' | 'roommate';
-  color: string;
-  occupation?: string;
-  phone?: string;
-  telegram?: string;
-  instagram?: string;
-  joinedAt: string;
-}
+
 
 import { getMonday } from '../../../lib/utils';
 
-interface CleaningTask {
-  id: string;
-  task: string;
-  assignedTo: string;
-  dayOfWeek: string;
-  weekStart: string;
-  done: boolean;
-}
+
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -43,7 +24,7 @@ export default function CleaningPage() {
   const { createNotification } = useNotifications();
   const { userProfile } = useAuth();
   const [cleaning, setCleaning] = useState<CleaningTask[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<Roommate[]>([]);
   const [task, setTask] = useState('');
   const [dayOfWeek, setDayOfWeek] = useState('Monday');
   const [assignedTo, setAssignedTo] = useState('');
@@ -57,7 +38,7 @@ export default function CleaningPage() {
       try {
         const snap = await getDocs(collection(db, 'users'));
         if (!mounted) return;
-        setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as User)));
+        setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Roommate)));
       } catch (error) {
         if (!mounted) return;
         logError(error, 'Cleaning.loadUsers');
