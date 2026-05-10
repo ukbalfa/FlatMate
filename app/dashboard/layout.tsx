@@ -23,6 +23,7 @@ import NotificationsDropdown from '../components/NotificationsDropdown';
 import { useI18n } from '../../context/I18nContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import FlatConnectionModal from '../components/FlatConnectionModal';
 
 const navLinks = [
   { href: "/dashboard", label: "nav.dashboard", icon: LayoutDashboard },
@@ -158,7 +159,7 @@ const LoadingScreen = memo(function LoadingScreen() {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, userProfile, loading } = useAuth();
+  const { user, userProfile, loading, showFlatModal, setShowFlatModal } = useAuth();
   const pathname = usePathname();
   const { t } = useI18n();
   const [authTimeout, setAuthTimeout] = useState(false);
@@ -174,6 +175,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.replace("/login");
     }
   }, [loading, user, router, authTimeout]);
+
+  useEffect(() => {
+    if (!loading && user && !userProfile?.flatId) {
+      setShowFlatModal(true);
+    }
+  }, [loading, user, userProfile?.flatId, setShowFlatModal]);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -220,6 +227,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </motion.aside>
         )}
       </AnimatePresence>
+
+      {showFlatModal && <FlatConnectionModal />}
 
       {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#0A0A0A] rounded-tl-3xl border-t border-l border-white/5 lg:mt-2 lg:mb-2 lg:mr-2 shadow-2xl relative overflow-hidden">
