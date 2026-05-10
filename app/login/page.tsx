@@ -163,12 +163,7 @@ export default function LoginPage() {
     }
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
-      if (!userDoc.exists()) {
-        setError(t('login.userProfileNotFound'));
-        setIsLoading(false);
-        return;
-      }
+      await ensureUserProfile(userCredential.user.uid, { email });
       router.push('/dashboard');
     } catch (err) {
       const code = (err as { code?: string }).code;
