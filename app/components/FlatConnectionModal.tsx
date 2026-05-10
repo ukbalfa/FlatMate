@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { useAuth } from '../context/AuthContext';
+import { db } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 import { X, Users, Key, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
-import { logError } from '../lib/errorLogger';
+import { logError } from '../../lib/errorLogger';
 
 export function generateInviteCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';

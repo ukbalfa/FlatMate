@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import admin from 'firebase-admin';
 import crypto from 'crypto';
-import { getAdminApp } from '../../../lib/firebase-admin';
+import { getAdminApp } from '../../../../lib/firebase-admin';
 
 function verifyTelegramHash(data: Record<string, string | undefined>, botToken: string): boolean {
   const { hash, ...fields } = data;
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     let uid: string;
 
     if (!existingUsers.empty) {
-      uid = existingUsers.docs[0].id;
+      uid = existingUsers.docs[0]!.id;
     } else {
       // Create a new Firebase Auth user
       const displayName = [first_name, last_name].filter(Boolean).join(' ');
