@@ -5,7 +5,7 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth, db } from '../../../lib/firebase';
 import { collection, getDocs, updateDoc, doc, setDoc, query, orderBy } from 'firebase/firestore';
-import { Plus, Phone, ExternalLink, X, Edit2, Send, Trash2 } from 'lucide-react';
+import { Plus, Phone, ExternalLink, X, Edit2, Send, Trash2, Copy } from 'lucide-react';
 import { SkeletonCard } from '../../components/Skeleton';
 import { toast } from 'sonner';
 import { useI18n } from '../../../context/I18nContext';
@@ -70,7 +70,8 @@ function formatMonth(val: unknown): string {
 
 export default function RoommatesPage() {
   const { t } = useI18n();
-  const { userProfile } = useAuth();
+  const { userProfile, setShowFlatModal } = useAuth();
+  const isAdmin = userProfile?.role === 'admin';
   const [users, setUsers] = useState<Roommate[]>([]);
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
@@ -240,6 +241,28 @@ const sortedRoommates = [...users].sort((a, b) =>
             </select>
           </div>
         </div>
+
+        {userProfile?.flatId && isAdmin && (
+          <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-xl p-4 mb-6 flex items-center justify-between">
+            <div>
+              <p className="text-white font-medium">Flat Invite Code</p>
+              <p className="text-gray-400 text-sm">Share this code with new roommates so they can join your flat.</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xl font-mono font-bold tracking-widest text-amber-400">{userProfile.flatId}</span>
+              <button
+                onClick={async () => {
+                  await navigator.clipboard.writeText(userProfile.flatId!);
+                  toast.success('Code copied!');
+                }}
+                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
+              >
+                <Copy className="w-4 h-4 text-white" />
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? (
             <>
