@@ -35,7 +35,7 @@ import type { Expense, Task, CleaningTask, Roommate, ActivityItem } from '../../
 
 
 export default function DashboardPage() {
-  const { userProfile } = useAuth();
+  const { userProfile, setShowFlatModal } = useAuth();
   const { t } = useI18n();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -243,6 +243,24 @@ useEffect(() => {
           </div>
         ) : (
           <>
+        {!userProfile?.flatId && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="backdrop-blur-md bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6 flex items-center justify-between"
+          >
+            <div>
+              <p className="text-amber-400 font-medium">You&apos;re not in a flat yet</p>
+              <p className="text-gray-400 text-sm">Set up your flat to start tracking expenses and chores with your roommates.</p>
+            </div>
+            <button
+              onClick={() => setShowFlatModal(true)}
+              className="bg-amber-400 text-gray-900 px-4 py-2 rounded-lg font-medium hover:bg-amber-300 transition text-sm whitespace-nowrap"
+            >
+              Set up your flat
+            </button>
+          </motion.div>
+        )}
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {stats.map((stat, index) => (
