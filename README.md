@@ -245,6 +245,7 @@ Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 Create `.env.local` in the project root:
 
 ```env
+# Note: Enable "Sign-in method > Google" in Firebase Console for Google login
 # Firebase (client-side)
 NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
@@ -257,6 +258,10 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 FIREBASE_PROJECT_ID=your_project_id
 FIREBASE_CLIENT_EMAIL=your_service_account@your_project.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+
+# Telegram (required for Telegram login)
+NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=your_bot_username
+TELEGRAM_BOT_TOKEN=your_bot_token
 
 # Sentry (optional — error monitoring)
 NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn
@@ -299,6 +304,7 @@ NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn
 | `npm run build` | Create an optimised production build |
 | `npm run start` | Serve the production build |
 | `npm run lint` | Run ESLint across the entire codebase |
+| `npm run test` | Run Jest test suite |
 
 ---
 
