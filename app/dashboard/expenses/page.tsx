@@ -28,6 +28,7 @@ import {
 import {
   Download,
   Plus,
+  RefreshCw,
 } from "lucide-react";
 import { Spinner } from "../../components/Spinner";
 import { SkeletonList } from "../../components/Skeleton";
@@ -37,6 +38,7 @@ import { Avatar } from "../../components/Avatar";
 import { useAuth } from "../../../context/AuthContext";
 import { useI18n } from "../../../context/I18nContext";
 import { logError } from "../../../lib/errorLogger";
+import { syncRecurringItems } from '../../../lib/syncRecurring';
 import type { Expense, RecurringExpense, SplitMember } from "../../../lib/types";
 import { ExpenseCard } from "./components/ExpenseCard";
 import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
@@ -89,8 +91,7 @@ export default function ExpensesPage() {
   const [budgetLimits, setBudgetLimits] = useState<Record<string, number>>({});
   const [receiptUrl, setReceiptUrl] = useState("");
   const [limitCount, setLimitCount] = useState(50);
-
-  
+  const [syncingRecurring, setSyncingRecurring] = useState(false);
 
   // Load roommates who share this user's flat
   const [roommates, setRoommates] = useState<SplitMember[]>([]);
@@ -202,6 +203,7 @@ export default function ExpensesPage() {
   useEffect(() => {
     if (!userProfile?.flatId) return;
     loadRecurringExpenses();
+    handleSyncRecurring();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userProfile]);
 
@@ -429,6 +431,20 @@ const handleDelete = async (id: string) => {
     setSplitWith(roommates);
   };
 
+  const handleSyncRecurring = async () => {
+    if (!userProfile?.flatId) return;
+    setSyncingRecurring(true);
+    try {
+      await syncRecurringItems(userProfile.flatId);
+      toast.success('Recurring items synced');
+    } catch (error) {
+      logError(error, 'Expenses.syncRecurring');
+      toast.error('Sync failed');
+    } finally {
+      setSyncingRecurring(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#121212] text-white p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -436,6 +452,14 @@ const handleDelete = async (id: string) => {
         <div className="flex justify-between items-center">
           <h1 className="font-display text-3xl font-bold">Expenses</h1>
           <div className="flex gap-2">
+            <button
+              onClick={handleSyncRecurring}
+              disabled={syncingRecurring}
+              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
+              title="Sync recurring items"
+            >
+              <RefreshCw className={`w-5 h-5 ${syncingRecurring ? 'animate-spin' : ''}`} />
+            </button>
             <button className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition">
               <Download className="w-5 h-5" />
             </button>
