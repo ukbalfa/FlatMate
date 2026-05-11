@@ -436,10 +436,10 @@ const handleDelete = async (id: string) => {
     setSyncingRecurring(true);
     try {
       await syncRecurringItems(userProfile.flatId);
-      toast.success('Recurring items synced');
+      toast.success(t('expenses.toast.syncComplete'));
     } catch (error) {
       logError(error, 'Expenses.syncRecurring');
-      toast.error('Sync failed');
+      toast.error(t('expenses.toast.syncFailed'));
     } finally {
       setSyncingRecurring(false);
     }
