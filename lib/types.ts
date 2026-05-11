@@ -18,6 +18,10 @@ export interface UserProfile {
   telegram?: string;
   instagram?: string;
   joinedAt?: string;
+  notificationPrefs?: {
+    deliveryMethods: Record<string, boolean>;
+    doNotDisturb: { enabled: boolean; start: string; end: string };
+  };
 }
 
 // ---------------------------------------------------------------------------

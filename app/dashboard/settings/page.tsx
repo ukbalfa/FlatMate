@@ -40,6 +40,10 @@ interface UserProfile {
   joinedAt?: string;
   emailVerified?: boolean;
   notifications?: Record<string, boolean>;
+  notificationPrefs?: {
+    deliveryMethods: Record<string, boolean>;
+    doNotDisturb: { enabled: boolean; start: string; end: string };
+  };
 }
 
 const COLORS = [
