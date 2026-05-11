@@ -147,6 +147,18 @@ describe('I18nContext', () => {
       expect(result.current.t('tasks.status.today')).toBe('Bugun');
     });
 
+    it('has tasks.recurringPattern translations in all three languages', () => {
+      const wrapper = createWrapper();
+      const { result } = renderHook(() => useI18n(), { wrapper });
+      expect(result.current.t('tasks.recurringPatternDaily')).toBe('Daily');
+
+      act(() => result.current.setLanguage('ru'));
+      expect(result.current.t('tasks.recurringPatternDaily')).toBe('\u0415\u0436\u0435\u0434\u043d\u0435\u0432\u043d\u043e');
+
+      act(() => result.current.setLanguage('uz'));
+      expect(result.current.t('tasks.recurringPatternDaily')).toBe('Har kuni');
+    });
+
     it('t function is stable across re-renders with same language', () => {
       const wrapper = createWrapper();
       const { result, rerender } = renderHook(() => useI18n(), { wrapper });
