@@ -10,8 +10,10 @@ import {
   addDoc,
   deleteDoc,
   doc,
+  getDoc,
   orderBy,
   limit,
+  updateDoc,
 } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { useAuth } from '../../../context/AuthContext';
@@ -30,8 +32,9 @@ import {
   Plus,
   X,
   User,
-  Minus,
   Calendar,
+  Clock,
+  Check,
 } from 'lucide-react';
 
 
@@ -117,17 +120,17 @@ export default function BalancesPage() {
       return;
     }
     setSubmittingSettlement(true);
-    try {
-      await addDoc(collection(db, 'settlements'), {
-        from: settlementForm.from,
-        to: settlementForm.to,
-        amount: Number(settlementForm.amount),
-        date: new Date().toISOString().slice(0, 10),
-        note: settlementForm.note,
-        status: 'completed',
-        createdAt: new Date().toISOString(),
-        flatId: userProfile?.flatId,
-      });
+     try {
+       await addDoc(collection(db, 'settlements'), {
+         from: settlementForm.from,
+         to: settlementForm.to,
+         amount: Number(settlementForm.amount),
+         date: new Date().toISOString().slice(0, 10),
+         note: settlementForm.note,
+         status: isAdmin ? 'completed' : 'pending', // Auto-complete for admins, pending for roommates
+         createdAt: new Date().toISOString(),
+         flatId: userProfile?.flatId,
+       });
       toast.success(t('balances.toast.paymentRecorded'));
 
       // Notify the recipient
@@ -157,6 +160,80 @@ export default function BalancesPage() {
   };
 
   const [confirmState, setConfirmState] = useState<{ open: boolean; onConfirm: () => void; message: string }>({ open: false, onConfirm: () => {}, message: '' });
+
+  const approveSettlement = async (id: string) => {
+    try {
+      await updateDoc(doc(db, 'settlements', id), {
+        status: 'completed',
+        approvedBy: userProfile?.uid,
+        approvedAt: new Date().toISOString(),
+      });
+      toast.success(t('balances.toast.settlementApproved'));
+      
+      // Notify the recipient
+      const settlementDoc = await getDoc(doc(db, 'settlements', id));
+      if (settlementDoc.exists()) {
+        const settlementData = settlementDoc.data() as Settlement;
+        const recipientUser = users.find((u) => u.username === settlementData.to);
+        if (recipientUser && recipientUser.id !== userProfile?.uid) {
+          try {
+            await createNotification({
+              userId: recipientUser.id,
+              title: 'Settlement Approved',
+              message: `Your settlement of ${Number(settlementData.amount).toLocaleString()} UZS from ${settlementData.from} has been approved.`,
+              type: 'settlement',
+              read: false,
+              link: '/dashboard/balances',
+            });
+          } catch (notifError) {
+            logError(notifError, 'Balances.createNotification');
+          }
+        }
+      }
+      
+      loadData();
+    } catch (error) {
+      logError(error, 'Balances.approveSettlement');
+      toast.error(t('balances.toast.approveFailed'));
+    }
+  };
+
+  const rejectSettlement = async (id: string) => {
+    try {
+      await updateDoc(doc(db, 'settlements', id), {
+        status: 'rejected',
+        approvedBy: userProfile?.uid,
+        approvedAt: new Date().toISOString(),
+      });
+      toast.success(t('balances.toast.settlementRejected'));
+      
+      // Notify the recipient
+      const settlementDoc = await getDoc(doc(db, 'settlements', id));
+      if (settlementDoc.exists()) {
+        const settlementData = settlementDoc.data() as Settlement;
+        const recipientUser = users.find((u) => u.username === settlementData.to);
+        if (recipientUser && recipientUser.id !== userProfile?.uid) {
+          try {
+            await createNotification({
+              userId: recipientUser.id,
+              title: 'Settlement Rejected',
+              message: `Your settlement of ${Number(settlementData.amount).toLocaleString()} UZS from ${settlementData.from} has been rejected.`,
+              type: 'settlement',
+              read: false,
+              link: '/dashboard/balances',
+            });
+          } catch (notifError) {
+            logError(notifError, 'Balances.createNotification');
+          }
+        }
+      }
+      
+      loadData();
+    } catch (error) {
+      logError(error, 'Balances.rejectSettlement');
+      toast.error(t('balances.toast.rejectFailed'));
+    }
+  };
 
   const deleteSettlement = async (id: string) => {
     setConfirmState({
@@ -467,56 +544,78 @@ export default function BalancesPage() {
                 </div>
               ) : (
                 <div className="divide-y divide-white/5">
-                  {settlements
-                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                    .map((settlement) => (
-                      <div
-                        key={settlement.id}
-                        className="px-6 py-4 flex items-center justify-between hover:bg-white/5 transition-colors"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                              settlement.status === 'completed'
-                                ? 'bg-green-500/20 text-green-400'
-                                : 'bg-amber-500/20 text-amber-400'
-                            }`}
-                          >
-                            {settlement.status === 'completed' ? (
-                              <CheckCircle className="w-4 h-4" />
-                            ) : (
-                              <Minus className="w-4 h-4" />
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-white">
-                              <span className="font-medium">{getUserName(settlement.from)}</span>
-                              {' '}{t('balances.settlementPaid')}{' '}
-                              <span className="font-medium">{getUserName(settlement.to)}</span>
-                            </p>
-                            <p className="text-sm text-gray-500 flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              {new Date(settlement.date).toLocaleDateString()}
-                              {settlement.note && ` • ${settlement.note}`}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <p className="text-lg font-semibold text-white">
-                            {settlement.amount.toLocaleString()} UZS
-                          </p>
-                          {isAdmin && (
-                            <button
-                              onClick={() => deleteSettlement(settlement.id)}
-                              className="text-gray-500 hover:text-red-400 transition-colors"
-                              aria-label="Delete settlement"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+             {settlements
+                     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                     .map((settlement) => (
+                       <div
+                         key={settlement.id}
+                         className="px-6 py-4 flex items-center justify-between hover:bg-white/5 transition-colors"
+                       >
+                         <div className="flex items-center gap-4">
+                           <div
+                             className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                               settlement.status === 'completed'
+                                 ? 'bg-green-500/20 text-green-400'
+                                 : settlement.status === 'pending'
+                                 ? 'bg-yellow-500/20 text-yellow-400'
+                                 : 'bg-red-500/20 text-red-400'
+                             }`}
+                           >
+                             {settlement.status === 'completed' ? (
+                               <CheckCircle className="w-4 h-4" />
+                             ) : settlement.status === 'pending' ? (
+                               <Clock className="w-4 h-4" />
+                             ) : (
+                               <X className="w-4 h-4" />
+                             )}
+                           </div>
+                           <div>
+                             <p className="text-white">
+                               <span className="font-medium">{getUserName(settlement.from)}</span>
+                               {' '}{t('balances.settlementPaid')}{' '}
+                               <span className="font-medium">{getUserName(settlement.to)}</span>
+                             </p>
+                             <p className="text-sm text-gray-500 flex items-center gap-1">
+                               <Calendar className="w-3 h-3" />
+                               {new Date(settlement.date).toLocaleDateString()}
+                               {settlement.note && ` • ${settlement.note}`}
+                             </p>
+                           </div>
+                         </div>
+                         <div className="flex items-center gap-4">
+                           <p className="text-lg font-semibold text-white">
+                             {settlement.amount.toLocaleString()} UZS
+                           </p>
+                           {isAdmin && settlement.status === 'pending' && (
+                             <>
+                               <button
+                                 onClick={() => approveSettlement(settlement.id)}
+                                 className="text-green-400 hover:text-green-300 transition-colors"
+                                 aria-label="Approve settlement"
+                               >
+                                 <Check className="w-4 h-4" />
+                               </button>
+                               <button
+                                 onClick={() => rejectSettlement(settlement.id)}
+                                 className="text-red-400 hover:text-red-300 transition-colors"
+                                 aria-label="Reject settlement"
+                               >
+                                 <X className="w-4 h-4" />
+                               </button>
+                             </>
+                           )}
+                           {isAdmin && settlement.status !== 'pending' && (
+                             <button
+                               onClick={() => deleteSettlement(settlement.id)}
+                               className="text-gray-500 hover:text-red-400 transition-colors"
+                               aria-label="Delete settlement"
+                             >
+                               <X className="w-4 h-4" />
+                             </button>
+                           )}
+                         </div>
+                       </div>
+                     ))}
                 </div>
               )}
             </div>

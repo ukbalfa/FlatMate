@@ -33,6 +33,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [pageReady, setPageReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showReset, setShowReset] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -230,6 +231,7 @@ export default function LoginPage() {
     setEmail('');
     setPassword('');
     setName('');
+    setShowReset(false);
   };
 
   const bullets = [
@@ -376,8 +378,52 @@ export default function LoginPage() {
               >
                 {activeTab === 'signin' ? t('login.signIn') : t('login.createAccount')}
               </button>
+              {activeTab === 'signin' && (
+                <div className="text-right">
+                  <button
+                    type="button"
+                    onClick={() => setShowReset(true)}
+                    className="text-xs text-[#F97316] hover:underline font-medium"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              )}
               {error && <div className="text-red-500 dark:text-red-400 text-sm text-center mt-2">{error}</div>}
             </form>
+
+            {showReset && (
+              <div className="mt-6 border-t border-gray-200 dark:border-gray-600 pt-6">
+                <h3 className="text-sm font-medium text-[#0a0a0a] dark:text-gray-100 mb-2">Reset Password</h3>
+                <p className="text-xs text-[#6b7280] dark:text-gray-400 mb-4">Enter your email address and we&apos;ll send you a link to reset your password.</p>
+                <div className="space-y-3">
+                  <input
+                    type="email"
+                    placeholder={t('login.emailPlaceholder')}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-3 text-[#0a0a0a] dark:text-gray-100 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                    required
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowReset(false)}
+                      className="flex-1 bg-gray-200 dark:bg-gray-600 text-[#0a0a0a] dark:text-gray-100 rounded-lg px-4 py-3 font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isLoading}
+                      className="flex-1 bg-[#0a0a0a] dark:bg-gray-700 text-white rounded-lg px-4 py-3 font-medium hover:bg-gray-800 dark:hover:bg-gray-600 transition disabled:opacity-60"
+                    >
+                      Send Link
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="mt-4 text-center">
               <span className="text-xs text-[#6b7280] dark:text-gray-400">

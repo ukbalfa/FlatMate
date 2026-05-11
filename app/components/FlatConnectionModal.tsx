@@ -157,7 +157,7 @@ export default function FlatConnectionModal() {
               {t('onboarding.createDesc')}
             </p>
             <button
-              onClick={handleCreate}
+              onClick={() => handleCreate()}
               disabled={loading}
               className="w-full bg-[#F97316] text-gray-900 rounded-lg px-6 py-3 font-medium hover:bg-orange-500 transition disabled:opacity-60"
             >

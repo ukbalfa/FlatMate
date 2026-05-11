@@ -37,6 +37,7 @@ export default function TasksPage() {
   const [text, setText] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
+  const [priority, setPriority] = useState<"medium" | "low" | "high">("medium");
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
 
@@ -85,18 +86,20 @@ export default function TasksPage() {
     if (!text || !dueDate || !assignedTo) return;
     setAdding(true);
     try {
-      await addDoc(collection(db, 'tasks'), {
-        text,
-        done: false,
-        assignedTo,
-        dueDate,
-        createdBy: userProfile?.username || '',
-        createdAt: new Date().toISOString(),
-        flatId: userProfile?.flatId,
-      });
-      setText('');
-      setDueDate('');
-      setAssignedTo('');
+await addDoc(collection(db, 'tasks'), {
+         text,
+         done: false,
+         assignedTo,
+         dueDate,
+         priority,
+         createdBy: userProfile?.username || '',
+         createdAt: new Date().toISOString(),
+         flatId: userProfile?.flatId,
+       });
+       setText('');
+       setDueDate('');
+       setAssignedTo('');
+       setPriority("medium");
       toast.success(t('tasks.toast.added'));
 
       // Notify the assigned user
@@ -174,34 +177,46 @@ export default function TasksPage() {
               />
               <div className="text-right text-xs text-gray-400 mt-1">{text.length}/200</div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-[#6b7280] dark:text-gray-400 mb-2">{t('tasks.dueDate')}</label>
-                <input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 text-[#0a0a0a] dark:text-gray-100 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-[#6b7280] dark:text-gray-400 mb-2">{t('tasks.assignTo')}</label>
-                <select
-                  value={assignedTo}
-                  onChange={(e) => setAssignedTo(e.target.value)}
-                  className="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 text-[#0a0a0a] dark:text-gray-100 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
-                  required
-                >
-                  <option value="">{t('tasks.select')}</option>
-                  {users.map((u) => (
-                    <option key={u.username} value={u.username}>
-                      {u.name || u.username}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+<div className="grid grid-cols-3 gap-4">
+               <div>
+                 <label className="block text-sm text-[#6b7280] dark:text-gray-400 mb-2">{t('tasks.dueDate')}</label>
+                 <input
+                   type="date"
+                   value={dueDate}
+                   onChange={(e) => setDueDate(e.target.value)}
+                   className="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 text-[#0a0a0a] dark:text-gray-100 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                   required
+                 />
+               </div>
+               <div>
+                 <label className="block text-sm text-[#6b7280] dark:text-gray-400 mb-2">{t('tasks.assignTo')}</label>
+                 <select
+                   value={assignedTo}
+                   onChange={(e) => setAssignedTo(e.target.value)}
+                   className="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 text-[#0a0a0a] dark:text-gray-100 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                   required
+                 >
+                   <option value="">{t('tasks.select')}</option>
+                   {users.map((u) => (
+                     <option key={u.username} value={u.username}>
+                       {u.name || u.username}
+                     </option>
+                   ))}
+                 </select>
+               </div>
+               <div>
+                 <label className="block text-sm text-[#6b7280] dark:text-gray-400 mb-2">{t('tasks.priority')}</label>
+                 <select
+                   value={priority}
+                   onChange={(e) => setPriority(e.target.value as "low" | "medium" | "high")}
+                   className="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 text-[#0a0a0a] dark:text-gray-100 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                 >
+                   <option value="low" className="bg-white dark:bg-gray-700">{t('tasks.priorityLow')}</option>
+                   <option value="medium" className="bg-white dark:bg-gray-700">{t('tasks.priorityMedium')}</option>
+                   <option value="high" className="bg-white dark:bg-gray-700">{t('tasks.priorityHigh')}</option>
+                 </select>
+               </div>
+             </div>
             <button
               type="submit"
               disabled={adding}
@@ -290,19 +305,33 @@ export default function TasksPage() {
                       </AnimatePresence>
                     </button>
                     <div className="flex-1 min-w-0">
-                      <div
-                        className={`text-sm ${
-                          task.done
-                            ? 'line-through text-gray-400 dark:text-gray-500'
-                            : 'text-[#0a0a0a] dark:text-gray-100'
-                        }`}
-                      >
-                        {task.text}
-                      </div>
-                      <div className="text-xs text-[#6b7280] dark:text-gray-400 mt-0.5">
-                        {users.find((u) => u.username === task.assignedTo)?.name || task.assignedTo}
-                      </div>
-                    </div>
+                       <div
+                         className={`text-sm ${
+                           task.done
+                             ? 'line-through text-gray-400 dark:text-gray-500'
+                             : 'text-[#0a0a0a] dark:text-gray-100'
+                         }`}
+                       >
+                         {task.text}
+                       </div>
+                       <div className="text-xs text-[#6b7280] dark:text-gray-400 mt-0.5 flex items-center gap-2">
+                         {users.find((u) => u.username === task.assignedTo)?.name || task.assignedTo}
+                         {task.priority && (
+                           <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                             task.priority === 'high' 
+                               ? 'bg-red-500/20 text-red-400' 
+                               : task.priority === 'medium'
+                               ? 'bg-yellow-500/20 text-yellow-400'
+                               : 'bg-green-500/20 text-green-400'
+                           }`}>
+                             <span className={`w-1.5 h-1.5 rounded-full ${
+                               task.priority === 'high' ? 'bg-red-400' : task.priority === 'medium' ? 'bg-yellow-400' : 'bg-green-400'
+                             }`} />
+                             {task.priority}
+                           </span>
+                         )}
+                       </div>
+                     </div>
                     <span className={`px-2 py-1 rounded text-xs font-semibold border ${badgeClass}`}>
                       {badgeType}
                     </span>
