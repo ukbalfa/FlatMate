@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '../../../lib/firebase';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, limit, where } from 'firebase/firestore';
-import { Trash2, Repeat, RefreshCw } from 'lucide-react';
+import { Trash2, Pencil, Repeat, RefreshCw } from 'lucide-react';
 import { Spinner } from '../../components/Spinner';
 import { SkeletonList } from '../../components/Skeleton';
 import { EmptyState } from '../../components/EmptyState';
@@ -15,7 +15,7 @@ import { useNotifications } from '../../../context/NotificationsContext';
 import { logError } from '../../../lib/errorLogger';
 import type { Roommate, Task, RecurringTask } from '../../../lib/types';
 import { syncRecurringItems } from '../../../lib/syncRecurring';
-
+import { TaskEditModal } from './components/TaskEditModal';
 
 
 export default function TasksPage() {
@@ -41,6 +41,7 @@ export default function TasksPage() {
   const [priority, setPriority] = useState<"medium" | "low" | "high">("medium");
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   const [activeTab, setActiveTab] = useState<'one-time' | 'recurring'>('one-time');
   const [recurringTasks, setRecurringTasks] = useState<RecurringTask[]>([]);
@@ -148,6 +149,22 @@ await addDoc(collection(db, 'tasks'), {
     } catch (error) {
       logError(error, 'Tasks.toggleDone');
       toast.error(t('tasks.toast.addFailed'));
+    }
+  };
+
+  const handleEditTask = async (updated: Task) => {
+    try {
+      await updateDoc(doc(db, 'tasks', updated.id), {
+        text: updated.text,
+        dueDate: updated.dueDate,
+        assignedTo: updated.assignedTo,
+        priority: updated.priority,
+        updatedAt: new Date().toISOString(),
+      });
+      toast.success(t('tasks.toast.updated'));
+    } catch (error) {
+      logError(error, 'Tasks.edit');
+      toast.error(t('tasks.toast.updateFailed'));
     }
   };
 
@@ -456,13 +473,22 @@ await addDoc(collection(db, 'tasks'), {
                           {badgeType}
                         </span>
                         {isAdmin && (
-                          <button
-                            onClick={() => handleDelete(task.id)}
-                            className="text-gray-400 hover:text-red-500 transition-colors"
-                            aria-label="Delete task"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          <>
+                            <button
+                              onClick={() => setEditingTask(task)}
+                              className="text-gray-400 hover:text-amber-400 transition-colors"
+                              aria-label="Edit task"
+                            >
+                              <Pencil size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(task.id)}
+                              className="text-gray-400 hover:text-red-500 transition-colors"
+                              aria-label="Delete task"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </>
                         )}
                       </motion.div>
                     );
@@ -626,6 +652,17 @@ await addDoc(collection(db, 'tasks'), {
           </>
         )}
       </div>
+      {editingTask && (
+        <TaskEditModal
+          task={editingTask}
+          users={users}
+          onSave={(updated) => {
+            handleEditTask(updated);
+            setEditingTask(null);
+          }}
+          onClose={() => setEditingTask(null)}
+        />
+      )}
       <ConfirmModal
         isOpen={confirmState.open}
         title="Confirm"
