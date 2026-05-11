@@ -129,7 +129,27 @@ export interface Task {
    createdBy: string;
    flatId?: string;
    priority?: "low" | "medium" | "high";
+   isRecurring?: boolean;
+   recurrencePattern?: "daily" | "weekly" | "monthly" | "yearly";
+   parentTaskId?: string;
  }
+
+// ---------------------------------------------------------------------------
+// Recurring Task
+// ---------------------------------------------------------------------------
+export interface RecurringTask {
+  id?: string;
+  flatId: string;
+  text: string;
+  assignedTo: string;
+  priority?: "low" | "medium" | "high";
+  createdBy: string;
+  startDate: string;
+  endDate?: string | null;
+  pattern: "daily" | "weekly" | "monthly" | "yearly";
+  createdAt: string;
+  lastGeneratedDate?: string;
+}
 
 // ---------------------------------------------------------------------------
 // Notification
