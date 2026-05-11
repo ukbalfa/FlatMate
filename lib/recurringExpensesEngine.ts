@@ -1,22 +1,6 @@
 import { collection, query, where, getDocs, writeBatch, doc } from 'firebase/firestore';
 import { db } from './firebase';
-
-interface RecurringExpense {
-  id?: string;
-  flatId: string;
-  amount: number;
-  currency?: string;
-  description?: string;
-  category: string;
-  paidBy: string;
-  startDate: string;
-  endDate?: string | null;
-  pattern: 'daily' | 'weekly' | 'monthly' | 'yearly';
-  note?: string;
-  createdAt: string;
-  nextDueDate?: string;
-  lastGeneratedDate?: string;
-}
+import type { RecurringExpense } from './types';
 
 export async function generateMissingRecurringExpenses(flatId: string) {
   if (!flatId) return [];
