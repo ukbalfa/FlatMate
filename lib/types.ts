@@ -18,6 +18,10 @@ export interface UserProfile {
   telegram?: string;
   instagram?: string;
   joinedAt?: string;
+  notificationPrefs?: {
+    deliveryMethods: Record<string, boolean>;
+    doNotDisturb: { enabled: boolean; start: string; end: string };
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -47,22 +51,25 @@ export interface SplitMember {
 }
 
 export interface Expense {
-  id: string;
-  flatId?: string;
-  amount: number;
-  category: string;
-  description?: string;
-  paidBy: string;
-  date: string;
-  note?: string;
-  receiptUrl?: string;
-  isRecurring?: boolean;
-  splitWith?: SplitMember[];
-  recurrencePattern?: "monthly" | "weekly" | "yearly";
-  recurrenceEndDate?: string;
-  parentExpenseId?: string;
-  createdAt?: string;
-}
+   id: string;
+   flatId?: string;
+   amount: number;
+   category: string;
+   description?: string;
+   paidBy: string;
+   date: string;
+   note?: string;
+   receiptUrl?: string;
+   isRecurring?: boolean;
+   splitWith?: SplitMember[];
+   recurrencePattern?: "monthly" | "weekly" | "yearly";
+   recurrenceEndDate?: string;
+   parentExpenseId?: string;
+   createdAt?: string;
+   approvalStatus?: "pending" | "approved" | "rejected";
+   approvedBy?: string;
+   approvedAt?: string;
+ }
 
 // ---------------------------------------------------------------------------
 // Recurring Expense
@@ -88,16 +95,18 @@ export interface RecurringExpense {
 // Settlement
 // ---------------------------------------------------------------------------
 export interface Settlement {
-  id: string;
-  from: string;
-  to: string;
-  amount: number;
-  date: string;
-  note?: string;
-  status: "pending" | "completed";
-  createdAt: string;
-  flatId?: string;
-}
+   id: string;
+   from: string;
+   to: string;
+   amount: number;
+   date: string;
+   note?: string;
+   status: "pending" | "completed" | "rejected";
+   createdAt: string;
+   flatId?: string;
+   approvedBy?: string;
+   approvedAt?: string;
+ }
 
 // ---------------------------------------------------------------------------
 // Cleaning Task
@@ -116,13 +125,34 @@ export interface CleaningTask {
 // Task
 // ---------------------------------------------------------------------------
 export interface Task {
-  id: string;
+   id: string;
+   text: string;
+   done: boolean;
+   assignedTo: string;
+   dueDate: string;
+   createdBy: string;
+   flatId?: string;
+   priority?: "low" | "medium" | "high";
+   isRecurring?: boolean;
+   recurrencePattern?: "daily" | "weekly" | "monthly" | "yearly";
+   parentTaskId?: string;
+ }
+
+// ---------------------------------------------------------------------------
+// Recurring Task
+// ---------------------------------------------------------------------------
+export interface RecurringTask {
+  id?: string;
+  flatId: string;
   text: string;
-  done: boolean;
   assignedTo: string;
-  dueDate: string;
+  priority?: "low" | "medium" | "high";
   createdBy: string;
-  flatId?: string;
+  startDate: string;
+  endDate?: string | null;
+  pattern: "daily" | "weekly" | "monthly" | "yearly";
+  createdAt: string;
+  lastGeneratedDate?: string;
 }
 
 // ---------------------------------------------------------------------------

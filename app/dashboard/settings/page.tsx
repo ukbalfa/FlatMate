@@ -40,6 +40,10 @@ interface UserProfile {
   joinedAt?: string;
   emailVerified?: boolean;
   notifications?: Record<string, boolean>;
+  notificationPrefs?: {
+    deliveryMethods: Record<string, boolean>;
+    doNotDisturb: { enabled: boolean; start: string; end: string };
+  };
 }
 
 const COLORS = [
@@ -55,6 +59,12 @@ const NOTIFICATION_PREFS = [
   { key: 'expenseAlerts', label: 'settings.notifications.newExpenses', description: 'settings.notifications.newExpensesDesc' },
   { key: 'cleaningReminders', label: 'settings.notifications.cleaningSchedule', description: 'settings.notifications.cleaningScheduleDesc' },
   { key: 'weeklySummary', label: 'settings.notifications.weeklySummary', description: 'settings.notifications.weeklySummaryDesc' },
+];
+
+const DELIVERY_METHODS = [
+  { key: 'inApp', label: 'settings.notifications.inApp', description: 'settings.notifications.inAppDesc' },
+  { key: 'email', label: 'settings.notifications.email', description: 'settings.notifications.emailDesc' },
+  { key: 'push', label: 'settings.notifications.push', description: 'settings.notifications.pushDesc' },
 ];
 
 export default function SettingsPage() {
@@ -81,6 +91,13 @@ export default function SettingsPage() {
     cleaningReminders: true,
     weeklySummary: false,
   });
+  const [notificationPrefs, setNotificationPrefs] = useState<{
+    deliveryMethods: Record<string, boolean>;
+    doNotDisturb: { enabled: boolean; start: string; end: string };
+  }>({
+    deliveryMethods: { inApp: true, email: false, push: false },
+    doNotDisturb: { enabled: false, start: '22:00', end: '08:00' },
+  });
 
   const loadUserProfile = useCallback(async () => {
     if (!contextProfile?.uid) return;
@@ -101,6 +118,9 @@ export default function SettingsPage() {
         });
         if (data.notifications) {
           setNotifications(data.notifications);
+        }
+        if (data.notificationPrefs) {
+          setNotificationPrefs(data.notificationPrefs);
         }
       }
     } catch (error) {
@@ -180,6 +200,7 @@ export default function SettingsPage() {
     try {
       await updateDoc(doc(db, 'users', contextProfile.uid), {
         notifications,
+        notificationPrefs,
         updatedAt: new Date().toISOString(),
       });
       toast.success(t('settings.toast.notificationsSaved'));
@@ -470,36 +491,139 @@ export default function SettingsPage() {
               <Bell className="w-5 h-5 text-[#F97316]" />
               <h3 className="text-lg font-semibold text-white">{t('settings.notifications.title')}</h3>
             </div>
-            <div className="space-y-4">
-              {NOTIFICATION_PREFS.map(({ key, label, description }) => (
-                <div
-                  key={key}
-                  className="flex items-center justify-between py-3 border-b border-white/5 last:border-0"
-                >
-                  <div>
-                    <p className="text-white font-medium">{t(label)}</p>
-                    <p className="text-sm text-gray-500">{t(description)}</p>
-                  </div>
-                  <button
-                    onClick={() =>
-                      setNotifications({ ...notifications, [key]: !notifications[key] })
-                    }
-                    className={`relative w-11 h-6 rounded-full transition-colors ${
-                      notifications[key] ? 'bg-[#F97316]' : 'bg-gray-600'
-                    }`}
+
+            {/* Notification Types */}
+            <div className="mb-8">
+              <h4 className="text-sm font-medium text-gray-400 mb-3">{t('settings.notifications.typeTitle')}</h4>
+              <div className="space-y-4">
+                {NOTIFICATION_PREFS.map(({ key, label, description }) => (
+                  <div
+                    key={key}
+                    className="flex items-center justify-between py-3 border-b border-white/5 last:border-0"
                   >
-                    <span
-                      className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                        notifications[key] ? 'translate-x-5' : ''
+                    <div>
+                      <p className="text-white font-medium">{t(label)}</p>
+                      <p className="text-sm text-gray-500">{t(description)}</p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        setNotifications({ ...notifications, [key]: !notifications[key] })
+                      }
+                      className={`relative w-11 h-6 rounded-full transition-colors ${
+                        notifications[key] ? 'bg-[#F97316]' : 'bg-gray-600'
                       }`}
-                    />
-                  </button>
-                </div>
-              ))}
+                    >
+                      <span
+                        className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                          notifications[key] ? 'translate-x-5' : ''
+                        }`}
+                      />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {/* Delivery Methods */}
+            <div className="mb-8">
+              <h4 className="text-sm font-medium text-gray-400 mb-3">{t('settings.notifications.deliveryTitle')}</h4>
+              <div className="space-y-4">
+                {DELIVERY_METHODS.map(({ key, label, description }) => (
+                  <div
+                    key={key}
+                    className="flex items-center justify-between py-3 border-b border-white/5 last:border-0"
+                  >
+                    <div>
+                      <p className="text-white font-medium">{t(label)}</p>
+                      <p className="text-sm text-gray-500">{t(description)}</p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        setNotificationPrefs({
+                          ...notificationPrefs,
+                          deliveryMethods: {
+                            ...notificationPrefs.deliveryMethods,
+                            [key]: !notificationPrefs.deliveryMethods[key],
+                          },
+                        })
+                      }
+                      className={`relative w-11 h-6 rounded-full transition-colors ${
+                        notificationPrefs.deliveryMethods[key] ? 'bg-[#F97316]' : 'bg-gray-600'
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                          notificationPrefs.deliveryMethods[key] ? 'translate-x-5' : ''
+                        }`}
+                      />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Do Not Disturb */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-medium text-gray-400">{t('settings.notifications.doNotDisturb')}</h4>
+                <button
+                  onClick={() =>
+                    setNotificationPrefs({
+                      ...notificationPrefs,
+                      doNotDisturb: {
+                        ...notificationPrefs.doNotDisturb,
+                        enabled: !notificationPrefs.doNotDisturb.enabled,
+                      },
+                    })
+                  }
+                  className={`relative w-11 h-6 rounded-full transition-colors ${
+                    notificationPrefs.doNotDisturb.enabled ? 'bg-[#F97316]' : 'bg-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                      notificationPrefs.doNotDisturb.enabled ? 'translate-x-5' : ''
+                    }`}
+                  />
+                </button>
+              </div>
+              {notificationPrefs.doNotDisturb.enabled && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">{t('settings.notifications.from')}</label>
+                    <input
+                      type="time"
+                      value={notificationPrefs.doNotDisturb.start}
+                      onChange={(e) =>
+                        setNotificationPrefs({
+                          ...notificationPrefs,
+                          doNotDisturb: { ...notificationPrefs.doNotDisturb, start: e.target.value },
+                        })
+                      }
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">{t('settings.notifications.to')}</label>
+                    <input
+                      type="time"
+                      value={notificationPrefs.doNotDisturb.end}
+                      onChange={(e) =>
+                        setNotificationPrefs({
+                          ...notificationPrefs,
+                          doNotDisturb: { ...notificationPrefs.doNotDisturb, end: e.target.value },
+                        })
+                      }
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
             <button
               onClick={saveNotifications}
-              className="mt-6 flex items-center gap-2 bg-[#F97316] text-white rounded-lg px-6 py-2.5 font-medium hover:bg-[#188a65] transition-colors"
+              className="flex items-center gap-2 bg-[#F97316] text-white rounded-lg px-6 py-2.5 font-medium hover:bg-[#188a65] transition-colors"
             >
               <Save className="w-4 h-4" />
               {t('settings.notifications.savePreferences')}

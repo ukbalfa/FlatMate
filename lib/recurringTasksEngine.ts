@@ -1,11 +1,11 @@
 import { collection, query, where, getDocs, writeBatch, doc } from 'firebase/firestore';
 import { db } from './firebase';
-import type { RecurringExpense } from './types';
+import type { RecurringTask } from './types';
 
-export async function generateMissingRecurringExpenses(flatId: string) {
+export async function generateMissingRecurringTasks(flatId: string) {
   if (!flatId) return [];
 
-  const q = query(collection(db, 'recurringExpenses'), where('flatId', '==', flatId));
+  const q = query(collection(db, 'recurringTasks'), where('flatId', '==', flatId));
   const snapshot = await getDocs(q);
 
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -16,54 +16,49 @@ export async function generateMissingRecurringExpenses(flatId: string) {
   let operationCount = 0;
   const results: { recurringId: string; generated: number }[] = [];
 
-  for (const expenseDoc of snapshot.docs) {
-    const data = expenseDoc.data() as RecurringExpense;
-    const recurringId = expenseDoc.id;
+  for (const taskDoc of snapshot.docs) {
+    const data = taskDoc.data() as RecurringTask;
+    const recurringId = taskDoc.id;
 
-    // Use lastGeneratedDate, or fallback to startDate
     const baseDateStr = data.lastGeneratedDate || data.startDate;
     if (!baseDateStr) continue;
 
-    // Skip if already up to date (last generated today or in the future)
-    if (baseDateStr >= todayStr) {
-      continue;
-    }
+    if (baseDateStr >= todayStr) continue;
 
     const currentDate = new Date(baseDateStr);
     const nextDates: string[] = [];
     const maxEntries = 365;
 
-    // Advance to the first missed date
     advanceDate(currentDate, data.pattern);
 
     const endDate = data.endDate ? new Date(data.endDate) : null;
 
     while (currentDate <= today && nextDates.length < maxEntries) {
       if (endDate && currentDate > endDate) break;
-
       nextDates.push(currentDate.toISOString().slice(0, 10));
       advanceDate(currentDate, data.pattern);
     }
 
     if (nextDates.length > 0) {
       for (const d of nextDates) {
-        const newExpenseRef = doc(collection(db, 'expenses'));
-        batch.set(newExpenseRef, {
+        const newTaskRef = doc(collection(db, 'tasks'));
+        batch.set(newTaskRef, {
           flatId,
-          amount: data.amount,
-          category: data.category,
-          paidBy: data.paidBy,
-          date: d,
-          note: data.note ? `${data.note} (Recurring)` : (data.description || 'Recurring expense'),
+          text: data.text,
+          done: false,
+          assignedTo: data.assignedTo,
+          dueDate: d,
+          createdBy: data.createdBy,
+          priority: data.priority || null,
+          createdAt: new Date().toISOString(),
           isRecurring: true,
           recurrencePattern: data.pattern,
-          recurrenceEndDate: data.endDate || null,
-          parentExpenseId: recurringId
+          parentTaskId: recurringId,
         });
         operationCount++;
       }
 
-      batch.update(expenseDoc.ref, { lastGeneratedDate: todayStr });
+      batch.update(taskDoc.ref, { lastGeneratedDate: todayStr });
       operationCount++;
 
       results.push({ recurringId, generated: nextDates.length });

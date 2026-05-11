@@ -37,6 +37,7 @@ interface AuthContextType {
   loading: boolean;
   showFlatModal: boolean;
   setShowFlatModal: (show: boolean) => void;
+  refreshUserProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -45,6 +46,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   showFlatModal: false,
   setShowFlatModal: () => {},
+  refreshUserProfile: async () => {},
 });
 
 export function useAuth() {
@@ -56,6 +58,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(getCachedProfile);
   const [loading, setLoading] = useState(!getCachedProfile());
   const [showFlatModal, setShowFlatModal] = useState(false);
+
+  const refreshUserProfile = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const docRef = doc(db, 'users', user.uid);
+      const docSnap = await getDoc(docRef);
+      const profile = docSnap.exists()
+        ? ({ uid: user.uid, ...docSnap.data() } as UserProfile)
+        : { uid: user.uid, username: user.email || 'Unknown' };
+      setUserProfile(profile);
+      setCachedProfile(profile);
+    } catch (error) {
+      logError(error, 'AuthContext.refreshUserProfile');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -88,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, userProfile, loading, showFlatModal, setShowFlatModal }}>
+    <AuthContext.Provider value={{ user, userProfile, loading, showFlatModal, setShowFlatModal, refreshUserProfile }}>
       {children}
     </AuthContext.Provider>
   );

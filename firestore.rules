@@ -53,6 +53,11 @@ service cloud.firestore {
       allow create: if tenantCreate();
     }
 
+    match /recurringTasks/{docId} {
+      allow read, update, delete: if tenantRead();
+      allow create: if tenantCreate();
+    }
+
     match /cleaning/{docId} {
       allow read, update, delete: if tenantRead();
       allow create: if tenantCreate();
