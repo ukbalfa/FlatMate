@@ -8,13 +8,13 @@ import type { Expense, SplitMember } from "../../../../lib/types";
 interface ExpenseCardProps {
    expense: Expense;
    onDelete: () => void;
-   onEdit: (expense: Expense) => void;
+    onEditRequest: () => void;
    onApprove: (expenseId: string) => void;
    onReject: (expenseId: string) => void;
    isAdmin: boolean;
  }
 
-export const ExpenseCard = ({ expense, onDelete, onEdit, onApprove, onReject, isAdmin }: ExpenseCardProps) => (
+export const ExpenseCard = ({ expense, onDelete, onEditRequest, onApprove, onReject, isAdmin }: ExpenseCardProps) => (
    <motion.div
      layout
      initial={{ opacity: 0, y: 10 }}
@@ -92,11 +92,11 @@ export const ExpenseCard = ({ expense, onDelete, onEdit, onApprove, onReject, is
 
      {isAdmin && (
        <div className="mt-3 flex gap-2">
-         <button
-           onClick={() => onEdit(expense)}
-           className="text-gray-400 hover:text-amber-400 transition-colors"
-           aria-label="Edit expense"
-         >
+          <button
+            onClick={onEditRequest}
+            className="text-gray-400 hover:text-amber-400 transition-colors"
+            aria-label="Edit expense"
+          >
            <Pencil className="w-5 h-5" />
          </button>
          <button

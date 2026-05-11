@@ -45,6 +45,7 @@ import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
 import { BudgetTracker } from "./components/BudgetTracker";
 import { ReceiptUpload } from "./components/ReceiptUpload";
 import { SplitExpenseModal } from "./components/SplitExpenseModal";
+import { ExpenseEditModal } from "./components/ExpenseEditModal";
 
 const CATEGORIES = [
   { name: "Rent", color: "#F97316" },
@@ -91,6 +92,7 @@ export default function ExpensesPage() {
   const [budgetLimits, setBudgetLimits] = useState<Record<string, number>>({});
   const [receiptUrl, setReceiptUrl] = useState("");
   const [limitCount, setLimitCount] = useState(50);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [syncingRecurring, setSyncingRecurring] = useState(false);
 
   // Load roommates who share this user's flat
@@ -673,7 +675,7 @@ const handleDelete = async (id: string) => {
                    key={expense.id}
                    expense={expense}
                    onDelete={() => handleDelete(expense.id)}
-                   onEdit={(updatedExpense) => handleEditExpense(updatedExpense)}
+                   onEditRequest={() => setEditingExpense(expense)}
                    onApprove={(expenseId) => handleApproveExpense(expenseId)}
                    onReject={(expenseId) => handleRejectExpense(expenseId)}
                    isAdmin={isAdmin}
@@ -692,6 +694,18 @@ const handleDelete = async (id: string) => {
             </div>
           )}
         </div>
+
+        {/* Edit Expense Modal */}
+        {editingExpense && (
+          <ExpenseEditModal
+            expense={editingExpense}
+            onSave={(updated) => {
+              handleEditExpense(updated);
+              setEditingExpense(null);
+            }}
+            onClose={() => setEditingExpense(null)}
+          />
+        )}
 
         {/* Split Expense Modal */}
         {showSplitModal && (
