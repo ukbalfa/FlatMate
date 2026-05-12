@@ -133,14 +133,13 @@ export function Footer() {
         >
           <text
             x="500"
-            y="125"
+            y="120"
             textAnchor="middle"
-            fontFamily="'Cormorant Garamond', serif"
-            fontWeight="700"
-            fontSize="180"
+            fontFamily="'DM Serif Display', serif"
+            fontSize="200"
             fill="currentColor"
-            opacity="0.06"
-            letterSpacing="4"
+            opacity="0.05"
+            letterSpacing="8"
           >
             flatmate
           </text>

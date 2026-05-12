@@ -1,4 +1,4 @@
-import { Sora, DM_Sans, DM_Mono, Space_Grotesk } from "next/font/google";
+import { Sora, DM_Sans, DM_Mono, Space_Grotesk, DM_Serif_Display } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import ClientThemeProvider from "../components/ClientThemeProvider";
@@ -29,6 +29,13 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   weight: ["700"],
   variable: "--font-space-grotesk",
+  display: 'swap',
+});
+
+const dmSerifDisplay = DM_Serif_Display({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-dm-serif-display",
   display: 'swap',
 });
 
@@ -145,7 +152,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Preload critical assets */}
         <link rel="preload" href="/assets/noise.svg" as="image" />
       </head>
-      <body className={`${sora.variable} ${dmSans.variable} ${dmMono.variable} ${spaceGrotesk.variable} font-sans`} suppressHydrationWarning>
+      <body className={`${sora.variable} ${dmSans.variable} ${dmMono.variable} ${spaceGrotesk.variable} ${dmSerifDisplay.variable} font-sans`} suppressHydrationWarning>
         <ClientThemeProvider>
           <LangSync />
           <Providers>{children}</Providers>
