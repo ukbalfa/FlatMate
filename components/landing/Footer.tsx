@@ -33,7 +33,7 @@ export function Footer() {
               <div className="w-8 h-8 rounded-full bg-gradient-citrus flex items-center justify-center text-white font-bold text-sm">
                 F
               </div>
-              <span className="font-bold text-lg tracking-tight text-white">flatmate</span>
+              <span className="font-bold text-lg tracking-wide text-white/90">flatmate</span>
             </Link>
             <p className="text-sm text-white/30 leading-relaxed max-w-xs">
               Co-living without the chaos. Split bills, track chores, and keep your household
@@ -110,7 +110,7 @@ export function Footer() {
         </div>
       </div>
 
-      {/* Decorative brand wordmark — SVG full-bleed */}
+      {/* Decorative brand wordmark */}
       <div
         style={{
           width: '100vw',
@@ -133,16 +133,14 @@ export function Footer() {
         >
           <text
             x="500"
-            y="140"
+            y="125"
             textAnchor="middle"
-            textLength="1000"
-            lengthAdjust="spacingAndGlyphs"
             fontFamily="'Cormorant Garamond', serif"
             fontWeight="700"
-            fontSize="160"
+            fontSize="180"
             fill="currentColor"
-            opacity="0.07"
-            letterSpacing="-2"
+            opacity="0.06"
+            letterSpacing="4"
           >
             flatmate
           </text>
