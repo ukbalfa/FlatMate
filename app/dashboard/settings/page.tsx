@@ -22,7 +22,10 @@ import {
   EyeOff,
   Mail,
   CheckCircle,
+  Download,
+  Trash2,
 } from 'lucide-react';
+import { deleteUser } from 'firebase/auth';
 import { Spinner } from '../../components/Spinner';
 import { Skeleton } from '../../components/Skeleton';
 
@@ -62,7 +65,7 @@ export default function SettingsPage() {
   const { userProfile: contextProfile, user: firebaseUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'notifications'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'notifications' | 'data'>('profile');
 
   // Profile form
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -81,6 +84,10 @@ export default function SettingsPage() {
     cleaningReminders: true,
     weeklySummary: false,
   });
+
+  // Data export/delete
+  const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const loadUserProfile = useCallback(async () => {
     if (!contextProfile?.uid) return;
@@ -189,6 +196,60 @@ export default function SettingsPage() {
     }
   };
 
+  const exportUserData = async () => {
+    if (!contextProfile?.uid) return;
+    setExporting(true);
+    try {
+      const userDoc = await getDoc(doc(db, 'users', contextProfile.uid));
+      const userData = userDoc.exists() ? userDoc.data() : {};
+      
+      const exportData = {
+        profile: userData,
+        exportedAt: new Date().toISOString(),
+        appVersion: '0.1.1',
+      };
+      
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `flatmate-data-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success(t('settings.data.exported'));
+    } catch (error) {
+      logError(error, 'Settings.exportData');
+      toast.error(t('settings.data.exportFailed'));
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const deleteAccount = async () => {
+    const confirmed = window.confirm(t('settings.data.deleteConfirm'));
+    if (!confirmed) return;
+    
+    if (!firebaseUser) return;
+    setDeleting(true);
+    try {
+      await deleteUser(firebaseUser);
+      toast.success(t('settings.data.deleted'));
+    } catch (error: unknown) {
+      logError(error, 'Settings.deleteAccount');
+      const errorCode = (error as { code?: string })?.code;
+      if (errorCode === 'auth/requires-recent-login') {
+        toast.error(t('settings.toast.passwordChangeFailed'));
+      } else {
+        toast.error(t('settings.data.deleteFailed'));
+      }
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const getColorClass = (color: string) => {
     return COLORS.find(c => c.value === color)?.class || 'bg-gray-400';
   };
@@ -221,6 +282,7 @@ export default function SettingsPage() {
             { id: 'profile', label: t('settings.tab.profile'), icon: User },
             { id: 'security', label: t('settings.tab.security'), icon: Lock },
             { id: 'notifications', label: t('settings.tab.notifications'), icon: Bell },
+            { id: 'data', label: t('settings.data.title'), icon: Save },
           ].map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -504,6 +566,64 @@ export default function SettingsPage() {
               <Save className="w-4 h-4" />
               {t('settings.notifications.savePreferences')}
             </button>
+          </motion.div>
+        )}
+
+        {/* Data Tab */}
+        {activeTab === 'data' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-[#1a1d27] border border-white/5 rounded-xl p-6"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <Save className="w-5 h-5 text-[#F97316]" />
+              <h3 className="text-lg font-semibold text-white">{t('settings.data.title')}</h3>
+            </div>
+            <p className="text-gray-400 mb-6">{t('settings.data.subtitle')}</p>
+            
+            <div className="space-y-6">
+              {/* Export Data */}
+              <div className="border border-white/10 rounded-lg p-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-[#F97316]/10 flex items-center justify-center flex-shrink-0">
+                    <Download className="w-5 h-5 text-[#F97316]" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-white font-medium">{t('settings.data.export')}</h4>
+                    <p className="text-sm text-gray-500 mt-1">{t('settings.data.exportDesc')}</p>
+                  </div>
+                  <button
+                    onClick={exportUserData}
+                    disabled={exporting}
+                    className="px-4 py-2 bg-[#F97316]/10 text-[#F97316] rounded-lg font-medium hover:bg-[#F97316]/20 transition-colors disabled:opacity-50"
+                  >
+                    {exporting ? t('settings.data.exporting') : t('settings.data.export')}
+                  </button>
+                </div>
+              </div>
+
+              {/* Delete Account */}
+              <div className="border border-red-500/20 rounded-lg p-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-white font-medium">{t('settings.data.delete')}</h4>
+                    <p className="text-sm text-gray-500 mt-1">{t('settings.data.deleteDesc')}</p>
+                    <p className="text-xs text-red-400 mt-2">{t('settings.data.deleteWarning')}</p>
+                  </div>
+                  <button
+                    onClick={deleteAccount}
+                    disabled={deleting}
+                    className="px-4 py-2 bg-red-500/10 text-red-500 rounded-lg font-medium hover:bg-red-500/20 transition-colors disabled:opacity-50"
+                  >
+                    {deleting ? t('settings.data.deleting') : t('settings.data.delete')}
+                  </button>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
       </div>

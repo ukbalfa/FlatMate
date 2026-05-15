@@ -2,6 +2,7 @@
 import { useI18n } from '../../context/I18nContext';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -369,6 +370,26 @@ export default function LoginPage() {
                   </button>
                 </div>
               </div>
+              {activeTab === 'signup' && (
+                <div className="flex items-start gap-3 mb-4">
+                  <input
+                    type="checkbox"
+                    id="privacyConsent"
+                    required
+                    className="mt-1 w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent"
+                  />
+                  <label htmlFor="privacyConsent" className="text-xs text-[#6b7280] dark:text-gray-400 leading-relaxed">
+                    {t('login.privacyConsent')}{' '}
+                    <Link href="/privacy" className="text-accent hover:underline">
+                      {t('login.privacyPolicy')}
+                    </Link>
+                    {' '}{t('login.and')}{' '}
+                    <Link href="/terms" className="text-accent hover:underline">
+                      {t('login.termsOfService')}
+                    </Link>
+                  </label>
+                </div>
+              )}
               <button
                 type="submit"
                 disabled={isLoading}

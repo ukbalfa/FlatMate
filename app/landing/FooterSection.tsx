@@ -76,12 +76,12 @@ export default function FooterSection() {
             © {currentYear} FlatMate · Made with ❤️ in Tashkent, Uzbekistan 🇺🇿
           </p>
           <div className="flex items-center gap-6">
-            <span className="text-xs font-dm-sans text-[#D4C4A0] dark:text-[#A89270] cursor-not-allowed opacity-60">
+            <Link href="/privacy" className="text-xs font-dm-sans text-[#D4C4A0] dark:text-[#A89270] hover:text-accent transition-colors">
               {t('landing.footer.privacy')}
-            </span>
-            <span className="text-xs font-dm-sans text-[#D4C4A0] dark:text-[#A89270] cursor-not-allowed opacity-60">
+            </Link>
+            <Link href="/terms" className="text-xs font-dm-sans text-[#D4C4A0] dark:text-[#A89270] hover:text-accent transition-colors">
               {t('landing.footer.terms')}
-            </span>
+            </Link>
           </div>
         </div>
       </div>
