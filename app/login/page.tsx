@@ -113,13 +113,16 @@ export default function LoginPage() {
       });
       router.push('/dashboard');
     } catch (err: unknown) {
-      const code = (err as { code?: string }).code;
+      const errObj = err as { code?: string; message?: string };
+      const code = errObj.code;
       if (code === 'auth/account-exists-with-different-credential') {
         setError(t('login.errorGoogleExists'));
       } else if (code === 'auth/popup-closed-by-user') {
         // User closed popup — do nothing
+      } else if (code === 'auth/popup-blocked') {
+        setError(t('login.errorPopupBlocked'));
       } else {
-        logError(err, 'Login.googleSignIn');
+        logError(err, `Login.googleSignIn:${code || 'unknown'}:${errObj.message}`);
         setError(t('login.errorGoogleFailed'));
       }
     } finally {
