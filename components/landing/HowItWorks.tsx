@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Users, Receipt, Split, Sparkles } from 'lucide-react';
+import { Zap, ScrollText, ListTodo, ShieldCheck } from 'lucide-react';
 import { ReactNode } from 'react';
 
 interface Step {
@@ -14,28 +14,28 @@ interface Step {
 export function HowItWorks() {
   const steps: Step[] = [
     {
-      icon: <Users className="w-5 h-5" />,
+      icon: <Zap className="w-5 h-5" />,
       number: '01',
-      title: 'Add Your Roommates',
-      description: 'Invite everyone in your household. One shared space for the whole flat.',
+      title: 'Set up in 5 minutes',
+      description: 'Add your flat, invite roommates, and start tracking. No onboarding maze.',
     },
     {
-      icon: <Receipt className="w-5 h-5" />,
+      icon: <ScrollText className="w-5 h-5" />,
       number: '02',
-      title: 'Log Expenses',
-      description: 'Snap a photo, enter the amount, and let FlatMate handle the math.',
+      title: 'Expenses, simplified',
+      description: 'Snap a receipt, set the split, done. No more spreadsheet nightmares.',
     },
     {
       number: '03',
-      icon: <Split className="w-5 h-5" />,
-      title: 'Split Automatically',
-      description: 'Equal, percentage, or custom splits. Fair for everyone, every time.',
+      icon: <ListTodo className="w-5 h-5" />,
+      title: 'Chores on autopilot',
+      description: 'Rotating schedule with reminders. Everyone does their share, no nagging.',
     },
     {
       number: '04',
-      icon: <Sparkles className="w-5 h-5" />,
-      title: 'Stay in Sync',
-      description: 'Real-time updates across all devices. Everyone is always on the same page.',
+      icon: <ShieldCheck className="w-5 h-5" />,
+      title: 'Total transparency',
+      description: 'Real-time balances visible to everyone. No surprises at month end.',
     },
   ];
 
@@ -56,7 +56,7 @@ export function HowItWorks() {
             Set up in minutes
           </h2>
           <p className="text-white/40 max-w-lg mx-auto text-sm">
-            Get your household organized without the headache.
+            Features are great. Here&apos;s what it actually feels like to use FlatMate.
           </p>
         </motion.div>
 

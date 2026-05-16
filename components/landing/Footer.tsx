@@ -14,12 +14,12 @@ export function Footer() {
       { label: 'Dashboard', href: '/dashboard' },
     ],
     company: [
-      { label: 'About', href: '#' },
-      { label: 'Support', href: '#' },
+      { label: 'About', href: '/about' },
+      { label: 'Support', href: '/dashboard' },
     ],
     legal: [
-      { label: 'Privacy', href: '#' },
-      { label: 'Terms', href: '#' },
+      { label: 'Privacy', href: '/privacy' },
+      { label: 'Terms', href: '/terms' },
     ],
   };
 

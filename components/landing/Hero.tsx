@@ -158,6 +158,29 @@ export function Hero() {
             Free forever
           </span>
         </motion.div>
+
+        {/* Social Proof */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="mt-6 flex items-center gap-3"
+        >
+          <div className="flex -space-x-2">
+            {['S', 'J', 'E', 'M', 'A'].map((initial, i) => (
+              <div
+                key={i}
+                className="w-7 h-7 rounded-full border-2 border-[#050505] bg-white/5 flex items-center justify-center text-[9px] font-bold text-white/50"
+                style={{ zIndex: 5 - i }}
+              >
+                {initial}
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-white/40">
+            <span className="text-white/70 font-semibold">5,000+</span> roommates already on board
+          </p>
+        </motion.div>
       </motion.div>
 
       {/* Dashboard Preview */}
@@ -186,7 +209,7 @@ export function Hero() {
           <div className="p-4 md:p-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               {[
-                { label: 'This Month', value: '2,450,000', icon: Receipt, color: 'from-[#F97316]' },
+                { label: 'This Month', value: '$1,240', icon: Receipt, color: 'from-[#F97316]' },
                 { label: 'My Tasks', value: '3', icon: CheckCircle, color: 'from-[#38BDF8]' },
                 { label: 'Roommates', value: '4', icon: Sparkles, color: 'from-[#A78BFA]' },
                 { label: 'Exchange', value: '+2.3%', icon: TrendingUp, color: 'from-[#84CC16]' },
@@ -242,9 +265,9 @@ export function Hero() {
                 <span className="text-sm font-medium text-white/70">Recent Activity</span>
                 <div className="mt-4 space-y-3">
                   {[
-                    { name: 'Groceries', amount: '-145,000', user: 'A' },
-                    { name: 'Internet', amount: '-75,000', user: 'B' },
-                    { name: 'Electricity', amount: '-230,000', user: 'C' },
+                    { name: 'Groceries', amount: '-$85', user: 'A' },
+                    { name: 'Internet', amount: '-$45', user: 'B' },
+                    { name: 'Electricity', amount: '-$120', user: 'C' },
                   ].map((item, i) => (
                     <div key={i} className="flex items-center gap-3">
                       <div className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center text-[10px] font-bold text-white/50">

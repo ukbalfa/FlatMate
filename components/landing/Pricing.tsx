@@ -37,8 +37,8 @@ export function Pricing() {
         'px-6 py-3 rounded-full text-sm font-semibold text-white border border-white/10 hover:bg-white/5 transition-all text-center block w-full',
     },
     {
-      name: t('landing.footer.features') || 'Mansion',
-      description: t('landing.footer.tagline') || 'For households that want it all.',
+      name: 'Pro',
+      description: 'For households that want it all.',
       price: '$4',
       period: '/mo',
       features: [

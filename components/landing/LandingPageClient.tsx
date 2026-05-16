@@ -25,7 +25,15 @@ export default function LandingPageClient() {
 
       <Navbar />
 
-      <main>
+      {/* Skip to content */}
+      <a
+        href="#main-content"
+        className="fixed -top-40 left-4 z-[100] px-4 py-2 rounded-lg bg-[#F97316] text-white text-sm font-semibold transition-all focus:top-4 focus:outline-2 focus:outline-[#F97316]"
+      >
+        Skip to content
+      </a>
+
+      <main id="main-content">
         <Hero />
         <Features />
         <HowItWorks />

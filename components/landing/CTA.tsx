@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useI18n } from '@/context/I18nContext';
-import { ArrowRight, Zap } from 'lucide-react';
+import { ArrowRight, Zap, Star, ArrowDown } from 'lucide-react';
 
 export function CTA() {
   const { t } = useI18n();
@@ -56,6 +56,25 @@ export function CTA() {
                 {t('landing.hero.getStarted') || 'Get Started Free'}
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </Link>
+              <a
+                href="#features"
+                className="group px-8 py-4 rounded-full text-sm font-semibold text-white/50 border border-white/10 hover:bg-white/5 hover:text-white transition-all duration-300 flex items-center gap-2"
+              >
+                Explore features
+                <ArrowDown className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
+              </a>
+            </div>
+
+            {/* Testimonial pull quote */}
+            <div className="mt-8 flex items-center justify-center gap-2 text-xs text-white/30">
+              <div className="flex gap-0.5">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Star key={i} className="w-3 h-3 fill-[#FBBF24] text-[#FBBF24]" />
+                ))}
+              </div>
+              <span>
+                &ldquo;No more passive-aggressive sticky notes. Game changer.&rdquo; <span className="text-white/50">&mdash; James K.</span>
+              </span>
             </div>
           </div>
         </motion.div>
