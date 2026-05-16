@@ -5,9 +5,18 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
-import { Users, Key, Copy, Check } from 'lucide-react';
+import { Users, Key } from 'lucide-react';
 import { toast } from 'sonner';
 import { logError } from '../../lib/errorLogger';
+
+function copyToClipboard(text: string): boolean {
+  try {
+    navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export function generateInviteCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -23,8 +32,6 @@ export default function FlatConnectionModal() {
   const { t } = useI18n();
   const [tab, setTab] = useState<'create' | 'join'>('create');
   const [joinCode, setJoinCode] = useState('');
-  const [generatedCode, setGeneratedCode] = useState('');
-  const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async (retryCount = 0) => {
@@ -34,7 +41,7 @@ export default function FlatConnectionModal() {
       const code = generateInviteCode();
       const existing = await getDoc(doc(db, 'flats', code));
       if (existing.exists()) {
-        return handleCreate(retryCount);
+        return handleCreate(retryCount + 1);
       }
       await setDoc(doc(db, 'flats', code), {
         createdBy: userProfile.uid,
@@ -43,8 +50,9 @@ export default function FlatConnectionModal() {
       });
       await setDoc(doc(db, 'users', userProfile.uid), { flatId: code }, { merge: true });
       await refreshUserProfile();
-      setGeneratedCode(code);
-      toast.success(t('onboarding.flatCreated'));
+      copyToClipboard(code);
+      setShowFlatModal(false);
+      toast.success(`${t('onboarding.flatCreated')} — ${code}`, { duration: 8000 });
     } catch (error: unknown) {
       logError(error, 'FlatConnection.create');
       const err = error as { code?: string };
@@ -83,44 +91,6 @@ export default function FlatConnectionModal() {
       setLoading(false);
     }
   };
-
-  const handleCopy = async () => {
-    if (!generatedCode) return;
-    try {
-      await navigator.clipboard.writeText(generatedCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // fallback
-    }
-  };
-
-  const handleClose = () => {
-    setShowFlatModal(false);
-  };
-
-  if (generatedCode) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-8 max-w-md w-full mx-4 text-center">
-          <h2 className="text-xl font-bold text-white mb-2">{t('onboarding.flatCreated')}</h2>
-          <p className="text-gray-400 mb-6">{t('onboarding.shareCode')}</p>
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <span className="text-3xl font-mono font-bold tracking-widest text-[#F97316]">{generatedCode}</span>
-            <button onClick={handleCopy} className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition">
-              {copied ? <Check className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5 text-white" />}
-            </button>
-          </div>
-          <button
-            onClick={handleClose}
-            className="w-full bg-[#F97316] text-gray-900 rounded-lg px-6 py-3 font-medium hover:bg-orange-500 transition"
-          >
-            {t('onboarding.goToDashboard')}
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
