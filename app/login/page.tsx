@@ -122,8 +122,8 @@ export default function LoginPage() {
       } else if (code === 'auth/popup-blocked') {
         setError(t('login.errorPopupBlocked'));
       } else {
-        logError(err, `Login.googleSignIn:${code || 'unknown'}:${errObj.message}`);
-        setError(t('login.errorGoogleFailed'));
+        logError(err, `Login.googleSignIn:${code || 'unknown'}`);
+        setError(`${t('login.errorGoogleFailed')} (${code || 'unknown'})`);
       }
     } finally {
       setIsLoading(false);
