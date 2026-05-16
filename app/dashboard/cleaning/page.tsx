@@ -129,7 +129,7 @@ export default function CleaningPage() {
   };
 
   return (
-    <div className="min-h-screen text-[#1C1400] dark:text-[#FFF5DC]">
+    <div className="min-h-screen">
       <ConfirmModal
         isOpen={confirmModal.isOpen}
         title={t('common.confirm') || 'Confirm'}
@@ -140,9 +140,9 @@ export default function CleaningPage() {
       />
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Cleaning Schedule Card */}
-        <div className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-6">
+        <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-[#1C1400] dark:text-[#FFF5DC]">{t('cleaning.title')}</h2>
+            <h2 className="text-xl font-semibold text-white">{t('cleaning.title')}</h2>
             <span className="text-sm text-[#9A7C4A] dark:text-gray-400">
               {new Date(weekStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} —{' '}
               {new Date(new Date(weekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
@@ -158,23 +158,29 @@ export default function CleaningPage() {
                 <div key={i} className="py-4 border-b border-white/[0.05] animate-pulse">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1">
-                      <div className="w-5 h-5 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+                      <div className="w-5 h-5 bg-white/10 rounded-full"></div>
+                      <div className="h-4 bg-white/10 rounded w-1/3"></div>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                        <div className="w-8 h-8 bg-white/10 rounded-full"></div>
+                        <div className="h-4 bg-white/10 rounded w-20"></div>
                       </div>
-                      <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
-                      <div className="w-5 h-5 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                      <div className="h-6 bg-white/10 rounded w-16"></div>
+                      <div className="w-5 h-5 bg-white/10 rounded"></div>
                     </div>
                   </div>
                 </div>
               ))}
             </>
           ) : cleaning.length === 0 ? (
-            <div className="py-8 text-center text-gray-400 text-sm">{t('cleaning.noTasks')}</div>
+            <div className="py-8 text-center text-gray-400 text-sm flex flex-col items-center gap-3">
+              <svg className="w-8 h-8 text-gray-500 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 12c0-4.14-3.36-7.5-7.5-7.5S4.5 7.86 4.5 12s3.36 7.5 7.5 7.5S19.5 16.14 19.5 12z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4" />
+              </svg>
+              <span>{t('cleaning.noTasks')}</span>
+            </div>
           ) : (
             <div className="space-y-0">
               {cleaning.map((item, i) => {
@@ -233,7 +239,7 @@ export default function CleaningPage() {
                       {isAdmin && (
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="text-gray-400 hover:text-red-500 transition-colors"
+                          className="text-gray-400 hover:text-red-500 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg"
                           aria-label="Delete cleaning task"
                         >
                           <Trash2 size={16} />
@@ -297,7 +303,7 @@ export default function CleaningPage() {
               </div>
               <button
                 type="submit"
-                className="w-full bg-[#0a0a0a] dark:bg-gray-700 text-white rounded-lg px-4 py-3 font-medium hover:bg-gray-800 dark:hover:bg-gray-600 transition"
+                className="w-full bg-[#F97316] text-white rounded-lg px-4 py-3 font-medium hover:bg-[#EA6D0E] transition"
               >
                 {t('cleaning.addTaskButton')}
               </button>

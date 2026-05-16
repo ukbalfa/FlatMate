@@ -34,7 +34,7 @@ import { Avatar } from "../../components/Avatar";
 import { useAuth } from "../../../context/AuthContext";
 import { useI18n } from "../../../context/I18nContext";
 import { logError } from "../../../lib/errorLogger";
-import type { Expense, RecurringExpense, SplitMember } from "../../../lib/types";
+import type { Expense, SplitMember } from "../../../lib/types";
 import { ExpenseCard } from "./components/ExpenseCard";
 import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
 import { BudgetTracker } from "./components/BudgetTracker";
@@ -65,7 +65,6 @@ export default function ExpensesPage() {
   const { t } = useI18n();
   const { userProfile } = useAuth();
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [_recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Rent");
@@ -174,30 +173,6 @@ export default function ExpensesPage() {
     
     return () => unsubscribe();
   }, [userProfile?.flatId, limitCount, t]);
-
-  // Load recurring expenses
-  const loadRecurringExpenses = async () => {
-    try {
-      const q = query(
-        collection(db, "recurringExpenses"),
-        where("flatId", "==", userProfile?.flatId),
-        orderBy("createdAt", "desc"),
-        limit(200)
-      );
-      const snap = await getDocs(q);
-      setRecurringExpenses(
-        snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as RecurringExpense[]
-      );
-    } catch (error) {
-      logError(error, "Expenses.loadRecurring");
-    }
-  };
-
-  useEffect(() => {
-    if (!userProfile?.flatId) return;
-    loadRecurringExpenses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userProfile]);
 
   // Prepare data for analytics
   const monthlyData = Array.from({ length: 12 }, (_, i) => {
@@ -326,13 +301,17 @@ export default function ExpensesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white p-4 md:p-8">
+    <div className="min-h-screen text-white p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h1 className="font-display text-3xl font-bold">Expenses</h1>
+          <h1 className="font-display text-3xl font-bold">{t('expenses.pageTitle') || 'Expenses'}</h1>
           <div className="flex gap-2">
-            <button className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition">
+            <button
+              onClick={() => toast.info(t('expenses.exportComingSoon') || 'Export coming soon')}
+              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label="Export expenses"
+            >
               <Download className="w-5 h-5" />
             </button>
           </div>
@@ -369,7 +348,7 @@ export default function ExpensesPage() {
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-amber-400 outline-none"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] outline-none"
                   required
                   min="1"
                 />
@@ -380,7 +359,7 @@ export default function ExpensesPage() {
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-amber-400 outline-none"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] outline-none"
                 >
                   {CATEGORIES.map((cat) => (
                     <option key={cat.name} value={cat.name} className="bg-[#121212]">
@@ -396,8 +375,30 @@ export default function ExpensesPage() {
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-amber-400 outline-none"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] outline-none"
                   required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-white/80 mb-1">Description</label>
+                <input
+                  type="text"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+                  placeholder="e.g., Groceries at Magnum"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-white/80 mb-1">Notes</label>
+                <input
+                  type="text"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+                  placeholder="Optional"
                 />
               </div>
 
@@ -461,7 +462,7 @@ export default function ExpensesPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full mt-6 bg-amber-400 text-gray-900 py-3 rounded-lg font-medium hover:bg-amber-300 transition disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full mt-6 bg-[#F97316] text-white py-3 rounded-lg font-medium hover:bg-[#EA6D0E] transition disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {submitting ? (
                 <>
@@ -480,11 +481,11 @@ export default function ExpensesPage() {
           <div className="flex justify-between items-center mb-6">
             <h2 className="font-display text-xl">{t('expenses.recentExpenses')}</h2>
             <div className="flex gap-2">
-              <select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-2 focus:ring-amber-400 outline-none"
-              >
+                <select
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+                >
                 <option value="All" className="bg-[#121212]">{t('expenses.allCategories')}</option>
                 {CATEGORIES.map((cat) => (
                   <option key={cat.name} value={cat.name} className="bg-[#121212]">
@@ -492,12 +493,12 @@ export default function ExpensesPage() {
                   </option>
                 ))}
               </select>
-              <input
-                type="month"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-2 focus:ring-amber-400 outline-none"
-              />
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+                />
             </div>
           </div>
 
@@ -505,7 +506,7 @@ export default function ExpensesPage() {
             <SkeletonList rows={4} />
           ) : filteredExpenses.length === 0 ? (
             <EmptyState
-              emoji="💰"
+              icon={<svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
               title="No expenses found"
               description={`No expenses for ${selectedMonth}. Add one above!`}
             />

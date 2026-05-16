@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
@@ -33,6 +33,14 @@ export default function FlatConnectionModal() {
   const [tab, setTab] = useState<'create' | 'join'>('create');
   const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowFlatModal(false);
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [setShowFlatModal]);
 
   const handleCreate = async (retryCount = 0) => {
     if (!userProfile?.uid) return;
@@ -93,10 +101,10 @@ export default function FlatConnectionModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="flat-modal-title">
       <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 max-w-md w-full mx-4">
         <div className="mb-6">
-          <h2 className="text-xl font-bold text-white">{t('onboarding.title')}</h2>
+          <h2 id="flat-modal-title" className="text-xl font-bold text-white">{t('onboarding.title')}</h2>
           <p className="text-gray-400 text-sm mt-2">{t('onboarding.subtitle')}</p>
         </div>
 

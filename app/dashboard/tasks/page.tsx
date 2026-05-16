@@ -156,41 +156,41 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="min-h-screen text-[#1C1400] dark:text-[#FFF5DC]">
+    <div className="min-h-screen">
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Add Task Form */}
-        <div className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-6">
-          <h3 className="text-lg font-semibold mb-4 text-[#0a0a0a] dark:text-gray-100">{t('tasks.newTask')}</h3>
+        <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
+          <h3 className="text-lg font-semibold mb-4 text-white">{t('tasks.newTask')}</h3>
           <form onSubmit={handleAdd} className="space-y-4">
             <div>
-              <label className="block text-sm text-[#6b7280] dark:text-gray-400 mb-2">{t('tasks.task')}</label>
+              <label className="block text-sm text-gray-400 mb-2">{t('tasks.task')}</label>
               <input
                 type="text"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 maxLength={200}
-                className="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 text-[#0a0a0a] dark:text-gray-100 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
                 required
               />
               <div className="text-right text-xs text-gray-400 mt-1">{text.length}/200</div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-[#6b7280] dark:text-gray-400 mb-2">{t('tasks.dueDate')}</label>
+                <label className="block text-sm text-gray-400 mb-2">{t('tasks.dueDate')}</label>
                 <input
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 text-[#0a0a0a] dark:text-gray-100 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm text-[#6b7280] dark:text-gray-400 mb-2">{t('tasks.assignTo')}</label>
+                <label className="block text-sm text-gray-400 mb-2">{t('tasks.assignTo')}</label>
                 <select
                   value={assignedTo}
                   onChange={(e) => setAssignedTo(e.target.value)}
-                  className="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 text-[#0a0a0a] dark:text-gray-100 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
                   required
                 >
                   <option value="">{t('tasks.select')}</option>
@@ -205,7 +205,7 @@ export default function TasksPage() {
             <button
               type="submit"
               disabled={adding}
-              className="w-full bg-[#0a0a0a] dark:bg-gray-700 text-white rounded-lg px-4 py-3 font-medium hover:bg-gray-800 dark:hover:bg-gray-600 transition disabled:opacity-60 inline-flex items-center justify-center gap-2"
+              className="w-full bg-[#F97316] text-white rounded-lg px-4 py-3 font-medium hover:bg-[#EA6D0E] transition disabled:opacity-60 inline-flex items-center justify-center gap-2"
             >
               {adding && <Spinner />}
               {t('tasks.addTaskButton')}
@@ -214,10 +214,10 @@ export default function TasksPage() {
         </div>
 
         {/* Task List */}
-        <div className="bg-white dark:bg-gray-800 border border-[#e5e7eb] dark:border-gray-700 rounded-xl p-6">
+        <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
-            <h3 className="text-lg font-semibold text-[#0a0a0a] dark:text-gray-100">{t('tasks.title')}</h3>
-            <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-[#6b7280] dark:text-gray-300 text-xs font-medium">
+            <h3 className="text-lg font-semibold text-white">{t('tasks.title')}</h3>
+            <span className="px-2 py-0.5 rounded-full bg-white/10 text-gray-400 text-xs font-medium">
               {tasks.length}
             </span>
           </div>
@@ -226,7 +226,7 @@ export default function TasksPage() {
             <SkeletonList rows={4} />
           ) : tasks.length === 0 ? (
             <EmptyState
-              emoji="✅"
+              icon={<svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
               title={t('tasks.allClear')}
               description={t('tasks.noTasks')}
               action={{
@@ -241,13 +241,13 @@ export default function TasksPage() {
                 const badgeType = getBadgeLabel(task.dueDate);
                 let badgeClass = '';
                 if (task.done) {
-                  badgeClass = 'bg-gray-50 text-gray-400 border-gray-200 dark:bg-gray-900 dark:text-gray-500 dark:border-gray-700';
+                  badgeClass = 'bg-white/5 text-gray-400 border-white/10';
                 } else if (badgeType === 'Upcoming') {
-                  badgeClass = 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800';
+                  badgeClass = 'bg-green-500/10 text-green-400 border-green-500/20';
                 } else if (badgeType === 'Today') {
-                  badgeClass = 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800';
+                  badgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
                 } else if (badgeType === 'Overdue') {
-                  badgeClass = 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800';
+                  badgeClass = 'bg-red-500/10 text-red-400 border-red-500/20';
                 }
 
                 return (
@@ -257,7 +257,7 @@ export default function TasksPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.25, delay: i * 0.04 }}
                     className={`flex items-center gap-3 py-3 ${
-                      !isLast ? 'border-b border-[#f3f4f6] dark:border-gray-700' : ''
+                      !isLast ? 'border-b border-white/5' : ''
                     }`}
                   >
                     <button
@@ -266,7 +266,7 @@ export default function TasksPage() {
                       className={`w-5 h-5 flex items-center justify-center rounded-full border-2 transition-all duration-150 flex-shrink-0 ${
                         task.done
                           ? 'bg-[#F97316] border-[#F97316]'
-                          : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-[#F97316]'
+                          : 'border-gray-600 bg-transparent hover:border-[#F97316]'
                       }`}
                       aria-label="Toggle done"
                     >
@@ -293,13 +293,13 @@ export default function TasksPage() {
                       <div
                         className={`text-sm ${
                           task.done
-                            ? 'line-through text-gray-400 dark:text-gray-500'
-                            : 'text-[#0a0a0a] dark:text-gray-100'
+                            ? 'line-through text-gray-500'
+                            : 'text-white'
                         }`}
                       >
                         {task.text}
                       </div>
-                      <div className="text-xs text-[#6b7280] dark:text-gray-400 mt-0.5">
+                      <div className="text-xs text-gray-400 mt-0.5">
                         {users.find((u) => u.username === task.assignedTo)?.name || task.assignedTo}
                       </div>
                     </div>
@@ -309,7 +309,7 @@ export default function TasksPage() {
                     {isAdmin && (
                       <button
                         onClick={() => handleDelete(task.id)}
-                        className="text-gray-400 hover:text-red-500 transition-colors"
+                        className="text-gray-400 hover:text-red-500 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg"
                         aria-label="Delete task"
                       >
                         <Trash2 size={16} />

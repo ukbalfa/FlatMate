@@ -74,6 +74,7 @@ function mapToDashboardUser(userProfile: { uid: string; username: string; name?:
 
 function SidebarContent({ user, setSidebarOpen, handleLogout }: { user: DashboardUser | null, setSidebarOpen: (v: boolean) => void, handleLogout: () => void }) {
   const pathname = usePathname();
+  const { t } = useI18n();
 
   return (
     <div className="flex flex-col h-full bg-[#050505] border-r border-white/5">
@@ -110,7 +111,7 @@ function SidebarContent({ user, setSidebarOpen, handleLogout }: { user: Dashboar
                 onClick={() => setSidebarOpen(false)}
               >
                 <link.icon className={`w-5 h-5 ${isActive ? 'text-[#F97316]' : 'opacity-70'}`} />
-                {link.label.split('.').pop()?.replace(/([A-Z])/g, ' $1').trim()}
+                {t(link.label)}
               </Link>
             </motion.div>
           );
@@ -147,11 +148,11 @@ function SidebarContent({ user, setSidebarOpen, handleLogout }: { user: Dashboar
 const LoadingScreen = memo(function LoadingScreen() {
   const { t } = useI18n();
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FFFBF0]">
+    <div className="min-h-screen flex items-center justify-center bg-[#050505]">
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 rounded-full relative">
           <div className="absolute inset-0 rounded-full gradient-citrus animate-pulse" />
-          <div className="absolute inset-2 rounded-full bg-[#FFFBF0]" />
+          <div className="absolute inset-2 rounded-full bg-[#050505]" />
           <div className="absolute inset-0 rounded-full gradient-citrus animate-ping opacity-75" />
         </div>
         <span className="text-sm font-[family-name:var(--font-dm-mono)] font-medium text-muted">{t('common.loading')}</span>
@@ -263,7 +264,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Page title */}
           <h1 className="text-xl sm:text-2xl tracking-tight font-space-grotesk font-bold text-white flex items-center gap-3">
             <span className="inline-block w-2 h-6 bg-[#F97316] rounded-full" />
-            {pageTitle.split('.').pop()?.replace(/([A-Z])/g, ' $1').trim()}
+            {pageTitle}
           </h1>
 
           <div className="flex-1" />
@@ -278,15 +279,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           {dashboardUser && (
-            <div className="hidden sm:flex items-center gap-3 ml-6 pl-6 border-l border-white/10">
+            <Link href="/dashboard/settings" className="hidden sm:flex items-center gap-3 ml-6 pl-6 border-l border-white/10 hover:opacity-80 transition-opacity">
               <div className="text-right">
                  <div className="text-sm font-bold text-white font-space-grotesk">{dashboardUser.name || dashboardUser.username}</div>
                  <div className="text-[10px] text-white/40 uppercase tracking-widest font-dm-mono">{dashboardUser.role}</div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-[#ccff00] border border-[#ccff00]/50 text-black flex items-center justify-center font-bold shadow-[0_0_15px_-3px_#ccff00]">
+              <div className="w-10 h-10 rounded-xl bg-[#ccff00] border border-[#ccff00]/50 text-black flex items-center justify-center font-bold shadow-[0_0_15px_-3px_#ccff00]" aria-label={`${dashboardUser.name || dashboardUser.username}'s profile`}>
                  {dashboardUser.name?.[0] || dashboardUser.username?.[0] || '?'}
               </div>
-            </div>
+            </Link>
           )}
         </header>
 

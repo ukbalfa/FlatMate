@@ -28,8 +28,8 @@ export function EmptyState({ icon, emoji, title, description, action }: EmptySta
           <div className="text-[#F97316] opacity-70">{icon}</div>
         </div>
       ) : emoji ? (
-        <div className="text-5xl mb-5" aria-hidden="true">
-          {emoji}
+        <div className="w-16 h-16 rounded-2xl bg-[#F97316]/10 flex items-center justify-center mb-5" aria-hidden="true">
+          <span className="text-4xl">{emoji}</span>
         </div>
       ) : null}
 
@@ -42,14 +42,14 @@ export function EmptyState({ icon, emoji, title, description, action }: EmptySta
         action.href ? (
           <Link
             href={action.href}
-            className="inline-flex items-center gap-2 bg-[#F97316] text-white rounded-lg px-5 py-2.5 text-sm font-medium hover:bg-[#188a65] transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 bg-[#F97316] text-white rounded-lg px-5 py-2.5 text-sm font-medium hover:bg-[#EA6D0E] transition-colors cursor-pointer"
           >
             {action.label}
           </Link>
         ) : (
           <button
             onClick={action.onClick}
-            className="inline-flex items-center gap-2 bg-[#F97316] text-white rounded-lg px-5 py-2.5 text-sm font-medium hover:bg-[#188a65] transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 bg-[#F97316] text-white rounded-lg px-5 py-2.5 text-sm font-medium hover:bg-[#EA6D0E] transition-colors cursor-pointer"
           >
             {action.label}
           </button>

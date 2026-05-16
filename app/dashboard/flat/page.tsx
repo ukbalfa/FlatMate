@@ -9,6 +9,7 @@ import { Users, Key, Copy, Check, LogOut, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { logError } from '../../../lib/errorLogger';
 import { motion } from 'framer-motion';
+import ConfirmModal from '../../components/ConfirmModal';
 
 function generateInviteCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -196,6 +197,7 @@ function FlatInfoView() {
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
   const [leaving, setLeaving] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
   useEffect(() => {
     if (!userProfile?.flatId) return;
@@ -225,10 +227,11 @@ function FlatInfoView() {
 
   const handleLeave = async () => {
     if (!userProfile?.uid || !userProfile?.flatId) return;
-    const confirmed = window.confirm(
-      t('flat.leaveConfirm') || 'Are you sure you want to leave this flat?'
-    );
-    if (!confirmed) return;
+    setShowLeaveConfirm(true);
+  };
+
+  const confirmLeave = async () => {
+    if (!userProfile?.uid || !userProfile?.flatId) return;
     setLeaving(true);
     try {
       const flatRef = doc(db, 'flats', userProfile.flatId);
@@ -296,6 +299,15 @@ function FlatInfoView() {
           {leaving ? (t('flat.leaving') || 'Leaving...') : (t('flat.leaveFlat') || 'Leave Flat')}
         </button>
       </div>
+
+      <ConfirmModal
+        isOpen={showLeaveConfirm}
+        title={t('flat.leaveConfirm') || 'Leave Flat?'}
+        message={t('flat.leaveConfirmMessage') || 'Are you sure you want to leave this flat? You will lose access to all shared data.'}
+        confirmLabel={t('flat.leaveFlat') || 'Leave Flat'}
+        onConfirm={confirmLeave}
+        onCancel={() => setShowLeaveConfirm(false)}
+      />
     </motion.div>
   );
 }

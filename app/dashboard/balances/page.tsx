@@ -302,10 +302,11 @@ export default function BalancesPage() {
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
               className="bg-[#1a1d27] border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+              aria-label="Select month"
             />
             <button
               onClick={() => setShowSettlementModal(true)}
-              className="flex items-center gap-2 bg-[#F97316] text-white rounded-lg px-4 py-2 font-medium hover:bg-[#188a65] transition-colors"
+              className="flex items-center gap-2 bg-[#F97316] text-white rounded-lg px-4 py-2 font-medium hover:bg-[#EA6D0E] transition-colors"
             >
               <Plus className="w-4 h-4" />
               {t('balances.recordPayment')}
@@ -459,11 +460,11 @@ export default function BalancesPage() {
               </div>
               {settlements.length === 0 ? (
                 <div className="py-8">
-                  <EmptyState
-                    emoji="📝"
-                    title={t('balances.noSettlements')}
-                    description={t('balances.noSettlementsDesc')}
-                  />
+                <EmptyState
+                  icon={<svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>}
+                  title={t('balances.noSettlements')}
+                  description={t('balances.noSettlementsDesc')}
+                />
                 </div>
               ) : (
                 <div className="divide-y divide-white/5">
@@ -526,17 +527,17 @@ export default function BalancesPage() {
 
       {/* Settlement Modal */}
       {showSettlementModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="settlement-modal-title">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="bg-[#1a1d27] border border-white/10 rounded-xl p-6 w-full max-w-md"
           >
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">{t('balances.modal.recordSettlement')}</h3>
+              <h3 id="settlement-modal-title" className="text-xl font-bold text-white">{t('balances.modal.recordSettlement')}</h3>
               <button
                 onClick={() => setShowSettlementModal(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
@@ -619,7 +620,7 @@ export default function BalancesPage() {
                 <button
                   type="submit"
                   disabled={submittingSettlement}
-                  className="flex-1 bg-[#F97316] text-white rounded-lg px-4 py-2.5 font-medium hover:bg-[#188a65] transition disabled:opacity-60 inline-flex items-center justify-center gap-2"
+                  className="flex-1 bg-[#F97316] text-white rounded-lg px-4 py-2.5 font-medium hover:bg-[#EA6D0E] transition disabled:opacity-60 inline-flex items-center justify-center gap-2"
                 >
                   {submittingSettlement && <Spinner />}
                   {t('balances.modal.recordPayment')}

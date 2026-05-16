@@ -11,11 +11,11 @@ interface BudgetTrackerProps {
 }
 
 export const BudgetTracker = ({ category, spent, limit, color }: BudgetTrackerProps) => {
-  const percentage = Math.min((spent / limit) * 100, 100);
+  const percentage = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
   const isOverBudget = percentage > 90;
 
   return (
-    <div className="backdrop-blur-md bg-white/5 rounded-xl p-4 w-40 text-center">
+    <div className="backdrop-blur-md bg-white/5 rounded-xl p-4 w-full text-center" role="progressbar" aria-valuenow={Math.round(percentage)} aria-valuemin={0} aria-valuemax={100} aria-label={`${category} budget: ${spent.toLocaleString()} of ${limit.toLocaleString()}`}>
       <h4 className="font-inter font-medium text-white mb-2">
         {category}
       </h4>

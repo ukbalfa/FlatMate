@@ -24,10 +24,19 @@ export const AnalyticsDashboard = ({ monthlyData, categoryData }: AnalyticsDashb
 
   const visibleMonthlyData = timeRange === "6months" ? monthlyData.slice(-6) : monthlyData;
 
+  const hasData = visibleMonthlyData.some(d => d.expenses > 0);
+
   return (
     <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-6">
       <h2 className="font-display text-xl text-white mb-6">Expense Analytics</h2>
 
+      {!hasData && (
+        <div className="text-center py-8 text-gray-400">
+          <p>No expense data available for the selected period.</p>
+        </div>
+      )}
+
+      {hasData && (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Monthly Trends */}
         <div className="backdrop-blur-md bg-white/5 rounded-lg p-4">
@@ -35,21 +44,25 @@ export const AnalyticsDashboard = ({ monthlyData, categoryData }: AnalyticsDashb
             <h3 className="font-medium text-white">Monthly Trends</h3>
             <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={() => setTimeRange("6months")}
-                className={`px-3 py-1 rounded-full text-sm ${timeRange === "6months" ? "bg-amber-400 text-gray-900" : "bg-white/10 text-white"}`}
+                className={`px-3 py-1 rounded-full text-sm min-h-[44px] ${timeRange === "6months" ? "bg-amber-400 text-gray-900" : "bg-white/10 text-white"}`}
+                aria-pressed={timeRange === "6months"}
               >
                 6M
               </button>
               <button
+                type="button"
                 onClick={() => setTimeRange("all")}
-                className={`px-3 py-1 rounded-full text-sm ${timeRange === "all" ? "bg-amber-400 text-gray-900" : "bg-white/10 text-white"}`}
+                className={`px-3 py-1 rounded-full text-sm min-h-[44px] ${timeRange === "all" ? "bg-amber-400 text-gray-900" : "bg-white/10 text-white"}`}
+                aria-pressed={timeRange === "all"}
               >
                 All
               </button>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={visibleMonthlyData}>
+            <LineChart data={visibleMonthlyData} aria-label="Monthly expense trends">
               <defs>
                 <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#F97316" />
@@ -77,7 +90,7 @@ export const AnalyticsDashboard = ({ monthlyData, categoryData }: AnalyticsDashb
         <div className="backdrop-blur-md bg-white/5 rounded-lg p-4">
           <h3 className="font-medium text-white mb-4">By Category</h3>
           <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={categoryData}>
+            <BarChart data={categoryData} aria-label="Expense breakdown by category">
               <XAxis dataKey="name" stroke="#A0A0A0" />
               <YAxis stroke="#A0A0A0" />
               <Tooltip
@@ -97,6 +110,7 @@ export const AnalyticsDashboard = ({ monthlyData, categoryData }: AnalyticsDashb
           </ResponsiveContainer>
         </div>
       </div>
+      )}
     </div>
   );
 };

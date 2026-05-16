@@ -232,16 +232,16 @@ const sortedRoommates = [...users].sort((a, b) =>
   );
 
   return (
-    <div className="min-h-screen text-[#1C1400] dark:text-[#FFF5DC]">
+    <div className="min-h-screen">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 w-full gap-4">
-          <h2 className="text-xl font-bold text-[#1C1400] dark:text-[#FFF5DC]">{t('roommates.title')}</h2>
+          <h2 className="text-xl font-bold text-white">{t('roommates.title')}</h2>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-[#9A7C4A] dark:text-gray-400">{t('roommates.sortBy')}:</span>
+            <span className="text-sm text-gray-400">{t('roommates.sortBy')}:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'date' | 'name')}
-              className="appearance-none bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] text-[#1C1400] dark:text-[#FFF5DC] text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block px-4 py-2 outline-none cursor-pointer hover:bg-[#FFF0CC] dark:hover:bg-[#2A1E00] transition-colors shadow-sm"
+              className="appearance-none bg-[#1a1d27] border border-white/10 text-white text-sm rounded-lg focus:ring-[#F97316] focus:border-[#F97316] block px-4 py-2 outline-none cursor-pointer hover:bg-white/5 transition-colors shadow-sm"
             >
               <option value="date">{t('roommates.dateJoined')}</option>
               <option value="name">{t('roommates.alphabetical')}</option>
@@ -285,7 +285,7 @@ const sortedRoommates = [...users].sort((a, b) =>
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   whileHover={{ y: -2, boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }}
-                  className="relative flex flex-col items-center p-6 bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl h-full"
+                  className="relative flex flex-col items-center p-6 bg-[#1a1d27] border border-white/5 rounded-xl h-full"
                 >
                   {editingId === u.id ? (
                     <div className="space-y-3 w-full">
@@ -351,7 +351,7 @@ const sortedRoommates = [...users].sort((a, b) =>
                       <div className="flex gap-2 pt-2">
                         <button
                           onClick={saveEdit}
-                          className="flex-1 bg-[#0a0a0a] text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-800 transition"
+                          className="flex-1 bg-[#F97316] text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-[#EA6D0E] transition"
                         >
                           Save
                         </button>
@@ -369,7 +369,7 @@ const sortedRoommates = [...users].sort((a, b) =>
                         <div className="absolute top-4 right-4 flex gap-2">
                           <button
                             onClick={() => startEdit(u)}
-                            className="text-gray-500 hover:text-white transition-colors p-1"
+                            className="text-gray-500 hover:text-white transition-colors p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg"
                             title="Edit"
                             aria-label="Edit roommate"
                           >
@@ -378,7 +378,7 @@ const sortedRoommates = [...users].sort((a, b) =>
                           {u.role !== 'admin' && (
                             <button
                               onClick={() => setRoommateToDelete(u)}
-                              className="text-gray-500 hover:text-red-400 transition-colors p-1"
+                              className="text-gray-500 hover:text-red-400 transition-colors p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg"
                               title="Remove"
                               aria-label="Remove roommate"
                             >
@@ -558,7 +558,7 @@ const sortedRoommates = [...users].sort((a, b) =>
                     </select>
                     <button
                       type="submit"
-                      className="w-full bg-[#0a0a0a] text-white rounded-lg px-4 py-3 font-medium hover:bg-gray-800 transition"
+                      className="w-full bg-[#F97316] text-white rounded-lg px-4 py-3 font-medium hover:bg-[#EA6D0E] transition"
                     >
                       Add Roommate
                     </button>
@@ -567,13 +567,13 @@ const sortedRoommates = [...users].sort((a, b) =>
               )}
 
               {roommateToDelete && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="remove-roommate-title">
                   <div className="bg-[#1a1d27] border border-white/10 rounded-xl p-6 w-full max-w-sm shadow-2xl">
-                    <h3 className="text-xl font-bold text-white mb-2">Remove Roommate?</h3>
+                    <h3 id="remove-roommate-title" className="text-xl font-bold text-white mb-2">Remove Roommate?</h3>
                     <p className="text-gray-400 mb-6 text-sm">Are you sure you want to remove <span className="text-white font-semibold">{roommateToDelete.name}</span>? This action cannot be undone and they will lose access to the dashboard.</p>
                     <div className="flex justify-end gap-3">
-                      <button onClick={() => setRoommateToDelete(null)} className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors">Cancel</button>
-                      <button onClick={handleDelete} className="px-4 py-2 text-sm font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors">Yes, Remove</button>
+                      <button onClick={() => setRoommateToDelete(null)} className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors min-h-[44px]">Cancel</button>
+                      <button onClick={handleDelete} className="px-4 py-2 text-sm font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors min-h-[44px]">Yes, Remove</button>
                     </div>
                   </div>
                 </div>

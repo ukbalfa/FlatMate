@@ -275,7 +275,7 @@ useEffect(() => {
               animate={{ opacity: 1, y: 0 }}
               whileHover={{ scale: 1.02, y: -5 }}
               transition={{ delay: index * 0.1, duration: 0.3 }}
-              className="bg-white/5 border border-white/10 rounded-[2rem] p-6 hover:border-white/30 transition-all cursor-pointer backdrop-blur-xl relative overflow-hidden group"
+              className="bg-white/5 border border-white/10 rounded-[2rem] p-6 hover:border-white/30 transition-all backdrop-blur-xl relative overflow-hidden group"
             >
               <div className={`absolute top-0 right-0 w-32 h-32 ${stat.color.replace('bg-', 'bg-').replace('-500', '-500/20')} rounded-full blur-3xl group-hover:scale-150 transition-transform duration-500`} />
               <div className="flex items-start justify-between relative z-10">
@@ -367,13 +367,7 @@ useEffect(() => {
                 </Link>
               </div>
 
-              {loading ? (
-                <div className="animate-pulse space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-16 bg-white/5 rounded-2xl"></div>
-                  ))}
-                </div>
-              ) : activityFeed.length === 0 ? (
+              {activityFeed.length === 0 ? (
                 <EmptyState
                   icon={<Bell className="w-8 h-8" />}
                   title={t('dashboard.noActivity')}

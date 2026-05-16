@@ -154,7 +154,7 @@ export default function AnnouncementsPage() {
   };
 
   return (
-    <div className="min-h-screen text-[#1C1400] dark:text-[#FFF5DC]">
+    <div className="min-h-screen">
       <ConfirmModal
         isOpen={confirmModal.isOpen}
         title={t('common.confirm') || 'Confirm'}
@@ -168,14 +168,14 @@ export default function AnnouncementsPage() {
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl p-5 h-32 animate-pulse"></div>
+              <div key={i} className="bg-[#1a1d27] border border-white/5 rounded-xl p-5 h-32 animate-pulse"></div>
             ))}
           </div>
         ) : announcements.length === 0 ? (
-          <div className="text-center py-16 bg-white dark:bg-[#2A1E00] border border-[#F0D89A] dark:border-[#3D2E00] rounded-xl">
+          <div className="text-center py-16 bg-[#1a1d27] border border-white/5 rounded-xl">
             <Megaphone className="w-12 h-12 text-gray-500 mx-auto mb-4 opacity-50" />
-            <h3 className="text-lg font-medium text-[#1C1400] dark:text-[#FFF5DC] mb-2">{t('announcements.noAnnouncements')}</h3>
-            <p className="text-[#9A7C4A] dark:text-gray-400">
+            <h3 className="text-lg font-medium text-white mb-2">{t('announcements.noAnnouncements')}</h3>
+            <p className="text-gray-400">
               {isAdmin ? t('announcements.postFirst') : t('announcements.empty')}
             </p>
           </div>
@@ -201,10 +201,10 @@ export default function AnnouncementsPage() {
                       )}
                     </div>
                     {isAdmin && (
-                      <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity absolute top-4 right-4">
+                      <div className="flex items-center gap-2 lg:opacity-0 lg:hover:opacity-100 transition-opacity absolute top-4 right-4">
                         <button
                           onClick={() => handleTogglePin(a.id, a.isPinned ?? false)}
-                          className={`p-1.5 rounded-lg transition-colors ${a.isPinned ? 'text-[#F97316] bg-[#F97316]/10' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
+                          className={`p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${a.isPinned ? 'text-[#F97316] bg-[#F97316]/10' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
                           title="Toggle pin"
                           aria-label="Toggle pin"
                         >
@@ -213,7 +213,7 @@ export default function AnnouncementsPage() {
                         {(userProfile?.uid === a.authorId || isAdmin) && (
                           <button
                             onClick={() => handleDelete(a.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                            className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                             title="Delete"
                             aria-label="Delete announcement"
                           >
@@ -264,7 +264,9 @@ export default function AnnouncementsPage() {
             <h2 className="text-lg font-semibold text-white mb-4">{t('announcements.addAnnouncement')}</h2>
             <form onSubmit={handleAdd} className="space-y-4">
               <div>
+                <label htmlFor="announcement-title" className="block text-sm text-gray-400 mb-2">{t('announcements.title') || 'Title'}</label>
                 <input
+                  id="announcement-title"
                   type="text"
                   placeholder="Title"
                   value={title}
@@ -275,7 +277,9 @@ export default function AnnouncementsPage() {
               </div>
               
               <div>
+                <label htmlFor="announcement-content" className="block text-sm text-gray-400 mb-2">{t('announcements.content') || 'Content'}</label>
                 <textarea
+                  id="announcement-content"
                   placeholder="What do you want to announce?"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
@@ -321,7 +325,7 @@ export default function AnnouncementsPage() {
                 <button
                   type="submit"
                   disabled={!title || !content}
-                  className="bg-[#F97316] text-white px-5 py-2.5 rounded-lg hover:bg-[#188a65] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center gap-2"
+                  className="bg-[#F97316] text-white px-5 py-2.5 rounded-lg hover:bg-[#EA6D0E] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center gap-2"
                 >
                   <Megaphone className="w-4 h-4" />
                   Post

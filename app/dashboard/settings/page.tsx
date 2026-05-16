@@ -28,6 +28,7 @@ import {
 import { deleteUser } from 'firebase/auth';
 import { Spinner } from '../../components/Spinner';
 import { Skeleton } from '../../components/Skeleton';
+import ConfirmModal from '../../components/ConfirmModal';
 
 interface UserProfile {
   uid: string;
@@ -88,6 +89,7 @@ export default function SettingsPage() {
   // Data export/delete
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const loadUserProfile = useCallback(async () => {
     if (!contextProfile?.uid) return;
@@ -229,9 +231,6 @@ export default function SettingsPage() {
   };
 
   const deleteAccount = async () => {
-    const confirmed = window.confirm(t('settings.data.deleteConfirm'));
-    if (!confirmed) return;
-    
     if (!firebaseUser) return;
     setDeleting(true);
     try {
@@ -415,7 +414,7 @@ export default function SettingsPage() {
             <button
               onClick={saveProfile}
               disabled={saving}
-              className="flex items-center gap-2 bg-[#F97316] text-white rounded-lg px-6 py-2.5 font-medium hover:bg-[#188a65] transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 bg-[#F97316] text-white rounded-lg px-6 py-2.5 font-medium hover:bg-[#EA6D0E] transition-colors disabled:opacity-50"
             >
               {saving && <Spinner />}
               <Save className="w-4 h-4" />
@@ -512,7 +511,7 @@ export default function SettingsPage() {
                 </div>
                 <button
                   type="submit"
-                  className="bg-[#F97316] text-white rounded-lg px-6 py-2.5 font-medium hover:bg-[#188a65] transition-colors"
+                  className="bg-[#F97316] text-white rounded-lg px-6 py-2.5 font-medium hover:bg-[#EA6D0E] transition-colors"
                 >
                   {t('settings.security.changePasswordButton')}
                 </button>
@@ -543,10 +542,14 @@ export default function SettingsPage() {
                     <p className="text-sm text-gray-500">{t(description)}</p>
                   </div>
                   <button
+                    type="button"
                     onClick={() =>
                       setNotifications({ ...notifications, [key]: !notifications[key] })
                     }
-                    className={`relative w-11 h-6 rounded-full transition-colors ${
+                    role="switch"
+                    aria-checked={notifications[key]}
+                    aria-label={t(label)}
+                    className={`relative w-11 h-6 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center ${
                       notifications[key] ? 'bg-[#F97316]' : 'bg-gray-600'
                     }`}
                   >
@@ -561,7 +564,7 @@ export default function SettingsPage() {
             </div>
             <button
               onClick={saveNotifications}
-              className="mt-6 flex items-center gap-2 bg-[#F97316] text-white rounded-lg px-6 py-2.5 font-medium hover:bg-[#188a65] transition-colors"
+              className="mt-6 flex items-center gap-2 bg-[#F97316] text-white rounded-lg px-6 py-2.5 font-medium hover:bg-[#EA6D0E] transition-colors"
             >
               <Save className="w-4 h-4" />
               {t('settings.notifications.savePreferences')}
@@ -615,7 +618,7 @@ export default function SettingsPage() {
                     <p className="text-xs text-red-400 mt-2">{t('settings.data.deleteWarning')}</p>
                   </div>
                   <button
-                    onClick={deleteAccount}
+                    onClick={() => setShowDeleteConfirm(true)}
                     disabled={deleting}
                     className="px-4 py-2 bg-red-500/10 text-red-500 rounded-lg font-medium hover:bg-red-500/20 transition-colors disabled:opacity-50"
                   >
@@ -627,6 +630,15 @@ export default function SettingsPage() {
           </motion.div>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        title={t('settings.data.deleteConfirm') || 'Delete Account?'}
+        message={t('settings.data.deleteConfirmMessage') || 'This action cannot be undone. All your data will be permanently deleted.'}
+        confirmLabel={t('settings.data.delete') || 'Delete'}
+        onConfirm={deleteAccount}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 }

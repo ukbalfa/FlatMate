@@ -41,6 +41,18 @@
 - **Client components**: All pages/layouts except root layout use `'use client'`.
 - **Role checks**: `useAuth().userProfile?.role === 'admin'` for admin-only features.
 - **Import order**: React/Next → external libs → relative local imports.
+- **Path alias**: `@/*` maps to project root (e.g. `@/lib/firebase`).
 - **Project structure**: `app/components/` for app-specific UI; `components/` (root) for shared components (PrimaryButton, ThemeProvider, LangSync, NoiseOverlay); `context/` for React contexts; `lib/` for utils/types/firebase setup; `constants/` for theme/animation values.
 - **Landing page**: Split across `components/landing/` (shared landing components) and `app/landing/` (page sections).
+- **`app/api/auth/`**: Telegram login webhook endpoint (route handler, not Server Action).
 - **`__tests__` excluded** from tsconfig (`"exclude": ["node_modules", "__tests__", "everything-claude-code"]`).
+
+## TypeScript & Linting
+- **`noUncheckedIndexedAccess`** enabled — array/object index access returns `T | undefined`.
+- **ESLint `_` prefix**: unused vars/args matching `^_` are ignored (e.g. `_err`, `_index`).
+- **`react-hooks/set-state-in-effect`** rule disabled in eslint config.
+
+## Testing
+- **Jest** via `next/jest` with `jest-environment-jsdom`. Setup file: `jest.setup.ts` (`@testing-library/jest-dom`).
+- **`@/` path mapping** configured in jest.config.ts for test imports.
+- 10 files, 103 tests. Single file: `npm run test -- __tests__/utils.test.ts`

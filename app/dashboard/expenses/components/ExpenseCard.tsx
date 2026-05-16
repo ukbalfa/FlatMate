@@ -45,9 +45,9 @@ export const ExpenseCard = ({ expense, onDelete, isAdmin }: ExpenseCardProps) =>
     {expense.receiptUrl && (
       <div className="mt-3 relative">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+          <img
           src={expense.receiptUrl}
-          alt="Receipt"
+          alt={`Receipt for ${expense.description || 'expense'} on ${new Date(expense.date).toLocaleDateString()}`}
           className="w-full h-32 object-cover rounded-lg"
         />
         <Paperclip className="absolute top-2 right-2 w-5 h-5 text-white/80" />
@@ -71,7 +71,7 @@ export const ExpenseCard = ({ expense, onDelete, isAdmin }: ExpenseCardProps) =>
     {isAdmin && (
       <button
         onClick={onDelete}
-        className="mt-3 text-gray-400 hover:text-red-400 transition-colors"
+        className="mt-3 text-gray-400 hover:text-red-400 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg"
         aria-label="Delete expense"
       >
         <Trash2 className="w-5 h-5" />
