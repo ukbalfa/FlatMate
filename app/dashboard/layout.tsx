@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
+  Building2,
   TrendingUp,
   Receipt,
   Sparkles,
@@ -28,6 +29,7 @@ import FlatConnectionModal from '../components/FlatConnectionModal';
 
 const navLinks = [
   { href: "/dashboard", label: "nav.dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/flat", label: "nav.flat", icon: Building2 },
   { href: "/dashboard/rates", label: "nav.rates", icon: TrendingUp },
   { href: "/dashboard/expenses", label: "nav.expenses", icon: Receipt },
   { href: "/dashboard/balances", label: "nav.balances", icon: Wallet },
@@ -40,6 +42,7 @@ const navLinks = [
 
 const pageNames: Record<string, string> = {
   "/dashboard": "nav.dashboard",
+  "/dashboard/flat": "nav.flat",
   "/dashboard/rates": "nav.rates",
   "/dashboard/expenses": "nav.expenses",
   "/dashboard/balances": "nav.balances",

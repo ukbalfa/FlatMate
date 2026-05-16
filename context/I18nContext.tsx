@@ -12,6 +12,7 @@ interface I18nContextType {
 const translations: Record<Language, Record<string, string>> = {
   en: {
     'nav.dashboard': 'Dashboard',
+    'nav.flat': 'Flat',
     'nav.rates': 'Exchange Rates',
     'nav.expenses': 'Expenses',
     'nav.balances': 'Balances',
@@ -34,6 +35,7 @@ const translations: Record<Language, Record<string, string>> = {
     'common.add': 'Add',
     'common.loading': 'Loading...',
     'common.confirm': 'Confirm',
+    'common.copied': 'Copied',
     'common.today': 'Today',
     'dashboard.welcome': 'Welcome back',
     'dashboard.welcomeSubtitle': 'Track expenses, manage tasks, and settle up with your roommates',
@@ -492,6 +494,7 @@ const translations: Record<Language, Record<string, string>> = {
   },
   ru: {
     'nav.dashboard': '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+    'nav.flat': '\u041a\u0432\u0430\u0440\u0442\u0438\u0440\u0430',
     'nav.rates': '\u041a\u0443\u0440\u0441\u044b \u0432\u0430\u043b\u044e\u0442',
     'nav.expenses': '\u0420\u0430\u0441\u0445\u043e\u0434\u044b',
     'nav.balances': '\u0411\u0430\u043b\u0430\u043d\u0441',
@@ -513,6 +516,7 @@ const translations: Record<Language, Record<string, string>> = {
     'common.add': '\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c',
     'common.loading': '\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430...',
     'common.confirm': '\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u0438\u0435',
+    'common.copied': '\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e',
     'common.today': '\u0441\u0435\u0433\u043e\u0434\u043d\u044f',
     'dashboard.welcome': '\u0421 \u0432\u043e\u0437\u0432\u0440\u0430\u0449\u0435\u043d\u0438\u0435\u043c',
     'dashboard.welcomeSubtitle': '\u041e\u0442\u0441\u043b\u0435\u0436\u0438\u0432\u0430\u0439\u0442\u0435 \u0440\u0430\u0441\u0445\u043e\u0434\u044b, \u0443\u043f\u0440\u0430\u0432\u043b\u044f\u0439\u0442\u0435 \u0437\u0430\u0434\u0430\u0447\u0430\u043c\u0438 \u0438 \u0440\u0430\u0441\u043f\u0440\u0435\u0434\u0435\u043b\u044f\u0439\u0442\u0435 \u043f\u043b\u0430\u0442\u0435\u0436\u0438 \u0441 \u0441\u043e\u0441\u0435\u0434\u044f\u043c\u0438',
@@ -969,6 +973,7 @@ const translations: Record<Language, Record<string, string>> = {
   },
   uz: {
     'nav.dashboard': 'Bosh sahifa',
+    'nav.flat': 'Xonadon',
     'nav.rates': 'Valyuta kurslari',
     'nav.expenses': 'Xarajatlar',
     'nav.balances': 'Balanslar',
@@ -991,6 +996,7 @@ const translations: Record<Language, Record<string, string>> = {
     'common.add': "Qo'shish",
     'common.loading': 'Yuklanmoqda...',
     'common.confirm': 'Tasdiqlash',
+    'common.copied': 'Nusxalandi',
     'common.today': 'Bugun',
     'login.welcomeBack': 'Xush kelibsiz',
     'login.signInToAccount': 'Hisobingizga kiring',
