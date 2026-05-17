@@ -5,7 +5,6 @@ import { Hero } from './Hero';
 import { Features } from './Features';
 import { HowItWorks } from './HowItWorks';
 import { Testimonials } from './Testimonials';
-import { Pricing } from './Pricing';
 import { CTA } from './CTA';
 import { Footer } from './Footer';
 
@@ -38,7 +37,6 @@ export default function LandingPageClient() {
         <Features />
         <HowItWorks />
         <Testimonials />
-        <Pricing />
         <CTA />
       </main>
 

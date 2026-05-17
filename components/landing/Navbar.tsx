@@ -20,7 +20,6 @@ export function Navbar() {
   const navLinks = [
     { href: '#features', label: t('landing.nav.features') || 'Features' },
     { href: '#how-it-works', label: t('landing.hero.seeFeatures') || 'How it works' },
-    { href: '#pricing', label: t('landing.footer.pricing') || 'Pricing' },
   ];
 
   return (

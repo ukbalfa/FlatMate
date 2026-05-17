@@ -37,7 +37,7 @@ export function CTA() {
             >
               <Zap className="w-4 h-4 text-[#F97316]" />
               <span className="text-sm font-medium text-[#F97316]">
-                Free forever for basic use
+                Free for everyone
               </span>
             </motion.div>
 
