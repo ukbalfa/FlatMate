@@ -52,15 +52,7 @@ export function useDashboardWidgets() {
   const addWidget = useCallback((id: WidgetId) => {
     setConfig((prev) => {
       if (prev.visibleWidgets.includes(id)) return prev;
-      const idx = ALL_WIDGETS.indexOf(id);
-      const before = prev.visibleWidgets.findIndex((w) => ALL_WIDGETS.indexOf(w) > idx);
-      const next = [...prev.visibleWidgets];
-      if (before === -1) {
-        next.push(id);
-      } else {
-        next.splice(before, 0, id);
-      }
-      return { visibleWidgets: next };
+      return { visibleWidgets: [...prev.visibleWidgets, id] };
     });
   }, []);
 

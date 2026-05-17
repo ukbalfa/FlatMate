@@ -34,17 +34,20 @@ describe('useDashboardWidgets', () => {
 
   it('addWidget restores hidden widget at end of visible', () => {
     const { result } = renderHook(() => useDashboardWidgets());
-    act(() => result.current.removeWidget('cleaning'));
-    act(() => result.current.addWidget('cleaning'));
-    expect(result.current.visibleWidgets).toEqual(ALL);
+    act(() => result.current.removeWidget('stats'));
+    act(() => result.current.addWidget('stats'));
+    // Should be appended at end, not at canonical position 0
+    expect(result.current.visibleWidgets[result.current.visibleWidgets.length - 1]).toBe('stats');
     expect(result.current.hiddenWidgets).toEqual([]);
   });
 
-  it('reorderWidgets swaps items at given indices', () => {
+  it('reorderWidgets moves item from source to target index', () => {
     const { result } = renderHook(() => useDashboardWidgets());
-    act(() => result.current.reorderWidgets(0, 1));
+    // Move 'stats' (index 0) to index 2
+    act(() => result.current.reorderWidgets(0, 2));
     expect(result.current.visibleWidgets[0]).toBe('quickActions');
-    expect(result.current.visibleWidgets[1]).toBe('stats');
+    expect(result.current.visibleWidgets[1]).toBe('activity');
+    expect(result.current.visibleWidgets[2]).toBe('stats');
   });
 
   it('save persists current state to localStorage', () => {
