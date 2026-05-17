@@ -89,6 +89,15 @@ export default function FlatConnectionModal() {
         return;
       }
       await setDoc(doc(db, 'users', userProfile.uid), { flatId: code }, { merge: true });
+      const flatRef = doc(db, 'flats', code);
+      const flatSnap = await getDoc(flatRef);
+      if (flatSnap.exists()) {
+        const flatData = flatSnap.data();
+        const members = flatData.members || [];
+        if (!members.includes(userProfile.uid)) {
+          await setDoc(flatRef, { members: [...members, userProfile.uid] }, { merge: true });
+        }
+      }
       await refreshUserProfile();
       toast.success(t('common.done'));
       setShowFlatModal(false);

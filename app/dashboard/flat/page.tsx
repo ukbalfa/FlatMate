@@ -86,6 +86,15 @@ function NoFlatView() {
         return;
       }
       await updateDoc(doc(db, 'users', userProfile.uid), { flatId: code });
+      const flatRef = doc(db, 'flats', code);
+      const flatSnap = await getDoc(flatRef);
+      if (flatSnap.exists()) {
+        const flatData = flatSnap.data();
+        const members = flatData.members || [];
+        if (!members.includes(userProfile.uid)) {
+          await updateDoc(flatRef, { members: [...members, userProfile.uid] });
+        }
+      }
       await refreshUserProfile();
       toast.success(t('common.done'));
     } catch (error) {

@@ -146,6 +146,7 @@ export default function RoommatesPage() {
         telegram: sanitizeSocialHandle(telegram),
         instagram: sanitizeSocialHandle(instagram),
         joinedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
         flatId: userProfile?.flatId,
       });
       setName(''); setSurname(''); setUsername(''); setPassword('');

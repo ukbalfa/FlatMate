@@ -94,6 +94,7 @@ export default function LoginPage() {
         name: extraData?.name || undefined,
         role: 'roommate',
         joinedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
         avatar: extraData?.avatar || undefined,
       });
     }
