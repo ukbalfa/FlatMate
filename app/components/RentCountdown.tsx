@@ -162,7 +162,7 @@ export default function RentCountdown() {
         <div className="flex items-center gap-2">
           <Calendar
             className={`w-5 h-5 ${
-              isPaid ? 'text-green-400' : isDueToday ? 'text-amber-400' : 'text-[#F97316]'
+              isPaid ? 'text-green-400' : isDueToday ? 'text-amber-400' : 'text-accent'
             }`}
           />
           <h2 className="text-lg font-semibold text-[#1C1400] dark:text-[#FFF5DC]">{t('rent.title')}</h2>
@@ -210,8 +210,8 @@ export default function RentCountdown() {
           </div>
         ) : (
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-[#F97316]/20 flex items-center justify-center">
-              <Loader2 className="w-7 h-7 text-[#F97316]" />
+            <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
+              <Loader2 className="w-7 h-7 text-accent" />
             </div>
             <div>
               <p className="text-2xl font-bold text-[#1C1400] dark:text-[#FFF5DC]">

@@ -50,7 +50,7 @@ const COLORS = [
   { name: 'settings.color.blue', value: 'blue', class: 'bg-blue-500' },
   { name: 'settings.color.amber', value: 'amber', class: 'bg-amber-400' },
   { name: 'settings.color.purple', value: 'purple', class: 'bg-purple-500' },
-  { name: 'settings.color.teal', value: 'teal', class: 'bg-[#F97316]' },
+  { name: 'settings.color.teal', value: 'teal', class: 'bg-accent' },
   { name: 'settings.color.rose', value: 'rose', class: 'bg-rose-500' },
 ];
 
@@ -288,7 +288,7 @@ export default function SettingsPage() {
               onClick={() => setActiveTab(id as typeof activeTab)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${
                 activeTab === id
-                  ? 'text-white border-b-2 border-[#F97316] bg-white/5'
+                  ? 'text-white border-b-2 border-accent bg-white/5'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
@@ -323,7 +323,7 @@ export default function SettingsPage() {
                 <span
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mt-2 ${
                     profile?.role === 'admin'
-                      ? 'bg-[#F97316]/20 text-[#F97316]'
+                      ? 'bg-accent/20 text-accent'
                       : 'bg-white/10 text-gray-400'
                   }`}
                 >
@@ -340,7 +340,7 @@ export default function SettingsPage() {
                   type="text"
                   value={editForm.name || ''}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all"
                 />
               </div>
               <div>
@@ -349,7 +349,7 @@ export default function SettingsPage() {
                   type="text"
                   value={editForm.surname || ''}
                   onChange={(e) => setEditForm({ ...editForm, surname: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all"
                 />
               </div>
               <div>
@@ -358,7 +358,7 @@ export default function SettingsPage() {
                   type="text"
                   value={editForm.occupation || ''}
                   onChange={(e) => setEditForm({ ...editForm, occupation: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all"
                 />
               </div>
               <div>
@@ -367,7 +367,7 @@ export default function SettingsPage() {
                   type="tel"
                   value={editForm.phone || ''}
                   onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all"
                 />
               </div>
               <div>
@@ -377,7 +377,7 @@ export default function SettingsPage() {
                   value={editForm.telegram || ''}
                   onChange={(e) => setEditForm({ ...editForm, telegram: e.target.value })}
                   placeholder={t('settings.profile.usernamePlaceholder')}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all"
                 />
               </div>
               <div>
@@ -387,7 +387,7 @@ export default function SettingsPage() {
                   value={editForm.instagram || ''}
                   onChange={(e) => setEditForm({ ...editForm, instagram: e.target.value })}
                   placeholder={t('settings.profile.usernamePlaceholder')}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all"
                 />
               </div>
             </div>
@@ -414,7 +414,7 @@ export default function SettingsPage() {
             <button
               onClick={saveProfile}
               disabled={saving}
-              className="flex items-center gap-2 bg-[#F97316] text-white rounded-lg px-6 py-2.5 font-medium hover:bg-[#EA6D0E] transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 bg-accent text-white rounded-lg px-6 py-2.5 font-medium hover:bg-accent-hover transition-colors disabled:opacity-50"
             >
               {saving && <Spinner />}
               <Save className="w-4 h-4" />
@@ -433,7 +433,7 @@ export default function SettingsPage() {
             {/* Email Verification */}
             <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
               <div className="flex items-center gap-3 mb-4">
-                <Mail className="w-5 h-5 text-[#F97316]" />
+                <Mail className="w-5 h-5 text-accent" />
                 <h3 className="text-lg font-semibold text-white">{t('settings.security.emailVerification')}</h3>
               </div>
               <div className="flex items-center justify-between">
@@ -454,7 +454,7 @@ export default function SettingsPage() {
                   </button>
                 )}
                 {firebaseUser?.emailVerified && (
-                  <span className="flex items-center gap-1 text-[#F97316] text-sm">
+                  <span className="flex items-center gap-1 text-accent text-sm">
                     <CheckCircle className="w-4 h-4" />
                     {t('settings.security.verified')}
                   </span>
@@ -465,7 +465,7 @@ export default function SettingsPage() {
             {/* Change Password */}
             <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
               <div className="flex items-center gap-3 mb-4">
-                <Lock className="w-5 h-5 text-[#F97316]" />
+                <Lock className="w-5 h-5 text-accent" />
                 <h3 className="text-lg font-semibold text-white">{t('settings.security.changePassword')}</h3>
               </div>
               <form onSubmit={changePassword} className="space-y-4 max-w-md">
@@ -477,7 +477,7 @@ export default function SettingsPage() {
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       required
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none transition-all pr-10"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all pr-10"
                     />
                     <button
                       type="button"
@@ -496,7 +496,7 @@ export default function SettingsPage() {
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
                     minLength={6}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all"
                   />
                 </div>
                 <div>
@@ -506,12 +506,12 @@ export default function SettingsPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="bg-[#F97316] text-white rounded-lg px-6 py-2.5 font-medium hover:bg-[#EA6D0E] transition-colors"
+                  className="bg-accent text-white rounded-lg px-6 py-2.5 font-medium hover:bg-accent-hover transition-colors"
                 >
                   {t('settings.security.changePasswordButton')}
                 </button>
@@ -528,7 +528,7 @@ export default function SettingsPage() {
             className="bg-[#1a1d27] border border-white/5 rounded-xl p-6"
           >
             <div className="flex items-center gap-3 mb-6">
-              <Bell className="w-5 h-5 text-[#F97316]" />
+              <Bell className="w-5 h-5 text-accent" />
               <h3 className="text-lg font-semibold text-white">{t('settings.notifications.title')}</h3>
             </div>
             <div className="space-y-4">
@@ -550,7 +550,7 @@ export default function SettingsPage() {
                     aria-checked={notifications[key]}
                     aria-label={t(label)}
                     className={`relative w-11 h-6 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center ${
-                      notifications[key] ? 'bg-[#F97316]' : 'bg-gray-600'
+                      notifications[key] ? 'bg-accent' : 'bg-gray-600'
                     }`}
                   >
                     <span
@@ -564,7 +564,7 @@ export default function SettingsPage() {
             </div>
             <button
               onClick={saveNotifications}
-              className="mt-6 flex items-center gap-2 bg-[#F97316] text-white rounded-lg px-6 py-2.5 font-medium hover:bg-[#EA6D0E] transition-colors"
+              className="mt-6 flex items-center gap-2 bg-accent text-white rounded-lg px-6 py-2.5 font-medium hover:bg-accent-hover transition-colors"
             >
               <Save className="w-4 h-4" />
               {t('settings.notifications.savePreferences')}
@@ -580,7 +580,7 @@ export default function SettingsPage() {
             className="bg-[#1a1d27] border border-white/5 rounded-xl p-6"
           >
             <div className="flex items-center gap-3 mb-6">
-              <Save className="w-5 h-5 text-[#F97316]" />
+              <Save className="w-5 h-5 text-accent" />
               <h3 className="text-lg font-semibold text-white">{t('settings.data.title')}</h3>
             </div>
             <p className="text-gray-400 mb-6">{t('settings.data.subtitle')}</p>
@@ -589,8 +589,8 @@ export default function SettingsPage() {
               {/* Export Data */}
               <div className="border border-white/10 rounded-lg p-4">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-[#F97316]/10 flex items-center justify-center flex-shrink-0">
-                    <Download className="w-5 h-5 text-[#F97316]" />
+                  <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                    <Download className="w-5 h-5 text-accent" />
                   </div>
                   <div className="flex-1">
                     <h4 className="text-white font-medium">{t('settings.data.export')}</h4>
@@ -599,7 +599,7 @@ export default function SettingsPage() {
                   <button
                     onClick={exportUserData}
                     disabled={exporting}
-                    className="px-4 py-2 bg-[#F97316]/10 text-[#F97316] rounded-lg font-medium hover:bg-[#F97316]/20 transition-colors disabled:opacity-50"
+                    className="px-4 py-2 bg-accent/10 text-accent rounded-lg font-medium hover:bg-accent/20 transition-colors disabled:opacity-50"
                   >
                     {exporting ? t('settings.data.exporting') : t('settings.data.export')}
                   </button>

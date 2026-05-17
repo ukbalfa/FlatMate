@@ -23,7 +23,7 @@ export default function LeftPanel() {
         className="text-left max-w-md"
       >
         <div className="flex items-center gap-2 mb-2">
-          <span className="w-3 h-3 rounded-full bg-[#F97316]" />
+          <span className="w-3 h-3 rounded-full bg-accent" />
           <h1 className="text-2xl font-bold text-[#0a0a0a] dark:text-gray-100">FlatMate</h1>
         </div>
         <p className="text-lg text-[#6b7280] dark:text-gray-400 mb-8">
@@ -34,8 +34,8 @@ export default function LeftPanel() {
         <div className="space-y-3 mb-8">
           {bullets.map((b) => (
             <div key={b} className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-full bg-[#F97316]/10 dark:bg-[#F97316]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Check className="w-3 h-3 text-[#F97316]" />
+              <div className="w-5 h-5 rounded-full bg-accent/10 dark:bg-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Check className="w-3 h-3 text-accent" />
               </div>
               <span className="text-sm text-[#6b7280] dark:text-gray-400">{b}</span>
             </div>
@@ -48,7 +48,7 @@ export default function LeftPanel() {
             {['S', 'J', 'E', 'M'].map((initial, i) => (
               <div
                 key={i}
-                className="w-7 h-7 rounded-full border-2 border-white dark:border-gray-800 bg-[#F97316]/10 flex items-center justify-center text-[9px] font-bold text-[#F97316]"
+                className="w-7 h-7 rounded-full border-2 border-white dark:border-gray-800 bg-accent/10 flex items-center justify-center text-[9px] font-bold text-accent"
                 style={{ zIndex: 4 - i }}
               >
                 {initial}

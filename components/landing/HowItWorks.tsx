@@ -49,7 +49,7 @@ export function HowItWorks() {
           transition={{ duration: 0.5 }}
           className="text-center mb-16"
         >
-          <span className="inline-block text-xs font-medium text-[#F97316] uppercase tracking-[0.15em] mb-4">
+          <span className="inline-block text-xs font-medium text-accent uppercase tracking-[0.15em] mb-4">
             How It Works
           </span>
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
@@ -70,10 +70,10 @@ export function HowItWorks() {
               transition={{ duration: 0.5, delay: i * 0.1 }}
               className="group relative"
             >
-              <div className="relative p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-white/10 transition-all duration-300 h-full">
+              <div className="relative p-6 rounded-2xl bg-white/2 border border-white/6 hover:border-white/10 transition-all duration-300 h-full">
                 {/* Step number */}
-                <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-[#F97316]/10 border border-[#F97316]/20 flex items-center justify-center">
-                  <span className="text-xs font-bold text-[#F97316]">{step.number}</span>
+                <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center">
+                  <span className="text-xs font-bold text-accent">{step.number}</span>
                 </div>
 
                 <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/60 mb-4 group-hover:text-white group-hover:border-white/20 transition-all">

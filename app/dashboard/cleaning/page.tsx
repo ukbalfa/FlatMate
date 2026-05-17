@@ -155,7 +155,7 @@ export default function CleaningPage() {
           {loading ? (
             <>
               {[1, 2, 3].map((i) => (
-                <div key={i} className="py-4 border-b border-white/[0.05] animate-pulse">
+                <div key={i} className="py-4 border-b border-white/5 animate-pulse">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1">
                       <div className="w-5 h-5 bg-white/10 rounded-full"></div>
@@ -190,7 +190,7 @@ export default function CleaningPage() {
                   <div
                     key={item.id}
                     className={`flex items-center justify-between py-4 ${item.done ? 'opacity-60' : ''} ${
-                      !isLast ? 'border-b border-white/[0.05]' : ''
+                      !isLast ? 'border-b border-white/5' : ''
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -225,7 +225,7 @@ export default function CleaningPage() {
                           {assignedUser?.name || item.assignedTo}
                         </span>
                       </div>
-                      <span className="px-3 py-1 rounded-full bg-white/[0.08] text-white text-xs font-medium">
+                      <span className="px-3 py-1 rounded-full bg-white/8 text-white text-xs font-medium">
                         {t('cleaning.day.' + item.dayOfWeek)}
                       </span>
                       <label className="flex items-center cursor-pointer">
@@ -233,7 +233,7 @@ export default function CleaningPage() {
                           type="checkbox"
                           checked={item.done}
                           onChange={() => toggleDone(item)}
-                          className="w-5 h-5 rounded border-2 border-gray-300 dark:border-gray-600 text-[#F97316] focus:ring-2 focus:ring-[#F97316] focus:ring-offset-0 cursor-pointer transition"
+                          className="w-5 h-5 rounded border-2 border-gray-300 dark:border-gray-600 text-accent focus:ring-2 focus:ring-accent focus:ring-offset-0 cursor-pointer transition"
                         />
                       </label>
                       {isAdmin && (
@@ -255,7 +255,7 @@ export default function CleaningPage() {
 
         {/* Admin Add Task Form */}
         {userProfile?.role === 'admin' && (
-          <div className="bg-[#1a1d27] border border-white/[0.06] rounded-xl p-6">
+          <div className="bg-[#1a1d27] border border-white/6 rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4 text-white">{t('cleaning.addTaskTitle')}</h3>
             <form onSubmit={handleAdd} className="space-y-4">
               <div>
@@ -264,7 +264,7 @@ export default function CleaningPage() {
                   type="text"
                   value={task}
                   onChange={(e) => setTask(e.target.value)}
-                  className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                   required
                 />
               </div>
@@ -274,7 +274,7 @@ export default function CleaningPage() {
                   <select
                     value={dayOfWeek}
                     onChange={(e) => setDayOfWeek(e.target.value)}
-                    className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                     required
                   >
                     {DAYS.map((day) => (
@@ -289,7 +289,7 @@ export default function CleaningPage() {
                   <select
                     value={assignedTo}
                     onChange={(e) => setAssignedTo(e.target.value)}
-                    className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                     required
                   >
                     <option className="bg-[#1a1d27]" value="">{t('cleaning.select')}</option>
@@ -303,7 +303,7 @@ export default function CleaningPage() {
               </div>
               <button
                 type="submit"
-                className="w-full bg-[#F97316] text-white rounded-lg px-4 py-3 font-medium hover:bg-[#EA6D0E] transition"
+                className="w-full bg-accent text-white rounded-lg px-4 py-3 font-medium hover:bg-accent-hover transition"
               >
                 {t('cleaning.addTaskButton')}
               </button>

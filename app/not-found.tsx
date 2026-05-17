@@ -12,7 +12,7 @@ export default function NotFound() {
         transition={{ duration: 0.4 }}
         className="text-center max-w-md"
       >
-        <div className="text-7xl font-bold text-[#F97316] mb-4">404</div>
+        <div className="text-7xl font-bold text-accent mb-4">404</div>
         <h1 className="text-2xl font-semibold text-[#1C1400] dark:text-[#FFF5DC] mb-3 tracking-tight">
           Page not found
         </h1>
@@ -30,7 +30,7 @@ export default function NotFound() {
           </button>
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 bg-[#F97316] text-white rounded-lg px-5 py-2.5 text-sm font-medium hover:bg-[#EA6D0E] transition-colors"
+            className="inline-flex items-center gap-2 bg-accent text-white rounded-lg px-5 py-2.5 text-sm font-medium hover:bg-accent-hover transition-colors"
           >
             <Home className="w-4 h-4" />
             Dashboard

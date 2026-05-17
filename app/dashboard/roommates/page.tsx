@@ -20,7 +20,7 @@ const COLORS = [
   { name: 'Blue', value: 'blue', class: 'bg-blue-500' },
   { name: 'Amber', value: 'amber', class: 'bg-amber-400' },
   { name: 'Purple', value: 'purple', class: 'bg-purple-500' },
-  { name: 'Orange', value: 'teal', class: 'bg-[#F97316]' },
+  { name: 'Orange', value: 'teal', class: 'bg-accent' },
   { name: 'Rose', value: 'rose', class: 'bg-rose-500' },
 ];
 
@@ -242,7 +242,7 @@ const sortedRoommates = [...users].sort((a, b) =>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'date' | 'name')}
-              className="appearance-none bg-[#1a1d27] border border-white/10 text-white text-sm rounded-lg focus:ring-[#F97316] focus:border-[#F97316] block px-4 py-2 outline-none cursor-pointer hover:bg-white/5 transition-colors shadow-sm"
+              className="appearance-none bg-[#1a1d27] border border-white/10 text-white text-sm rounded-lg focus:ring-accent focus:border-accent block px-4 py-2 outline-none cursor-pointer hover:bg-white/5 transition-colors shadow-sm"
             >
               <option value="date">{t('roommates.dateJoined')}</option>
               <option value="name">{t('roommates.alphabetical')}</option>
@@ -291,7 +291,7 @@ const sortedRoommates = [...users].sort((a, b) =>
                   {editingId === u.id ? (
                     <div className="space-y-3 w-full">
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-sm font-semibold text-[#F97316]">Edit Profile</h3>
+                        <h3 className="text-sm font-semibold text-accent">Edit Profile</h3>
                         <button
                           onClick={() => setEditingId(null)}
                           className="text-gray-400 hover:text-white transition-colors"
@@ -302,43 +302,43 @@ const sortedRoommates = [...users].sort((a, b) =>
                       </div>
                       <div className="space-y-2">
                         <input
-                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                           placeholder="Name"
                           value={editForm.name || ''}
                           onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                         />
                         <input
-                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                           placeholder="Surname"
                           value={editForm.surname || ''}
                           onChange={(e) => setEditForm({ ...editForm, surname: e.target.value })}
                         />
                         <input
-                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                           placeholder="Occupation"
                           value={editForm.occupation || ''}
                           onChange={(e) => setEditForm({ ...editForm, occupation: e.target.value })}
                         />
                         <input
-                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                           placeholder="Phone"
                           value={editForm.phone || ''}
                           onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
                         />
                         <input
-                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                           placeholder="Telegram"
                           value={editForm.telegram || ''}
                           onChange={(e) => setEditForm({ ...editForm, telegram: e.target.value })}
                         />
                         <input
-                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                           placeholder="Instagram"
                           value={editForm.instagram || ''}
                           onChange={(e) => setEditForm({ ...editForm, instagram: e.target.value })}
                         />
                         <select
-                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                           value={editForm.color || 'blue'}
                           onChange={(e) => setEditForm({ ...editForm, color: e.target.value })}
                         >
@@ -352,7 +352,7 @@ const sortedRoommates = [...users].sort((a, b) =>
                       <div className="flex gap-2 pt-2">
                         <button
                           onClick={saveEdit}
-                          className="flex-1 bg-[#F97316] text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-[#EA6D0E] transition"
+                          className="flex-1 bg-accent text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent-hover transition"
                         >
                           Save
                         </button>
@@ -410,7 +410,7 @@ const sortedRoommates = [...users].sort((a, b) =>
                         <span
                           className={`text-xs px-3 py-1 rounded-full font-semibold ${
                             u.role === 'admin'
-                              ? 'bg-[#F97316] text-white'
+                              ? 'bg-accent text-white'
                               : 'bg-white/10 text-gray-400'
                           }`}
                         >
@@ -491,7 +491,7 @@ const sortedRoommates = [...users].sort((a, b) =>
                       placeholder="Name *"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                       required
                     />
                     <input
@@ -499,14 +499,14 @@ const sortedRoommates = [...users].sort((a, b) =>
                       placeholder="Surname"
                       value={surname}
                       onChange={(e) => setSurname(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                     />
                     <input
                       type="text"
                       placeholder="Username *"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                       required
                     />
                     <input
@@ -514,7 +514,7 @@ const sortedRoommates = [...users].sort((a, b) =>
                       placeholder="Password *"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                       required
                     />
                     <input
@@ -522,33 +522,33 @@ const sortedRoommates = [...users].sort((a, b) =>
                       placeholder="Occupation"
                       value={occupation}
                       onChange={(e) => setOccupation(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                     />
                     <input
                       type="text"
                       placeholder="Phone"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                     />
                     <input
                       type="text"
                       placeholder="Telegram"
                       value={telegram}
                       onChange={(e) => setTelegram(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                     />
                     <input
                       type="text"
                       placeholder="Instagram"
                       value={instagram}
                       onChange={(e) => setInstagram(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                     />
                     <select
                       value={color}
                       onChange={(e) => setColor(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                       required
                     >
                       {COLORS.map((c) => (
@@ -559,7 +559,7 @@ const sortedRoommates = [...users].sort((a, b) =>
                     </select>
                     <button
                       type="submit"
-                      className="w-full bg-[#F97316] text-white rounded-lg px-4 py-3 font-medium hover:bg-[#EA6D0E] transition"
+                      className="w-full bg-accent text-white rounded-lg px-4 py-3 font-medium hover:bg-accent-hover transition"
                     >
                       Add Roommate
                     </button>

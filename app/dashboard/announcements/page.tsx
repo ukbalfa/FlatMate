@@ -18,14 +18,14 @@ interface AnnouncementWithUI extends Announcement {
 }
 
 const colorClasses = {
-  teal: 'border-[#F97316]',
+  teal: 'border-accent',
   amber: 'border-amber-400',
   red: 'border-red-400',
   blue: 'border-blue-400'
 };
 
 const bgColors = {
-  teal: 'bg-[#F97316]',
+  teal: 'bg-accent',
   amber: 'bg-amber-400',
   red: 'bg-red-400',
   blue: 'bg-blue-400'
@@ -188,7 +188,7 @@ export default function AnnouncementsPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className={`bg-[#1a1d27] border border-white/[0.06] rounded-xl p-5 relative overflow-hidden border-l-4 ${colorClasses[a.color]}`}
+                  className={`bg-[#1a1d27] border border-white/6 rounded-xl p-5 relative overflow-hidden border-l-4 ${colorClasses[a.color]}`}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
@@ -204,7 +204,7 @@ export default function AnnouncementsPage() {
                       <div className="flex items-center gap-2 lg:opacity-0 lg:hover:opacity-100 transition-opacity absolute top-4 right-4">
                         <button
                           onClick={() => handleTogglePin(a.id, a.isPinned ?? false)}
-                          className={`p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${a.isPinned ? 'text-[#F97316] bg-[#F97316]/10' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
+                          className={`p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${a.isPinned ? 'text-accent bg-accent/10' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
                           title="Toggle pin"
                           aria-label="Toggle pin"
                         >
@@ -234,11 +234,11 @@ export default function AnnouncementsPage() {
                   
                   {/* For mobile where hover doesn't work well */}
                   {(userProfile?.uid === a.authorId || isAdmin) && (
-                    <div className="flex lg:hidden items-center gap-4 mt-4 pt-4 border-t border-white/[0.06]">
+                    <div className="flex lg:hidden items-center gap-4 mt-4 pt-4 border-t border-white/6">
                       {isAdmin && (
                         <button
                           onClick={() => handleTogglePin(a.id, a.isPinned ?? false)}
-                          className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${a.isPinned ? 'text-[#F97316]' : 'text-gray-400'}`}
+                          className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${a.isPinned ? 'text-accent' : 'text-gray-400'}`}
                         >
                           <Pin className="w-4 h-4" />
                           {a.isPinned ? 'Unpin' : 'Pin'}
@@ -260,7 +260,7 @@ export default function AnnouncementsPage() {
         )}
 
         {isAdmin && (
-          <div className="bg-[#1a1d27] border border-white/[0.06] rounded-xl p-6 mt-8">
+          <div className="bg-[#1a1d27] border border-white/6 rounded-xl p-6 mt-8">
             <h2 className="text-lg font-semibold text-white mb-4">{t('announcements.addAnnouncement')}</h2>
             <form onSubmit={handleAdd} className="space-y-4">
               <div>
@@ -272,7 +272,7 @@ export default function AnnouncementsPage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   maxLength={100}
-                  className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-accent outline-none"
                 />
               </div>
               
@@ -285,7 +285,7 @@ export default function AnnouncementsPage() {
                   onChange={(e) => setContent(e.target.value)}
                   maxLength={500}
                   rows={4}
-                  className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-[#F97316] outline-none resize-none"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-accent outline-none resize-none"
                 />
                 <div className="text-right mt-1">
                   <span className={`text-xs ${content.length >= 500 ? 'text-red-400' : 'text-gray-500'}`}>
@@ -309,7 +309,7 @@ export default function AnnouncementsPage() {
                   </div>
                   
                   <label className="flex items-center gap-2 cursor-pointer group ml-2">
-                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${pinned ? 'bg-[#F97316] border-[#F97316]' : 'border-white/20 group-hover:border-white/40 bg-white/5'}`}>
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${pinned ? 'bg-accent border-accent' : 'border-white/20 group-hover:border-white/40 bg-white/5'}`}>
                       {pinned && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                     </div>
                     <input
@@ -325,7 +325,7 @@ export default function AnnouncementsPage() {
                 <button
                   type="submit"
                   disabled={!title || !content}
-                  className="bg-[#F97316] text-white px-5 py-2.5 rounded-lg hover:bg-[#EA6D0E] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center gap-2"
+                  className="bg-accent text-white px-5 py-2.5 rounded-lg hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center gap-2"
                 >
                   <Megaphone className="w-4 h-4" />
                   Post

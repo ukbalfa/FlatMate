@@ -348,7 +348,7 @@ export default function ExpensesPage() {
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-accent outline-none"
                   required
                   min="1"
                 />
@@ -359,7 +359,7 @@ export default function ExpensesPage() {
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-accent outline-none"
                 >
                   {CATEGORIES.map((cat) => (
                     <option key={cat.name} value={cat.name} className="bg-[#121212]">
@@ -375,7 +375,7 @@ export default function ExpensesPage() {
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-accent outline-none"
                   required
                 />
               </div>
@@ -386,7 +386,7 @@ export default function ExpensesPage() {
                   type="text"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-accent outline-none"
                   placeholder="e.g., Groceries at Magnum"
                 />
               </div>
@@ -397,7 +397,7 @@ export default function ExpensesPage() {
                   type="text"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-accent outline-none"
                   placeholder="Optional"
                 />
               </div>
@@ -462,7 +462,7 @@ export default function ExpensesPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full mt-6 bg-[#F97316] text-white py-3 rounded-lg font-medium hover:bg-[#EA6D0E] transition disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full mt-6 bg-accent text-white py-3 rounded-lg font-medium hover:bg-accent-hover transition disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {submitting ? (
                 <>
@@ -484,7 +484,7 @@ export default function ExpensesPage() {
                 <select
                   value={filter}
                   onChange={(e) => setFilter(e.target.value)}
-                  className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+                  className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-2 focus:ring-accent outline-none"
                 >
                 <option value="All" className="bg-[#121212]">{t('expenses.allCategories')}</option>
                 {CATEGORIES.map((cat) => (
@@ -497,7 +497,7 @@ export default function ExpensesPage() {
                   type="month"
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+                  className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-2 focus:ring-accent outline-none"
                 />
             </div>
           </div>

@@ -60,7 +60,7 @@ export function Navbar() {
       <div className="hidden md:block">
         <Link
           href="/login"
-          className="px-5 py-2 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-[#F97316] to-[#FBBF24] hover:shadow-[0_0_20px_-5px_rgba(249,115,22,0.4)] transition-shadow duration-300"
+          className="px-5 py-2 rounded-full text-sm font-semibold text-white bg-linear-to-r from-accent to-accent-honey hover:shadow-[0_0_20px_-5px_rgba(249,115,22,0.4)] transition-shadow duration-300"
         >
           {t('landing.nav.signIn') || 'Get Started'}
         </Link>
@@ -83,7 +83,7 @@ export function Navbar() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-full left-0 right-0 mt-3 mx-4 p-4 rounded-2xl bg-[#0A0A0A]/95 border border-white/10 backdrop-blur-xl md:hidden"
+            className="absolute top-full left-0 right-0 mt-3 mx-4 p-4 rounded-2xl bg-bg-section/95 border border-white/10 backdrop-blur-xl md:hidden"
           >
             <div className="flex flex-col gap-2">
               {navLinks.map((link) => (
@@ -98,7 +98,7 @@ export function Navbar() {
               ))}
               <Link
                 href="/login"
-                className="mt-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-center text-white bg-gradient-to-r from-[#F97316] to-[#FBBF24]"
+                className="mt-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-center text-white bg-linear-to-r from-accent to-accent-honey"
               >
                 {t('landing.nav.signIn') || 'Get Started'}
               </Link>

@@ -19,7 +19,7 @@ export function Testimonials() {
       content:
         'We used to argue about bills every month. Now everything is automatic and transparent. Best decision we made for our flat.',
       rating: 5,
-      color: 'from-[#F97316]/20',
+      color: 'from-accent/20',
     },
     {
       name: 'James K.',
@@ -42,7 +42,7 @@ export function Testimonials() {
   return (
     <section className="relative py-24 px-4 md:px-8 overflow-hidden">
       {/* Subtle background accent */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[#F97316]/[0.02] blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-accent/2 blur-[100px] pointer-events-none" />
 
       <div className="max-w-6xl mx-auto relative">
         <motion.div
@@ -52,7 +52,7 @@ export function Testimonials() {
           transition={{ duration: 0.5 }}
           className="text-center mb-16"
         >
-          <span className="inline-block text-xs font-medium text-[#F97316] uppercase tracking-[0.15em] mb-4">
+          <span className="inline-block text-xs font-medium text-accent uppercase tracking-[0.15em] mb-4">
             Testimonials
           </span>
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
@@ -71,16 +71,16 @@ export function Testimonials() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="group relative p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-white/10 transition-all duration-300"
+              className="group relative p-6 rounded-2xl bg-white/2 border border-white/6 hover:border-white/10 transition-all duration-300"
             >
               <div
-                className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${testimonial.color} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
+                className={`absolute inset-0 rounded-2xl bg-linear-to-br ${testimonial.color} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
               />
               <div className="relative z-10">
                 {/* Stars */}
                 <div className="flex gap-1 mb-4">
                   {Array.from({ length: testimonial.rating }).map((_, j) => (
-                    <Star key={j} className="w-4 h-4 fill-[#FBBF24] text-[#FBBF24]" />
+                    <Star key={j} className="w-4 h-4 fill-accent-honey text-accent-honey" />
                   ))}
                 </div>
 

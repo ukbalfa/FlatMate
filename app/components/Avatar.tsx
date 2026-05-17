@@ -9,7 +9,7 @@ interface AvatarProps {
   colorClass?: string;
 }
 
-export function Avatar({ src, name, size = 8, className = '', colorClass = 'bg-[#F97316]' }: AvatarProps) {
+export function Avatar({ src, name, size = 8, className = '', colorClass = 'bg-accent' }: AvatarProps) {
   const [error, setError] = useState(false);
   const initials = name
     .split(' ')

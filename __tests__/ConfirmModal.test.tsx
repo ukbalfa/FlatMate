@@ -68,7 +68,7 @@ describe('ConfirmModal', () => {
   it('applies non-danger styling when danger is false', () => {
     render(<ConfirmModal {...defaultProps} danger={false} />);
     const confirmButton = screen.getAllByRole('button')[1];
-    expect(confirmButton).toHaveClass('bg-[#F97316]');
+    expect(confirmButton).toHaveClass('bg-accent');
     expect(confirmButton).not.toHaveClass('bg-red-500');
   });
 

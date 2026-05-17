@@ -22,7 +22,7 @@ function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
       viewport={{ once: true, margin: '-50px' }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
       whileHover={{ y: -4 }}
-      className="group relative p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-white/10 transition-all duration-300"
+      className="group relative p-6 rounded-2xl bg-white/2 border border-white/6 hover:border-white/10 transition-all duration-300"
     >
       {/* Gradient glow on hover */}
       <div
@@ -51,9 +51,9 @@ export function Features() {
       description:
         t('landing.feature.expenseSplitting.description') ||
         'Split any expense with any group size. Automatic calculations and fair distribution.',
-      color: 'bg-[#F97316]/10 text-[#F97316]',
-      borderColor: 'border-[#F97316]/20',
-      gradient: 'bg-gradient-to-br from-[#F97316]/[0.03] to-transparent',
+      color: 'bg-accent/10 text-accent',
+      borderColor: 'border-accent/20',
+      gradient: 'bg-linear-to-br from-accent/3 to-transparent',
     },
     {
       icon: <CalendarSync className="w-5 h-5" />,
@@ -63,7 +63,7 @@ export function Features() {
         'Automated chore rotation. Never fight over who cleans the bathroom again.',
       color: 'bg-[#84CC16]/10 text-[#84CC16]',
       borderColor: 'border-[#84CC16]/20',
-      gradient: 'bg-gradient-to-br from-[#84CC16]/[0.03] to-transparent',
+      gradient: 'bg-linear-to-br from-[#84CC16]/3 to-transparent',
     },
     {
       icon: <ArrowRightLeft className="w-5 h-5" />,
@@ -73,7 +73,7 @@ export function Features() {
         'Real-time currency conversion. Split expenses in any currency, automatically.',
       color: 'bg-[#38BDF8]/10 text-[#38BDF8]',
       borderColor: 'border-[#38BDF8]/20',
-      gradient: 'bg-gradient-to-br from-[#38BDF8]/[0.03] to-transparent',
+      gradient: 'bg-linear-to-br from-[#38BDF8]/3 to-transparent',
     },
     {
       icon: <Users className="w-5 h-5" />,
@@ -83,16 +83,16 @@ export function Features() {
         'Track individual spending, tasks, and contributions per roommate.',
       color: 'bg-[#A78BFA]/10 text-[#A78BFA]',
       borderColor: 'border-[#A78BFA]/20',
-      gradient: 'bg-gradient-to-br from-[#A78BFA]/[0.03] to-transparent',
+      gradient: 'bg-linear-to-br from-[#A78BFA]/3 to-transparent',
     },
     {
       icon: <BarChart3 className="w-5 h-5" />,
       title: 'Spending Analytics',
       description:
         'Visual breakdowns of where your money goes. Monthly reports and insights.',
-      color: 'bg-[#FBBF24]/10 text-[#FBBF24]',
-      borderColor: 'border-[#FBBF24]/20',
-      gradient: 'bg-gradient-to-br from-[#FBBF24]/[0.03] to-transparent',
+      color: 'bg-accent-honey/10 text-accent-honey',
+      borderColor: 'border-accent-honey/20',
+      gradient: 'bg-linear-to-br from-accent-honey/3 to-transparent',
     },
     {
       icon: <Bell className="w-5 h-5" />,
@@ -101,7 +101,7 @@ export function Features() {
         'Automatic reminders for upcoming bills and overdue chores. Stay on track.',
       color: 'bg-[#F43F5E]/10 text-[#F43F5E]',
       borderColor: 'border-[#F43F5E]/20',
-      gradient: 'bg-gradient-to-br from-[#F43F5E]/[0.03] to-transparent',
+      gradient: 'bg-linear-to-br from-[#F43F5E]/3 to-transparent',
     },
   ];
 
@@ -115,7 +115,7 @@ export function Features() {
           transition={{ duration: 0.5 }}
           className="text-center mb-16"
         >
-          <span className="inline-block text-xs font-medium text-[#F97316] uppercase tracking-[0.15em] mb-4">
+          <span className="inline-block text-xs font-medium text-accent uppercase tracking-[0.15em] mb-4">
             Features
           </span>
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">

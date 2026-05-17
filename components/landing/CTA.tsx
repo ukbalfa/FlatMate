@@ -19,13 +19,13 @@ export function CTA() {
           className="relative p-8 md:p-16 rounded-3xl overflow-hidden"
         >
           {/* Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#F97316]/10 via-[#FBBF24]/5 to-transparent" />
-          <div className="absolute inset-0 bg-[#0A0A0A]/80" />
-          <div className="absolute inset-0 border border-white/[0.06] rounded-3xl" />
+          <div className="absolute inset-0 bg-linear-to-br from-accent/10 via-accent-honey/5 to-transparent" />
+          <div className="absolute inset-0 bg-bg-section/80" />
+          <div className="absolute inset-0 border border-white/6 rounded-3xl" />
 
           {/* Decorative corner accents */}
-          <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-[#F97316]/20 rounded-tl-3xl" />
-          <div className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-[#F97316]/20 rounded-br-3xl" />
+          <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-accent/20 rounded-tl-3xl" />
+          <div className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-accent/20 rounded-br-3xl" />
 
           <div className="relative z-10 text-center">
             <motion.div
@@ -33,10 +33,10 @@ export function CTA() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#F97316]/10 border border-[#F97316]/20 mb-6"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 mb-6"
             >
-              <Zap className="w-4 h-4 text-[#F97316]" />
-              <span className="text-sm font-medium text-[#F97316]">
+              <Zap className="w-4 h-4 text-accent" />
+              <span className="text-sm font-medium text-accent">
                 Free for everyone
               </span>
             </motion.div>
@@ -51,7 +51,7 @@ export function CTA() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
                 href="/login"
-                className="group px-8 py-4 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-[#F97316] to-[#FBBF24] hover:shadow-[0_0_30px_-5px_rgba(249,115,22,0.4)] transition-all duration-300 flex items-center gap-2"
+                className="group px-8 py-4 rounded-full text-sm font-semibold text-white bg-linear-to-r from-accent to-accent-honey hover:shadow-[0_0_30px_-5px_rgba(249,115,22,0.4)] transition-all duration-300 flex items-center gap-2"
               >
                 {t('landing.hero.getStarted') || 'Get Started Free'}
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -69,7 +69,7 @@ export function CTA() {
             <div className="mt-8 flex items-center justify-center gap-2 text-xs text-white/30">
               <div className="flex gap-0.5">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <Star key={i} className="w-3 h-3 fill-[#FBBF24] text-[#FBBF24]" />
+                  <Star key={i} className="w-3 h-3 fill-accent-honey text-accent-honey" />
                 ))}
               </div>
               <span>

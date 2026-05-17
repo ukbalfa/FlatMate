@@ -121,7 +121,7 @@ export default function FlatConnectionModal() {
           <button
             onClick={() => setTab('create')}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition ${
-              tab === 'create' ? 'bg-[#F97316] text-gray-900' : 'text-gray-400 hover:text-white'
+              tab === 'create' ? 'bg-accent text-gray-900' : 'text-gray-400 hover:text-white'
             }`}
           >
             <Users className="w-4 h-4" />
@@ -130,7 +130,7 @@ export default function FlatConnectionModal() {
           <button
             onClick={() => setTab('join')}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition ${
-              tab === 'join' ? 'bg-[#F97316] text-gray-900' : 'text-gray-400 hover:text-white'
+              tab === 'join' ? 'bg-accent text-gray-900' : 'text-gray-400 hover:text-white'
             }`}
           >
             <Key className="w-4 h-4" />
@@ -146,7 +146,7 @@ export default function FlatConnectionModal() {
             <button
               onClick={() => handleCreate()}
               disabled={loading}
-              className="w-full bg-[#F97316] text-gray-900 rounded-lg px-6 py-3 font-medium hover:bg-orange-500 transition disabled:opacity-60"
+              className="w-full bg-accent text-gray-900 rounded-lg px-6 py-3 font-medium hover:bg-orange-500 transition disabled:opacity-60"
             >
               {loading ? t('onboarding.creating') : t('onboarding.createFlat')}
             </button>
@@ -162,12 +162,12 @@ export default function FlatConnectionModal() {
               onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
               placeholder="e.g., A3X9K2"
               maxLength={6}
-              className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white text-center text-xl font-mono tracking-widest focus:ring-2 focus:ring-[#F97316] outline-none mb-4"
+              className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white text-center text-xl font-mono tracking-widest focus:ring-2 focus:ring-accent outline-none mb-4"
             />
             <button
               onClick={handleJoin}
               disabled={loading || joinCode.length !== 6}
-              className="w-full bg-[#F97316] text-gray-900 rounded-lg px-6 py-3 font-medium hover:bg-orange-500 transition disabled:opacity-60"
+              className="w-full bg-accent text-gray-900 rounded-lg px-6 py-3 font-medium hover:bg-orange-500 transition disabled:opacity-60"
             >
               {loading ? t('onboarding.joining') : t('onboarding.joinFlat')}
             </button>

@@ -11,7 +11,6 @@ interface CleaningWidgetProps {
 
 export default function CleaningWidget({ myCleaning, t }: CleaningWidgetProps) {
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-  const todaysCount = myCleaning.filter((c) => c.dayOfWeek === today).length;
 
   return (
     <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8 backdrop-blur-xl relative overflow-hidden">

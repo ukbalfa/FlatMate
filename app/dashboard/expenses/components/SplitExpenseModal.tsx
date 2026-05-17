@@ -115,7 +115,7 @@ export const SplitExpenseModal = (
                     )}
                   </div>
                   {isSelected && (
-                    <Check className="w-4 h-4 text-[#F97316]" />
+                    <Check className="w-4 h-4 text-accent" />
                   )}
                 </button>
               );

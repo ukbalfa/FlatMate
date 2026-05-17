@@ -301,12 +301,12 @@ export default function BalancesPage() {
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="bg-[#1a1d27] border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+              className="bg-[#1a1d27] border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-accent outline-none"
               aria-label="Select month"
             />
             <button
               onClick={() => setShowSettlementModal(true)}
-              className="flex items-center gap-2 bg-[#F97316] text-white rounded-lg px-4 py-2 font-medium hover:bg-[#EA6D0E] transition-colors"
+              className="flex items-center gap-2 bg-accent text-white rounded-lg px-4 py-2 font-medium hover:bg-accent-hover transition-colors"
             >
               <Plus className="w-4 h-4" />
               {t('balances.recordPayment')}
@@ -318,7 +318,7 @@ export default function BalancesPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
-              <Wallet className="w-5 h-5 text-[#F97316]" />
+              <Wallet className="w-5 h-5 text-accent" />
               <span className="text-gray-400 text-sm">{t('balances.totalExpenses')}</span>
             </div>
             <p className="text-2xl font-bold text-white">
@@ -552,7 +552,7 @@ export default function BalancesPage() {
                     setSettlementForm({ ...settlementForm, from: e.target.value })
                   }
                   required
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-accent outline-none"
                 >
                   <option value="" className="bg-[#1a1d27]">
                     {t('balances.modal.selectPayer')}
@@ -572,7 +572,7 @@ export default function BalancesPage() {
                     setSettlementForm({ ...settlementForm, to: e.target.value })
                   }
                   required
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-accent outline-none"
                 >
                   <option value="" className="bg-[#1a1d27]">
                     {t('balances.modal.selectRecipient')}
@@ -594,7 +594,7 @@ export default function BalancesPage() {
                   }
                   required
                   min="1"
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-[#F97316] outline-none"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-accent outline-none"
                 />
               </div>
               <div>
@@ -606,7 +606,7 @@ export default function BalancesPage() {
                     setSettlementForm({ ...settlementForm, note: e.target.value })
                   }
                   placeholder={t('balances.modal.notePlaceholder')}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-[#F97316] outline-none"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:ring-2 focus:ring-accent outline-none"
                 />
               </div>
               <div className="flex gap-3 pt-2">
@@ -620,7 +620,7 @@ export default function BalancesPage() {
                 <button
                   type="submit"
                   disabled={submittingSettlement}
-                  className="flex-1 bg-[#F97316] text-white rounded-lg px-4 py-2.5 font-medium hover:bg-[#EA6D0E] transition disabled:opacity-60 inline-flex items-center justify-center gap-2"
+                  className="flex-1 bg-accent text-white rounded-lg px-4 py-2.5 font-medium hover:bg-accent-hover transition disabled:opacity-60 inline-flex items-center justify-center gap-2"
                 >
                   {submittingSettlement && <Spinner />}
                   {t('balances.modal.recordPayment')}

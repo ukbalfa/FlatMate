@@ -276,7 +276,7 @@ export default function LoginPage() {
     }
   };
 
-  const inputClass = 'w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-3 text-[#0a0a0a] dark:text-gray-100 focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none transition-colors';
+  const inputClass = 'w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-3 text-[#0a0a0a] dark:text-gray-100 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-colors';
 
   return (
     <motion.div
@@ -296,7 +296,7 @@ export default function LoginPage() {
         >
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2 mb-8">
-            <span className="w-3 h-3 rounded-full bg-[#F97316]" />
+            <span className="w-3 h-3 rounded-full bg-accent" />
             <span className="text-2xl font-bold text-[#0a0a0a] dark:text-gray-100">FlatMate</span>
           </div>
 
@@ -316,7 +316,7 @@ export default function LoginPage() {
                 onKeyDown={(e) => handleTabKeyDown(e, 'signin')}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
                   activeTab === 'signin'
-                    ? 'bg-[#F97316] text-white shadow-sm'
+                    ? 'bg-accent text-white shadow-sm'
                     : 'text-[#6b7280] dark:text-gray-400 hover:text-[#0a0a0a] dark:hover:text-gray-100'
                 }`}
               >
@@ -331,7 +331,7 @@ export default function LoginPage() {
                 onKeyDown={(e) => handleTabKeyDown(e, 'signup')}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
                   activeTab === 'signup'
-                    ? 'bg-[#F97316] text-white shadow-sm'
+                    ? 'bg-accent text-white shadow-sm'
                     : 'text-[#6b7280] dark:text-gray-400 hover:text-[#0a0a0a] dark:hover:text-gray-100'
                 }`}
               >
@@ -451,7 +451,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={handleForgotPassword}
-                    className="text-xs text-[#F97316] hover:underline mt-1"
+                    className="text-xs text-accent hover:underline mt-1"
                     disabled={isLoading}
                   >
                     Forgot password?
@@ -505,7 +505,7 @@ export default function LoginPage() {
                 {activeTab === 'signin' ? t('login.noAccountYet') : t('login.alreadyHaveAccount')}{' '}
                 <button
                   onClick={() => handleTabChange(activeTab === 'signin' ? 'signup' : 'signin')}
-                  className="text-[#F97316] hover:underline font-medium"
+                  className="text-accent hover:underline font-medium"
                 >
                   {activeTab === 'signin' ? t('login.switchToSignUp') : t('login.switchToSignIn')}
                 </button>

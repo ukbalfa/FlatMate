@@ -10,9 +10,6 @@ interface TasksWidgetProps {
 }
 
 export default function TasksWidget({ myTasks, t }: TasksWidgetProps) {
-  const overdueTasks = myTasks.filter((t) => new Date(t.dueDate) < new Date(new Date().toISOString().slice(0, 10)));
-  const overdueCount = overdueTasks.length;
-
   return (
     <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8 backdrop-blur-xl relative overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />

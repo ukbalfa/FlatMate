@@ -27,7 +27,7 @@ export const AnalyticsDashboard = ({ monthlyData, categoryData }: AnalyticsDashb
   const hasData = visibleMonthlyData.some(d => d.expenses > 0);
 
   return (
-    <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-6">
+    <div className="bg-linear-to-br from-gray-900 to-gray-800 rounded-xl p-6">
       <h2 className="font-display text-xl text-white mb-6">Expense Analytics</h2>
 
       {!hasData && (

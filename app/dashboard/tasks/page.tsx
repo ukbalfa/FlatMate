@@ -169,7 +169,7 @@ export default function TasksPage() {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 maxLength={200}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                 required
               />
               <div className="text-right text-xs text-gray-400 mt-1">{text.length}/200</div>
@@ -181,7 +181,7 @@ export default function TasksPage() {
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                   required
                 />
               </div>
@@ -190,7 +190,7 @@ export default function TasksPage() {
                 <select
                   value={assignedTo}
                   onChange={(e) => setAssignedTo(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#F97316] focus:border-transparent outline-none"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-accent focus:border-transparent outline-none"
                   required
                 >
                   <option value="">{t('tasks.select')}</option>
@@ -205,7 +205,7 @@ export default function TasksPage() {
             <button
               type="submit"
               disabled={adding}
-              className="w-full bg-[#F97316] text-white rounded-lg px-4 py-3 font-medium hover:bg-[#EA6D0E] transition disabled:opacity-60 inline-flex items-center justify-center gap-2"
+              className="w-full bg-accent text-white rounded-lg px-4 py-3 font-medium hover:bg-accent-hover transition disabled:opacity-60 inline-flex items-center justify-center gap-2"
             >
               {adding && <Spinner />}
               {t('tasks.addTaskButton')}
@@ -265,8 +265,8 @@ export default function TasksPage() {
                       onClick={() => toggleDone(task)}
                       className={`w-5 h-5 flex items-center justify-center rounded-full border-2 transition-all duration-150 flex-shrink-0 ${
                         task.done
-                          ? 'bg-[#F97316] border-[#F97316]'
-                          : 'border-gray-600 bg-transparent hover:border-[#F97316]'
+                          ? 'bg-accent border-accent'
+                          : 'border-gray-600 bg-transparent hover:border-accent'
                       }`}
                       aria-label="Toggle done"
                     >

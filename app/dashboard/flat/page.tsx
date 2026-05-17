@@ -118,13 +118,13 @@ function NoFlatView() {
     return (
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-lg mx-auto">
         <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-[#F97316]/10 flex items-center justify-center mx-auto mb-4">
-            <Building2 className="w-8 h-8 text-[#F97316]" />
+          <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+            <Building2 className="w-8 h-8 text-accent" />
           </div>
           <h2 className="text-xl font-bold text-white mb-2">{t('onboarding.flatCreated')}</h2>
           <p className="text-gray-400 mb-6">{t('onboarding.shareCode')}</p>
           <div className="flex items-center justify-center gap-3 mb-6">
-            <span className="text-3xl font-mono font-bold tracking-widest text-[#F97316]">{generatedCode}</span>
+            <span className="text-3xl font-mono font-bold tracking-widest text-accent">{generatedCode}</span>
             <button onClick={handleCopy} className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition">
               {copied ? <Check className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5 text-white" />}
             </button>
@@ -146,7 +146,7 @@ function NoFlatView() {
           <button
             onClick={() => setTab('create')}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition ${
-              tab === 'create' ? 'bg-[#F97316] text-gray-900' : 'text-gray-400 hover:text-white'
+              tab === 'create' ? 'bg-accent text-gray-900' : 'text-gray-400 hover:text-white'
             }`}
           >
             <Users className="w-4 h-4" />
@@ -155,7 +155,7 @@ function NoFlatView() {
           <button
             onClick={() => setTab('join')}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition ${
-              tab === 'join' ? 'bg-[#F97316] text-gray-900' : 'text-gray-400 hover:text-white'
+              tab === 'join' ? 'bg-accent text-gray-900' : 'text-gray-400 hover:text-white'
             }`}
           >
             <Key className="w-4 h-4" />
@@ -169,7 +169,7 @@ function NoFlatView() {
             <button
               onClick={() => handleCreate()}
               disabled={loading}
-              className="w-full bg-[#F97316] text-gray-900 rounded-lg px-6 py-3 font-medium hover:bg-orange-500 transition disabled:opacity-60"
+              className="w-full bg-accent text-gray-900 rounded-lg px-6 py-3 font-medium hover:bg-orange-500 transition disabled:opacity-60"
             >
               {loading ? t('onboarding.creating') : t('onboarding.createFlat')}
             </button>
@@ -183,12 +183,12 @@ function NoFlatView() {
               onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
               placeholder="e.g., A3X9K2"
               maxLength={6}
-              className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white text-center text-xl font-mono tracking-widest focus:ring-2 focus:ring-[#F97316] outline-none mb-4"
+              className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white text-center text-xl font-mono tracking-widest focus:ring-2 focus:ring-accent outline-none mb-4"
             />
             <button
               onClick={handleJoin}
               disabled={loading || joinCode.length !== 6}
-              className="w-full bg-[#F97316] text-gray-900 rounded-lg px-6 py-3 font-medium hover:bg-orange-500 transition disabled:opacity-60"
+              className="w-full bg-accent text-gray-900 rounded-lg px-6 py-3 font-medium hover:bg-orange-500 transition disabled:opacity-60"
             >
               {loading ? t('onboarding.joining') : t('onboarding.joinFlat')}
             </button>
@@ -274,14 +274,14 @@ function FlatInfoView() {
 
       <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
         <div className="flex items-center gap-3 mb-6">
-          <Building2 className="w-5 h-5 text-[#F97316]" />
+          <Building2 className="w-5 h-5 text-accent" />
           <h2 className="text-lg font-semibold text-white">{t('flat.yourFlat') || 'Your Flat'}</h2>
         </div>
 
         <div className="bg-white/5 rounded-lg p-4 mb-6">
           <p className="text-sm text-gray-400 mb-2">{t('flat.inviteCode') || 'Invite Code'}</p>
           <div className="flex items-center gap-3">
-            <span className="text-2xl font-mono font-bold tracking-widest text-[#F97316]">{userProfile?.flatId}</span>
+            <span className="text-2xl font-mono font-bold tracking-widest text-accent">{userProfile?.flatId}</span>
             <button onClick={handleCopyCode} className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition">
               {copied ? <Check className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5 text-white" />}
             </button>

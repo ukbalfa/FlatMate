@@ -110,7 +110,7 @@ function SidebarContent({ user, setSidebarOpen, handleLogout }: { user: Dashboar
                 }`}
                 onClick={() => setSidebarOpen(false)}
               >
-                <link.icon className={`w-5 h-5 ${isActive ? 'text-[#F97316]' : 'opacity-70'}`} />
+                <link.icon className={`w-5 h-5 ${isActive ? 'text-accent' : 'opacity-70'}`} />
                 {t(link.label)}
               </Link>
             </motion.div>
@@ -120,7 +120,7 @@ function SidebarContent({ user, setSidebarOpen, handleLogout }: { user: Dashboar
 
       {/* User info + logout */}
       {user && (
-        <div className="p-4 border-t border-white/5 bg-[#0A0A0A]">
+        <div className="p-4 border-t border-white/5 bg-bg-section">
           <div className="flex items-center gap-3 mb-3 px-3 py-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md">
             <span
               className="w-10 h-10 rounded-full flex items-center justify-center text-black text-sm font-bold flex-shrink-0 bg-[#ccff00] shadow-[0_0_20px_-5px_#ccff00] font-space-grotesk"
@@ -243,15 +243,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {showFlatModal && <FlatConnectionModal />}
 
       {/* Main area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#0A0A0A] rounded-tl-3xl border-t border-l border-white/5 lg:mt-2 lg:mb-2 lg:mr-2 shadow-2xl relative overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 bg-bg-section rounded-tl-3xl border-t border-l border-white/5 lg:mt-2 lg:mb-2 lg:mr-2 shadow-2xl relative overflow-hidden">
         
         {/* Glow Effects */}
-        <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-[#F97316]/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-accent/10 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-[#84CC16]/5 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.02] pointer-events-none mix-blend-overlay" />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-2 pointer-events-none mix-blend-overlay" />
 
         {/* Topbar */}
-        <header className="flex items-center h-20 px-6 sm:px-8 border-b border-white/5 sticky top-0 z-30 bg-[#0A0A0A]/80 backdrop-blur-xl">
+        <header className="flex items-center h-20 px-6 sm:px-8 border-b border-white/5 sticky top-0 z-30 bg-bg-section/80 backdrop-blur-xl">
           {/* Left: hamburger (mobile only) */}
           <button
             className="lg:hidden p-2 rounded-xl transition-colors mr-4 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-white/10 text-white/70 border border-white/10"
@@ -263,7 +263,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* Page title */}
           <h1 className="text-xl sm:text-2xl tracking-tight font-space-grotesk font-bold text-white flex items-center gap-3">
-            <span className="inline-block w-2 h-6 bg-[#F97316] rounded-full" />
+            <span className="inline-block w-2 h-6 bg-accent rounded-full" />
             {pageTitle}
           </h1>
 

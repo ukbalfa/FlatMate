@@ -20,7 +20,7 @@ const typeIcons = {
 
 const typeColors = {
   task: 'text-blue-400 bg-blue-500/20',
-  expense: 'text-[#F97316] bg-[#F97316]/20',
+  expense: 'text-accent bg-accent/20',
   cleaning: 'text-amber-400 bg-amber-500/20',
   settlement: 'text-purple-400 bg-purple-500/20',
   system: 'text-gray-400 bg-gray-500/20',
@@ -63,7 +63,7 @@ export default function NotificationsDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-lg hover:bg-white/[0.06] hover:text-teal-400 transition-colors relative"
+        className="p-2 rounded-lg hover:bg-white/6 hover:text-teal-400 transition-colors relative"
         aria-label="Notifications"
       >
         <Bell className="w-5 h-5 text-slate-300" />
@@ -99,7 +99,7 @@ export default function NotificationsDropdown() {
                     {unreadCount > 0 && (
                       <button
                         onClick={markAllAsRead}
-                        className="text-xs text-[#F97316] hover:text-[#188a65] flex items-center gap-1 px-2 py-1 rounded hover:bg-white/5 transition-colors"
+                        className="text-xs text-accent hover:text-[#188a65] flex items-center gap-1 px-2 py-1 rounded hover:bg-white/5 transition-colors"
                       >
                         <Check className="w-3 h-3" />
                         Mark all read
@@ -136,7 +136,7 @@ export default function NotificationsDropdown() {
                           key={notification.id}
                           onClick={() => handleNotificationClick(notification)}
                           className={`w-full px-4 py-3 flex items-start gap-3 hover:bg-white/5 transition-colors text-left ${
-                            !notification.read ? 'bg-white/[0.02]' : ''
+                            !notification.read ? 'bg-white/2' : ''
                           }`}
                         >
                           {/* Icon */}
@@ -159,7 +159,7 @@ export default function NotificationsDropdown() {
 
                           {/* Unread indicator */}
                           {!notification.read && (
-                            <span className="w-2 h-2 bg-[#F97316] rounded-full flex-shrink-0 mt-2" />
+                            <span className="w-2 h-2 bg-accent rounded-full flex-shrink-0 mt-2" />
                           )}
                         </button>
                       );

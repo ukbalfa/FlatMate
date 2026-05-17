@@ -32,7 +32,7 @@ export default function LanguageSwitcher() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg hover:bg-white/[0.06] text-slate-300 hover:text-white transition-colors mr-2"
+        className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg hover:bg-white/6 text-slate-300 hover:text-white transition-colors mr-2"
         title="Change language"
       >
         <span className="text-base">{currentLang.flag}</span>
@@ -72,7 +72,7 @@ export default function LanguageSwitcher() {
                     <span className="text-lg">{lang.flag}</span>
                     <span className="flex-1 text-sm text-white">{lang.name}</span>
                     {language === lang.code && (
-                      <Check className="w-4 h-4 text-[#F97316]" />
+                      <Check className="w-4 h-4 text-accent" />
                     )}
                   </button>
                 ))}

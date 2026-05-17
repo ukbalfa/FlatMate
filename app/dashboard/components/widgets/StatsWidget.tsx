@@ -1,6 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
-import { Wallet, CheckSquare, Sparkles, Users, type LucideIcon } from 'lucide-react';
+import { type LucideIcon } from 'lucide-react';
 
 interface StatItem {
   title: string;
