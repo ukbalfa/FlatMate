@@ -26,9 +26,9 @@ import OAuthButtons from './OAuthButtons';
 declare global {
   interface Window {
     hcaptcha?: {
-      getResponse: () => string;
-      render: (element: Element | null, params: Record<string, unknown>) => void;
-      reset: () => void;
+      getResponse: (widgetId?: number) => string;
+      render: (element: Element | null, params: Record<string, unknown>) => number;
+      reset: (widgetId?: number) => void;
     };
     Telegram?: {
       Login: {
@@ -65,6 +65,10 @@ export default function LoginPage() {
   const [rateLimitCooldown, setRateLimitCooldown] = useState(0);
   const [showVerifyStep, setShowVerifyStep] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
+  const hcaptchaContainerRef = useRef<HTMLDivElement>(null);
+  const hcaptchaWidgetId = useRef<number | null>(null);
+  const [hcaptchaReady, setHcaptchaReady] = useState(false);
+  const [hcaptchaError, setHcaptchaError] = useState('');
 
   async function createSession(user: import('firebase/auth').User): Promise<void> {
     const idToken = await user.getIdToken();
@@ -192,20 +196,64 @@ export default function LoginPage() {
   useEffect(() => {
     if (activeTab !== 'signup' || typeof window === 'undefined') return;
     if (!process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) return;
-    if (window.hcaptcha) return;
-    const script = document.createElement('script');
-    script.src = 'https://js.hcaptcha.com/1/api.js';
-    script.async = true;
-    script.onload = () => {
+
+    const loadHcaptcha = () => {
       if (window.hcaptcha) {
-        window.hcaptcha.render(document.querySelector('.h-captcha'), {
-          sitekey: process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY,
-          theme: 'dark',
-        });
+        setHcaptchaReady(true);
+        return;
       }
+
+      const script = document.createElement('script');
+      script.src = 'https://js.hcaptcha.com/1/api.js';
+      script.async = true;
+      script.onload = () => {
+        if (window.hcaptcha) {
+          setHcaptchaReady(true);
+        } else {
+          setHcaptchaError(t('login.errorCaptchaRequired'));
+        }
+      };
+      script.onerror = () => {
+        setHcaptchaError(t('login.errorCaptchaRequired'));
+      };
+      document.head.appendChild(script);
     };
-    document.body.appendChild(script);
-  }, [activeTab]);
+
+    loadHcaptcha();
+  }, [activeTab, t]);
+
+  useEffect(() => {
+    if (!hcaptchaReady || !hcaptchaContainerRef.current || !process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) return;
+    if (!window.hcaptcha) return;
+
+    try {
+      if (hcaptchaWidgetId.current !== null) {
+        window.hcaptcha.reset(hcaptchaWidgetId.current);
+        return;
+      }
+
+      hcaptchaWidgetId.current = window.hcaptcha.render(hcaptchaContainerRef.current, {
+        sitekey: process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY,
+        theme: 'dark',
+        size: 'flexible',
+      });
+    } catch {
+      setHcaptchaError(t('login.errorCaptchaRequired'));
+    }
+  }, [hcaptchaReady, activeTab, t]);
+
+  useEffect(() => {
+    if (activeTab !== 'signup') return;
+    if (!hcaptchaReady || !window.hcaptcha || hcaptchaWidgetId.current === null) return;
+
+    const timer = setTimeout(() => {
+      try {
+        window.hcaptcha!.reset(hcaptchaWidgetId.current!);
+      } catch { /* ignore */ }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [activeTab, hcaptchaReady]);
 
   useEffect(() => {
     if (password.length > 0) {
@@ -422,7 +470,12 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       if (process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) {
-        const captchaToken = window.hcaptcha?.getResponse();
+        if (hcaptchaError) {
+          setError(t('login.errorCaptchaRequired'));
+          setIsLoading(false);
+          return;
+        }
+        const captchaToken = window.hcaptcha?.getResponse(hcaptchaWidgetId.current ?? undefined);
         if (!captchaToken) {
           setError(t('login.errorCaptchaRequired'));
           setIsLoading(false);
@@ -493,6 +546,8 @@ export default function LoginPage() {
     setPasswordStrength('weak');
     setShowVerifyStep(false);
     setPendingEmail('');
+    setHcaptchaError('');
+    hcaptchaWidgetId.current = null;
   };
 
   const handleTabKeyDown = (e: React.KeyboardEvent, tab: 'signin' | 'signup') => {
@@ -731,9 +786,12 @@ export default function LoginPage() {
               {activeTab === 'signup' && process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY && (
                 <div className="mb-4">
                   <div
-                    className="h-captcha"
-                    data-sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY}
+                    ref={hcaptchaContainerRef}
+                    className="h-captcha min-h-[78px]"
                   />
+                  {hcaptchaError && (
+                    <p className="text-red-400 text-xs mt-2 text-center">{hcaptchaError}</p>
+                  )}
                 </div>
               )}
 
