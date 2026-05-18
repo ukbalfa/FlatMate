@@ -9,6 +9,7 @@ import {
   signInWithPopup,
   signInWithCustomToken,
   sendPasswordResetEmail,
+  sendEmailVerification,
   GoogleAuthProvider,
   onAuthStateChanged,
 } from 'firebase/auth';
@@ -18,12 +19,18 @@ import { motion } from 'framer-motion';
 import { Eye, EyeOff, LoaderCircle } from 'lucide-react';
 import { logError } from '../../lib/errorLogger';
 import { toast } from 'sonner';
+import { getPasswordStrength, PasswordStrengthLevel } from '../../lib/passwordStrength';
 import LeftPanel from './LeftPanel';
 import OAuthButtons from './OAuthButtons';
 
 declare global {
   interface Window {
     onTelegramAuth?: (user: Record<string, string>) => void;
+    hcaptcha?: {
+      getResponse: () => string;
+      render: (element: Element | null, params: Record<string, unknown>) => void;
+      reset: () => void;
+    };
   }
 }
 
@@ -47,6 +54,12 @@ export default function LoginPage() {
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
+  const [consentAccepted, setConsentAccepted] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState<PasswordStrengthLevel>('weak');
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [rateLimitCooldown, setRateLimitCooldown] = useState(0);
+  const [_showVerifyStep, setShowVerifyStep] = useState(false);
+  const [_pendingEmail, setPendingEmail] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -84,6 +97,43 @@ export default function LoginPage() {
     window.onTelegramAuth = handleTelegramAuth;
     return () => { delete window.onTelegramAuth; };
   }, [handleTelegramAuth]);
+
+  useEffect(() => {
+    if (activeTab !== 'signup' || typeof window === 'undefined') return;
+    if (window.hcaptcha) return;
+    const script = document.createElement('script');
+    script.src = 'https://js.hcaptcha.com/1/api.js';
+    script.async = true;
+    script.onload = () => {
+      if (window.hcaptcha) {
+        window.hcaptcha.render(document.querySelector('.h-captcha'), {
+          sitekey: process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY,
+          theme: 'dark',
+        });
+      }
+    };
+    document.body.appendChild(script);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (password.length > 0) {
+      setPasswordStrength(getPasswordStrength(password).level);
+    } else {
+      setPasswordStrength('weak');
+    }
+  }, [password]);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown((prev) => prev - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
+  useEffect(() => {
+    if (rateLimitCooldown <= 0) return;
+    const timer = setTimeout(() => setRateLimitCooldown((prev) => prev - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [rateLimitCooldown]);
 
   const ensureUserProfile = async (uid: string, extraData?: Record<string, unknown>) => {
     const docRef = doc(db, 'users', uid);
@@ -167,26 +217,102 @@ export default function LoginPage() {
     setFieldErrors({});
   };
 
+  const isValidEmail = (email: string): boolean => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const getRateLimitState = (): { count: number; lastAttempt: number } => {
+    if (typeof window === 'undefined') return { count: 0, lastAttempt: 0 };
+    try {
+      const stored = sessionStorage.getItem('auth_attempts');
+      if (stored) return JSON.parse(stored);
+    } catch { /* ignore */ }
+    return { count: 0, lastAttempt: 0 };
+  };
+
+  const recordFailedAttempt = () => {
+    if (typeof window === 'undefined') return;
+    const state = getRateLimitState();
+    const now = Date.now();
+    if (now - state.lastAttempt > 30000) {
+      sessionStorage.setItem('auth_attempts', JSON.stringify({ count: 1, lastAttempt: now }));
+    } else {
+      sessionStorage.setItem('auth_attempts', JSON.stringify({ count: state.count + 1, lastAttempt: now }));
+    }
+  };
+
+  const clearRateLimit = () => {
+    if (typeof window === 'undefined') return;
+    sessionStorage.removeItem('auth_attempts');
+  };
+
+  const checkRateLimit = (): boolean => {
+    const state = getRateLimitState();
+    const now = Date.now();
+    if (state.count >= 3 && now - state.lastAttempt < 30000) {
+      const remaining = Math.ceil((30000 - (now - state.lastAttempt)) / 1000);
+      setRateLimitCooldown(remaining);
+      return true;
+    }
+    if (state.count >= 3 && now - state.lastAttempt >= 30000) {
+      clearRateLimit();
+    }
+    return false;
+  };
+
+  const _handleResendVerification = async () => {
+    if (resendCooldown > 0) return;
+    setIsLoading(true);
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        await sendEmailVerification(user);
+        toast.success(t('login.emailSent'));
+        setResendCooldown(60);
+      }
+    } catch (err) {
+      logError(err, 'Login.resendVerification');
+      toast.error(t('login.resendFailed'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     clearErrors();
+
+    if (checkRateLimit()) {
+      return;
+    }
+
     const errors: FieldErrors = {};
-    if (!email.trim()) {
+    if (!email.trim() || !isValidEmail(email)) {
       errors.email = t('login.errorValidEmail');
     }
-    if (password.length < 6) {
+    if (password.length < 8) {
       errors.password = t('login.errorPasswordMinLength');
     }
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       return;
     }
+
     setIsLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      if (!userCredential.user.emailVerified) {
+        setError(t('login.errorEmailNotVerified'));
+        await sendEmailVerification(userCredential.user);
+        setResendCooldown(60);
+        recordFailedAttempt();
+        return;
+      }
       await ensureUserProfile(userCredential.user.uid, { email });
+      clearRateLimit();
       router.push('/dashboard');
     } catch (err) {
+      recordFailedAttempt();
       const code = (err as { code?: string }).code;
       let message = t('login.errorGeneric');
       switch (code) {
@@ -195,6 +321,11 @@ export default function LoginPage() {
         case 'auth/invalid-email': message = t('login.errorInvalidEmail'); break;
         case 'auth/invalid-credential': message = t('login.errorInvalidCredential'); break;
         default: message = (err as Error).message || t('login.errorGeneric');
+      }
+      const rateState = getRateLimitState();
+      if (rateState.count >= 3) {
+        const remaining = Math.ceil((30000 - (Date.now() - rateState.lastAttempt)) / 1000);
+        if (remaining > 0) setRateLimitCooldown(remaining);
       }
       setError(message);
     } finally {
@@ -205,29 +336,49 @@ export default function LoginPage() {
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     clearErrors();
+
     const errors: FieldErrors = {};
     if (!name.trim()) {
       errors.name = t('common.fillAllFields');
     }
-    if (!email.trim()) {
+    if (!email.trim() || !isValidEmail(email)) {
       errors.email = t('login.errorValidEmail');
     }
     if (password.length < 8) {
       errors.password = t('login.passwordMinLength');
     }
+    if (!consentAccepted) {
+      setError(t('login.errorCaptchaRequired'));
+      return;
+    }
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       return;
     }
+
     setIsLoading(true);
     try {
+      const captchaResponse = await fetch('/api/auth/verify-captcha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: window.hcaptcha?.getResponse() }),
+      });
+      const captchaData = await captchaResponse.json();
+      if (!captchaData.success) {
+        setError(t('login.errorCaptchaFailed'));
+        setIsLoading(false);
+        return;
+      }
+
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await sendEmailVerification(userCredential.user);
       await ensureUserProfile(userCredential.user.uid, {
         email,
         name: name.trim(),
       });
       toast.success(t('login.signUpSuccess'));
-      router.push('/dashboard');
+      setPendingEmail(email);
+      setShowVerifyStep(true);
     } catch (err) {
       const code = (err as { code?: string }).code;
       let message = t('login.errorGeneric');
@@ -267,6 +418,10 @@ export default function LoginPage() {
     setEmail('');
     setPassword('');
     setName('');
+    setConsentAccepted(false);
+    setPasswordStrength('weak');
+    setShowVerifyStep(false);
+    setPendingEmail('');
   };
 
   const handleTabKeyDown = (e: React.KeyboardEvent, tab: 'signin' | 'signup') => {
@@ -441,6 +596,26 @@ export default function LoginPage() {
                     {fieldErrors.password}
                   </p>
                 )}
+                {activeTab === 'signup' && password.length > 0 && (
+                  <div className="mt-2">
+                    <div className="flex gap-1 mb-1">
+                      {[1, 2, 3].map((level) => (
+                        <div
+                          key={level}
+                          className={`h-1 flex-1 rounded-full transition-colors ${
+                            passwordStrength === 'weak' ? 'bg-red-500' :
+                            passwordStrength === 'fair' ? (level <= 1 ? 'bg-orange-500' : 'bg-gray-200 dark:bg-gray-600') :
+                            passwordStrength === 'good' ? (level <= 2 ? 'bg-yellow-500' : 'bg-gray-200 dark:bg-gray-600') :
+                            'bg-green-500'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-xs text-[#9ca3af] dark:text-gray-500">
+                      {t(`login.passwordStrength${passwordStrength.charAt(0).toUpperCase() + passwordStrength.slice(1)}`)}
+                    </p>
+                  </div>
+                )}
                 {/* Password hint (signup) / Forgot link (signin) */}
                 {activeTab === 'signup' && !fieldErrors.password && (
                   <p className="text-xs text-[#9ca3af] dark:text-gray-500 mt-1">
@@ -465,7 +640,8 @@ export default function LoginPage() {
                   <input
                     type="checkbox"
                     id="privacyConsent"
-                    required
+                    checked={consentAccepted}
+                    onChange={(e) => setConsentAccepted(e.target.checked)}
                     className="mt-1 w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent"
                   />
                   <label htmlFor="privacyConsent" className="text-xs text-[#6b7280] dark:text-gray-400 leading-relaxed">
@@ -481,14 +657,29 @@ export default function LoginPage() {
                 </div>
               )}
 
+              {/* hCaptcha widget (signup only) */}
+              {activeTab === 'signup' && (
+                <div className="mb-4">
+                  <div
+                    className="h-captcha"
+                    data-sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || ''}
+                  />
+                </div>
+              )}
+
               {/* Submit button */}
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || (activeTab === 'signup' && (!consentAccepted || rateLimitCooldown > 0)) || (activeTab === 'signin' && rateLimitCooldown > 0)}
                 className="w-full bg-[#0a0a0a] dark:bg-gray-700 text-white rounded-lg px-4 py-3 font-medium hover:bg-gray-800 dark:hover:bg-gray-600 transition disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {isLoading && <LoaderCircle className="w-4 h-4 animate-spin" />}
-                {activeTab === 'signin' ? t('login.signIn') : t('login.createAccount')}
+                {rateLimitCooldown > 0
+                  ? t('login.errorRateLimited', { seconds: rateLimitCooldown })
+                  : activeTab === 'signin'
+                    ? t('login.signIn')
+                    : t('login.createAccount')
+                }
               </button>
 
               {/* Global error */}
