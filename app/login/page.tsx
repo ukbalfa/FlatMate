@@ -32,7 +32,7 @@ declare global {
     };
     Telegram?: {
       Login: {
-        init: (options: { client_id: string; request_access?: string[] }, callback: (data: { id_token?: string; user?: Record<string, string>; error?: string }) => void) => void;
+        init: (options: { client_id: string; redirect_uri?: string; request_access?: string[] }, callback: (data: { id_token?: string; user?: Record<string, string>; error?: string }) => void) => void;
         open: () => void;
       };
     };
@@ -132,7 +132,7 @@ export default function LoginPage() {
       await loadTelegramSDK();
 
       window.Telegram!.Login.init(
-        { client_id: clientId, request_access: ['write'] },
+        { client_id: clientId, redirect_uri: window.location.origin, request_access: ['write'] },
         async (data) => {
           if (data.error) {
             setError(t('login.telegramAuthFailed'));
