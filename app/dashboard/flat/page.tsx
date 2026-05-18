@@ -269,17 +269,17 @@ function FlatInfoView() {
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-lg mx-auto">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">{t('nav.flat')}</h1>
-        <p className="text-gray-400 mt-1">{t('flat.manageSubtitle') || 'Manage your flat membership'}</p>
+        <p className="text-gray-400 mt-1">{t('flat.manageSubtitle')}</p>
       </div>
 
       <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
         <div className="flex items-center gap-3 mb-6">
           <Building2 className="w-5 h-5 text-accent" />
-          <h2 className="text-lg font-semibold text-white">{t('flat.yourFlat') || 'Your Flat'}</h2>
+          <h2 className="text-lg font-semibold text-white">{t('flat.yourFlat')}</h2>
         </div>
 
         <div className="bg-white/5 rounded-lg p-4 mb-6">
-          <p className="text-sm text-gray-400 mb-2">{t('flat.inviteCode') || 'Invite Code'}</p>
+          <p className="text-sm text-gray-400 mb-2">{t('flat.inviteCode')}</p>
           <div className="flex items-center gap-3">
             <span className="text-2xl font-mono font-bold tracking-widest text-accent">{userProfile?.flatId}</span>
             <button onClick={handleCopyCode} className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition">
@@ -289,14 +289,14 @@ function FlatInfoView() {
         </div>
 
         <div className="mb-6">
-          <p className="text-sm text-gray-400 mb-2">{t('flat.members') || 'Members'}</p>
+          <p className="text-sm text-gray-400 mb-2">{t('flat.members')}</p>
           <p className="text-white text-lg font-medium">
-            {flatData?.members.length || 1} {(flatData?.members.length || 1) === 1 ? (t('flat.member') || 'member') : (t('flat.members') || 'members')}
+            {flatData?.members.length || 1} {(flatData?.members.length || 1) === 1 ? (t('flat.member')) : (t('flat.members'))}
           </p>
         </div>
 
         {flatData?.createdBy === userProfile?.uid && (
-          <p className="text-xs text-gray-500 mb-6">{t('flat.youAreCreator') || 'You are the flat creator'}</p>
+          <p className="text-xs text-gray-500 mb-6">{t('flat.youAreCreator')}</p>
         )}
 
         <button
@@ -305,15 +305,15 @@ function FlatInfoView() {
           className="flex items-center gap-2 w-full justify-center px-4 py-2.5 border border-red-500/30 text-red-400 rounded-lg font-medium hover:bg-red-500/10 transition-colors disabled:opacity-50"
         >
           <LogOut className="w-4 h-4" />
-          {leaving ? (t('flat.leaving') || 'Leaving...') : (t('flat.leaveFlat') || 'Leave Flat')}
+          {leaving ? (t('flat.leaving')) : (t('flat.leaveFlat'))}
         </button>
       </div>
 
       <ConfirmModal
         isOpen={showLeaveConfirm}
-        title={t('flat.leaveConfirm') || 'Leave Flat?'}
-        message={t('flat.leaveConfirmMessage') || 'Are you sure you want to leave this flat? You will lose access to all shared data.'}
-        confirmLabel={t('flat.leaveFlat') || 'Leave Flat'}
+        title={t('flat.leaveConfirm')}
+        message={t('flat.leaveConfirmMessage')}
+        confirmLabel={t('flat.leaveFlat')}
         onConfirm={confirmLeave}
         onCancel={() => setShowLeaveConfirm(false)}
       />

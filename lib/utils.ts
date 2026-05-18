@@ -1,3 +1,5 @@
+import type { Timestamp } from 'firebase/firestore';
+
 export function getMonday(d: Date): string {
   const date = new Date(d);
   const day = date.getDay();
@@ -20,3 +22,10 @@ export function formatTimeAgo(date: Date | string): string {
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
   return `${Math.floor(seconds / 86400)}d ago`;
 }
+
+export function toDate(value: Timestamp | string): Date {
+  if (typeof value === 'string') return new Date(value);
+  return value.toDate();
+}
+
+export const DEFAULT_CURRENCY = 'UZS';

@@ -248,7 +248,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Glow Effects */}
         <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-accent/10 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-[#84CC16]/5 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-2 pointer-events-none mix-blend-overlay" />
+        <div className="absolute inset-0 bg-[url('/assets/noise.svg')] opacity-2 pointer-events-none mix-blend-overlay" />
 
         {/* Topbar */}
         <header className="flex items-center h-20 px-6 sm:px-8 border-b border-white/5 sticky top-0 z-30 bg-bg-section/80 backdrop-blur-xl">

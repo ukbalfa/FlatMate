@@ -8,6 +8,7 @@ import { collection, onSnapshot, query, orderBy, limit, where } from 'firebase/f
 import { useAuth } from '@/context/AuthContext';
 import { useI18n } from '@/context/I18nContext';
 import { Pencil, Check, Plus, Wallet, CheckSquare, Sparkles, Users } from 'lucide-react';
+import { DEFAULT_CURRENCY } from '@/lib/utils';
 import { SkeletonCard } from '../components/Skeleton';
 import { useDashboardWidgets, type WidgetId } from '@/lib/hooks/useDashboardWidgets';
 import DashboardWidget from './components/DashboardWidget';
@@ -59,25 +60,28 @@ export default function DashboardPage() {
     if (!userProfile?.flatId) { setLoading(false); return; }
     const weekStart = getMonday(new Date());
     const unsubs: (() => void)[] = [];
-    let loadedCount = 0;
-    const loaded = () => { loadedCount++; if (loadedCount >= 4) setLoading(false); };
+    const loadedSources = new Set<string>();
+    const markLoaded = (source: string) => {
+      loadedSources.add(source);
+      if (loadedSources.size >= 4) setLoading(false);
+    };
     setLoading(true);
 
     unsubs.push(onSnapshot(
       query(collection(db, 'expenses'), where('flatId', '==', userProfile.flatId), orderBy('date', 'desc'), limit(50)),
-      (snap) => { setExpenses(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Expense))); loaded(); }
+      (snap) => { setExpenses(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Expense))); markLoaded('expenses'); }
     ));
     unsubs.push(onSnapshot(
       query(collection(db, 'tasks'), where('flatId', '==', userProfile.flatId), orderBy('dueDate', 'desc'), limit(100)),
-      (snap) => { setTasks(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Task))); loaded(); }
+      (snap) => { setTasks(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Task))); markLoaded('tasks'); }
     ));
     unsubs.push(onSnapshot(
       query(collection(db, 'cleaning'), where('flatId', '==', userProfile.flatId), where('weekStart', '==', weekStart)),
-      (snap) => { setCleaningTasks(snap.docs.map((d) => ({ id: d.id, ...d.data() } as CleaningTask))); loaded(); }
+      (snap) => { setCleaningTasks(snap.docs.map((d) => ({ id: d.id, ...d.data() } as CleaningTask))); markLoaded('cleaning'); }
     ));
     unsubs.push(onSnapshot(
       query(collection(db, 'users'), where('flatId', '==', userProfile.flatId), orderBy('createdAt', 'desc')),
-      (snap) => { setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Roommate))); loaded(); }
+      (snap) => { setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Roommate))); markLoaded('users'); }
     ));
     return () => unsubs.forEach((u) => u());
   }, [userProfile?.flatId]);
@@ -92,7 +96,7 @@ export default function DashboardPage() {
     }));
     const todayDate = new Date().toISOString().slice(0, 10);
     tasks.filter((tk) => !tk.done && tk.dueDate >= todayDate).slice(0, 5).forEach((tk) => {
-      const days = Math.ceil((new Date(tk.dueDate).getTime() - Date.now()) / 86400000);
+      const days = Math.ceil((new Date(tk.dueDate).getTime() - new Date().getTime()) / 86400000);
       items.push({
         id: `task-${tk.id}`, type: 'task',
         title: t('dashboard.taskDueSoon'),
@@ -114,7 +118,7 @@ export default function DashboardPage() {
   const todayCleaningCount = myCleaning.filter((c) => c.dayOfWeek === today).length;
 
   const stats = [
-    { title: t('dashboard.thisMonthExpenses'), value: totalMonthExpenses.toLocaleString() + ' UZS', subtitle: t('dashboard.totalExpenses'), icon: Wallet, color: 'bg-accent', trend: myMonthExpenses > 0 ? t('dashboard.youPaid') + ' ' + myMonthExpenses.toLocaleString() : null },
+    { title: t('dashboard.thisMonthExpenses'), value: totalMonthExpenses.toLocaleString() + ' ' + DEFAULT_CURRENCY, subtitle: t('dashboard.totalExpenses'), icon: Wallet, color: 'bg-accent', trend: myMonthExpenses > 0 ? t('dashboard.youPaid') + ' ' + myMonthExpenses.toLocaleString() + ' ' + DEFAULT_CURRENCY : null },
     { title: t('dashboard.myTasks'), value: myTasks.length.toString(), subtitle: `${overdueCount} ${t('dashboard.overdue')}`, icon: CheckSquare, color: overdueCount > 0 ? 'bg-red-500' : 'bg-blue-500', alert: overdueCount > 0 },
     { title: t('dashboard.cleaning'), value: myCleaning.length.toString(), subtitle: todayCleaningCount > 0 ? `${todayCleaningCount} ${t('dashboard.today')}` : t('dashboard.thisWeek'), icon: Sparkles, color: todayCleaningCount > 0 ? 'bg-amber-500' : 'bg-purple-500', alert: todayCleaningCount > 0 },
     { title: t('dashboard.roommates'), value: users.length.toString(), subtitle: t('dashboard.activeMembers'), icon: Users, color: 'bg-teal-500' },

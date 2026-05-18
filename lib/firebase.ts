@@ -1,5 +1,11 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
-import { getFirestore, type Firestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  getFirestore,
+  type Firestore,
+} from 'firebase/firestore';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
@@ -31,13 +37,16 @@ function getSafeFirestore(app: FirebaseApp | null): Firestore {
       },
     });
   }
-  const firestore = getFirestore(app);
-  enableIndexedDbPersistence(firestore).catch((err) => {
-    if (err.code === 'failed-precondition' || err.code === 'unimplemented') {
-      console.warn('Firestore persistence not available');
-    }
-  });
-  return firestore;
+  try {
+    return initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+      }),
+    });
+  } catch {
+    // Already initialized (e.g. hot reload) — return existing instance
+    return getFirestore(app);
+  }
 }
 
 function getSafeAuth(app: FirebaseApp | null): Auth {

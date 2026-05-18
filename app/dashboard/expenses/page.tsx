@@ -11,11 +11,11 @@ import {
   onSnapshot,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   limit,
   serverTimestamp,
   where,
-  writeBatch,
 } from "firebase/firestore";
 import {
   ref as storageRef,
@@ -35,11 +35,13 @@ import { useAuth } from "../../../context/AuthContext";
 import { useI18n } from "../../../context/I18nContext";
 import { logError } from "../../../lib/errorLogger";
 import type { Expense, SplitMember } from "../../../lib/types";
+import { DEFAULT_CURRENCY } from "../../../lib/utils";
 import { ExpenseCard } from "./components/ExpenseCard";
 import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
 import { BudgetTracker } from "./components/BudgetTracker";
 import { ReceiptUpload } from "./components/ReceiptUpload";
 import { SplitExpenseModal } from "./components/SplitExpenseModal";
+import { createSplitNotifications } from "../../actions/createSplitNotifications";
 
 const CATEGORIES = [
   { name: "Rent", color: "#F97316" },
@@ -120,24 +122,19 @@ export default function ExpensesPage() {
 
     const fetchBudgets = async () => {
       try {
-        const docSnap = await getDocs(
-          query(collection(db, "flats"), where("flatId", "==", userProfile!.flatId))
-        );
-        if (!docSnap.empty) {
-          const firstDoc = docSnap.docs[0];
-          if (firstDoc) {
-            const flatData = firstDoc.data() as { budgets?: Record<string, number> };
-            if (flatData.budgets) {
-              setBudgetLimits(flatData.budgets);
-              return;
-            }
+        const flatRef = doc(db, "flats", userProfile!.flatId!);
+        const flatSnap = await getDoc(flatRef);
+        if (flatSnap.exists()) {
+          const flatData = flatSnap.data() as { budgets?: Record<string, number> };
+          if (flatData.budgets) {
+            setBudgetLimits(flatData.budgets);
+            return;
           }
         }
       } catch (error) {
         logError(error, "Expenses.loadBudgets");
         toast.error(t("expenses.toast.loadBudgetsFailed"));
       }
-      // Fallback to defaults if no document or budgets field
       setBudgetLimits(DEFAULT_BUDGET_LIMITS);
     };
 
@@ -231,22 +228,14 @@ export default function ExpensesPage() {
       // Notify split members about the shared expense
       if (splitWith.length > 0) {
         try {
-          const batch = writeBatch(db);
-          splitWith.forEach((member) => {
-            const notifRef = doc(collection(db, "notifications"));
-            batch.set(notifRef, {
-              userId: member.id,
-              title: "New Shared Expense",
-              message: `${userProfile?.name || userProfile?.username} added a ${parsedAmount.toLocaleString()} UZS expense for ${category}.`,
-              type: "expense",
-              read: false,
-              link: "/dashboard/expenses",
-              createdAt: serverTimestamp(),
-            });
+          await createSplitNotifications({
+            memberIds: splitWith.map((m) => m.id),
+            senderName: userProfile?.name || userProfile?.username || 'Someone',
+            amount: parsedAmount,
+            category,
           });
-          await batch.commit();
         } catch (notifError) {
-          logError(notifError, "Expenses.createNotifications");
+          logError(notifError, 'Expenses.createNotifications');
         }
       }
 
@@ -296,7 +285,7 @@ export default function ExpensesPage() {
     }
   };
 
-  const handleSplit = (roommates: SplitMember[]) => {
+  const handleSplit = (roommates: SplitMember[], _amount?: number) => {
     setSplitWith(roommates);
   };
 
@@ -305,10 +294,10 @@ export default function ExpensesPage() {
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h1 className="font-display text-3xl font-bold">{t('expenses.pageTitle') || 'Expenses'}</h1>
+          <h1 className="font-display text-3xl font-bold">{t('expenses.pageTitle')}</h1>
           <div className="flex gap-2">
             <button
-              onClick={() => toast.info(t('expenses.exportComingSoon') || 'Export coming soon')}
+              onClick={() => toast.info(t('expenses.exportComingSoon'))}
               className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label="Export expenses"
             >
@@ -343,7 +332,7 @@ export default function ExpensesPage() {
           <form onSubmit={handleAdd} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-white/80 mb-1">Amount (UZS)</label>
+                <label className="block text-sm text-white/80 mb-1">Amount ({DEFAULT_CURRENCY})</label>
                 <input
                   type="number"
                   value={amount}
@@ -401,31 +390,9 @@ export default function ExpensesPage() {
                   placeholder="Optional"
                 />
               </div>
-
-              <div>
-                <label className="block text-sm text-white/80 mb-1">Description</label>
-                <input
-                  type="text"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-amber-400 outline-none"
-                  placeholder="e.g., Groceries at Magnum"
-                />
-              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-white/80 mb-1">Notes</label>
-                <input
-                  type="text"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-amber-400 outline-none"
-                  placeholder="Optional"
-                />
-              </div>
-
               <div>
                 <label className="block text-sm text-white/80 mb-1">Split With</label>
                 <button
@@ -467,7 +434,7 @@ export default function ExpensesPage() {
               {submitting ? (
                 <>
                   <Spinner />
-                  {t('common.processing') || 'Processing...'}
+                  {t('common.processing')}
                 </>
               ) : (
                 t('expenses.addExpense')

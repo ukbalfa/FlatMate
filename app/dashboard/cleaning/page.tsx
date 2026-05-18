@@ -132,9 +132,9 @@ export default function CleaningPage() {
     <div className="min-h-screen">
       <ConfirmModal
         isOpen={confirmModal.isOpen}
-        title={t('common.confirm') || 'Confirm'}
+        title={t('common.confirm')}
         message={confirmModal.message}
-        confirmLabel={t('common.delete') || 'Delete'}
+        confirmLabel={t('common.delete')}
         onConfirm={() => confirmModal.action?.()}
         onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
       />

@@ -1,3 +1,5 @@
+import type { Timestamp } from 'firebase/firestore';
+
 // ============================================================
 // Centralized TypeScript Types for FlatMate
 // All shared interfaces are defined here and imported everywhere
@@ -184,6 +186,6 @@ export interface Announcement {
   content: string;
   authorId: string;
   authorName: string;
-  createdAt: unknown;
+  createdAt: Timestamp | string;
   isPinned?: boolean;
 }

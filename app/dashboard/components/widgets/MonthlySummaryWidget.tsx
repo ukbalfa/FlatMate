@@ -8,6 +8,8 @@ interface MonthlySummaryWidgetProps {
   t: (key: string, params?: Record<string, unknown>) => string;
 }
 
+import { DEFAULT_CURRENCY } from '@/lib/utils';
+
 export default function MonthlySummaryWidget({ myMonthExpenses, totalMonthExpenses, t }: MonthlySummaryWidgetProps) {
   return (
     <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8 backdrop-blur-xl relative overflow-hidden">
@@ -32,7 +34,7 @@ export default function MonthlySummaryWidget({ myMonthExpenses, totalMonthExpens
             </div>
           </div>
           <p className="text-[10px] text-white/30 mt-2 font-dm-mono tracking-widest uppercase">
-            {myMonthExpenses.toLocaleString()} of {totalMonthExpenses.toLocaleString()} UZS
+            {myMonthExpenses.toLocaleString()} of {totalMonthExpenses.toLocaleString()} {DEFAULT_CURRENCY}
           </p>
         </div>
         <div className="pt-5 border-t border-white/10">

@@ -28,6 +28,18 @@ const nextConfig = {
             key: "Referrer-Policy",
             value: "strict-origin-when-cross-origin",
           },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://telegram.org https://js.hcaptcha.com",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: blob: https://ui-avatars.com https://firebasestorage.googleapis.com",
+              "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firebaseinstallations.googleapis.com https://identitytoolkit.googleapis.com https://oauth.telegram.org wss://*.firebaseio.com",
+              "frame-src 'self' https://js.hcaptcha.com",
+              "font-src 'self'",
+            ].join('; '),
+          },
         ],
       },
     ];

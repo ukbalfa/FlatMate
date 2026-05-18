@@ -633,9 +633,9 @@ export default function SettingsPage() {
 
       <ConfirmModal
         isOpen={showDeleteConfirm}
-        title={t('settings.data.deleteConfirm') || 'Delete Account?'}
-        message={t('settings.data.deleteConfirmMessage') || 'This action cannot be undone. All your data will be permanently deleted.'}
-        confirmLabel={t('settings.data.delete') || 'Delete'}
+        title={t('settings.data.deleteConfirm')}
+        message={t('settings.data.deleteConfirmMessage')}
+        confirmLabel={t('settings.data.delete')}
         onConfirm={deleteAccount}
         onCancel={() => setShowDeleteConfirm(false)}
       />

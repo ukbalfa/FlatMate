@@ -7,6 +7,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { useI18n } from '../../../context/I18nContext';
 import { useNotifications } from '../../../context/NotificationsContext';
 import { logError } from '../../../lib/errorLogger';
+import { toDate } from '../../../lib/utils';
 import type { Announcement } from '../../../lib/types';
 import { Pin, Trash2, Megaphone } from 'lucide-react';
 import { toast } from 'sonner';
@@ -146,8 +147,8 @@ export default function AnnouncementsPage() {
     });
   };
 
-  const formatDate = (createdAt: unknown) => {
-    const date = createdAt instanceof Timestamp ? createdAt.toDate() : new Date(createdAt as string);
+  const formatDate = (createdAt: Timestamp | string) => {
+    const date = toDate(createdAt);
     return date.toLocaleString(undefined, { 
       month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
     });
@@ -157,9 +158,9 @@ export default function AnnouncementsPage() {
     <div className="min-h-screen">
       <ConfirmModal
         isOpen={confirmModal.isOpen}
-        title={t('common.confirm') || 'Confirm'}
+        title={t('common.confirm')}
         message={confirmModal.message}
-        confirmLabel={t('common.delete') || 'Delete'}
+        confirmLabel={t('common.delete')}
         onConfirm={() => confirmModal.action?.()}
         onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
       />
@@ -264,7 +265,7 @@ export default function AnnouncementsPage() {
             <h2 className="text-lg font-semibold text-white mb-4">{t('announcements.addAnnouncement')}</h2>
             <form onSubmit={handleAdd} className="space-y-4">
               <div>
-                <label htmlFor="announcement-title" className="block text-sm text-gray-400 mb-2">{t('announcements.title') || 'Title'}</label>
+                <label htmlFor="announcement-title" className="block text-sm text-gray-400 mb-2">{t('announcements.title')}</label>
                 <input
                   id="announcement-title"
                   type="text"
@@ -277,7 +278,7 @@ export default function AnnouncementsPage() {
               </div>
               
               <div>
-                <label htmlFor="announcement-content" className="block text-sm text-gray-400 mb-2">{t('announcements.content') || 'Content'}</label>
+                <label htmlFor="announcement-content" className="block text-sm text-gray-400 mb-2">{t('announcements.content')}</label>
                 <textarea
                   id="announcement-content"
                   placeholder="What do you want to announce?"

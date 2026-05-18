@@ -18,6 +18,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { useI18n } from '../../../context/I18nContext';
 import { useNotifications } from '../../../context/NotificationsContext';
 import { logError } from '../../../lib/errorLogger';
+import { DEFAULT_CURRENCY } from '../../../lib/utils';
 import type { Roommate, Expense, Settlement } from '../../../lib/types';
 import { Spinner } from '../../components/Spinner';
 import { SkeletonTable } from '../../components/Skeleton';
@@ -137,7 +138,7 @@ export default function BalancesPage() {
           await createNotification({
             userId: recipientUser.id,
             title: 'Payment Recorded',
-            message: `${userProfile?.name || userProfile?.username} recorded a payment of ${Number(settlementForm.amount).toLocaleString()} UZS to you.`,
+            message: `${userProfile?.name || userProfile?.username} recorded a payment of ${Number(settlementForm.amount).toLocaleString()} ${DEFAULT_CURRENCY} to you.`,
             type: 'settlement',
             read: false,
             link: '/dashboard/balances',
@@ -322,7 +323,7 @@ export default function BalancesPage() {
               <span className="text-gray-400 text-sm">{t('balances.totalExpenses')}</span>
             </div>
             <p className="text-2xl font-bold text-white">
-              {totalExpenses.toLocaleString()} UZS
+              {totalExpenses.toLocaleString()} ${DEFAULT_CURRENCY}
             </p>
           </div>
           <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
@@ -331,7 +332,7 @@ export default function BalancesPage() {
               <span className="text-gray-400 text-sm">{t('balances.sharePerPerson')}</span>
             </div>
             <p className="text-2xl font-bold text-white">
-              {users.length > 0 ? Math.round(totalExpenses / users.length).toLocaleString() : '0'} UZS
+              {users.length > 0 ? Math.round(totalExpenses / users.length).toLocaleString() : '0'} ${DEFAULT_CURRENCY}
             </p>
           </div>
           <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
@@ -368,7 +369,7 @@ export default function BalancesPage() {
                       <div>
                         <p className="text-white font-medium">{balance.name}</p>
                         <p className="text-sm text-gray-500">
-                          {t('balances.paid')}: {balance.paid.toLocaleString()} UZS
+                          {t('balances.paid')}: {balance.paid.toLocaleString()} ${DEFAULT_CURRENCY}
                         </p>
                       </div>
                     </div>
@@ -385,7 +386,7 @@ export default function BalancesPage() {
                         {balance.netBalance > 0
                           ? `+${balance.netBalance.toLocaleString()}`
                           : balance.netBalance.toLocaleString()}{' '}
-                        UZS
+                        {DEFAULT_CURRENCY}
                       </p>
                       <p className="text-xs text-gray-500">
                         {balance.netBalance > 0
@@ -444,7 +445,7 @@ export default function BalancesPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-semibold text-amber-400">
-                          {debt.amount.toLocaleString()} UZS
+                          {debt.amount.toLocaleString()} ${DEFAULT_CURRENCY}
                         </p>
                       </div>
                     </motion.div>
@@ -504,7 +505,7 @@ export default function BalancesPage() {
                         </div>
                         <div className="flex items-center gap-4">
                           <p className="text-lg font-semibold text-white">
-                            {settlement.amount.toLocaleString()} UZS
+                            {settlement.amount.toLocaleString()} ${DEFAULT_CURRENCY}
                           </p>
                           {isAdmin && (
                             <button

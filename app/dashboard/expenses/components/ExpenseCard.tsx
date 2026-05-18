@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Trash2, Repeat, Paperclip } from "lucide-react";
 import { Avatar } from "../../../components/Avatar";
 import type { Expense, SplitMember } from "../../../../lib/types";
+import { DEFAULT_CURRENCY } from "../../../../lib/utils";
 
 interface ExpenseCardProps {
   expense: Expense;
@@ -38,7 +39,7 @@ export const ExpenseCard = ({ expense, onDelete, isAdmin }: ExpenseCardProps) =>
         <span className="font-mono font-bold text-amber-400 text-xl">
           {expense.amount.toLocaleString()}
         </span>
-        <span className="text-xs text-gray-400 ml-1">UZS</span>
+        <span className="text-xs text-gray-400 ml-1">{DEFAULT_CURRENCY}</span>
       </div>
     </div>
 

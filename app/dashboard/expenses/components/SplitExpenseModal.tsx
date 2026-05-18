@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Check } from "lucide-react";
 import { Avatar } from "../../../components/Avatar";
 import type { SplitMember } from "../../../../lib/types";
+import { DEFAULT_CURRENCY } from "../../../../lib/utils";
 
 interface SplitExpenseModalProps {
   roommates: SplitMember[];
@@ -68,7 +69,7 @@ export const SplitExpenseModal = (
         </div>
 
         <div className="mb-4">
-          <p className="text-white/80 mb-2">Total: {totalAmount.toLocaleString()} UZS</p>
+          <p className="text-white/80 mb-2">Total: {totalAmount.toLocaleString()} {DEFAULT_CURRENCY}</p>
           <div className="flex gap-2 mb-4">
             <button
               type="button"
