@@ -102,6 +102,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Token expired' }, { status: 401 });
     }
 
+    if (claims.iat * 1000 > Date.now() + 60000) {
+      return NextResponse.json({ error: 'Token issued in the future' }, { status: 401 });
+    }
+
     getAdminApp();
     const telegramId = String(claims.id);
 
