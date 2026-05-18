@@ -100,6 +100,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (activeTab !== 'signup' || typeof window === 'undefined') return;
+    if (!process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) return;
     if (window.hcaptcha) return;
     const script = document.createElement('script');
     script.src = 'https://js.hcaptcha.com/1/api.js';
@@ -358,22 +359,24 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      const captchaToken = window.hcaptcha?.getResponse();
-      if (!captchaToken) {
-        setError(t('login.errorCaptchaRequired'));
-        setIsLoading(false);
-        return;
-      }
-      const captchaResponse = await fetch('/api/auth/verify-captcha', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: captchaToken }),
-      });
-      const captchaData = await captchaResponse.json();
-      if (!captchaData.success) {
-        setError(t('login.errorCaptchaFailed'));
-        setIsLoading(false);
-        return;
+      if (process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) {
+        const captchaToken = window.hcaptcha?.getResponse();
+        if (!captchaToken) {
+          setError(t('login.errorCaptchaRequired'));
+          setIsLoading(false);
+          return;
+        }
+        const captchaResponse = await fetch('/api/auth/verify-captcha', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: captchaToken }),
+        });
+        const captchaData = await captchaResponse.json();
+        if (!captchaData.success) {
+          setError(t('login.errorCaptchaFailed'));
+          setIsLoading(false);
+          return;
+        }
       }
 
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -665,11 +668,11 @@ export default function LoginPage() {
               )}
 
               {/* hCaptcha widget (signup only) */}
-              {activeTab === 'signup' && (
+              {activeTab === 'signup' && process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY && (
                 <div className="mb-4">
                   <div
                     className="h-captcha"
-                    data-sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || ''}
+                    data-sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY}
                   />
                 </div>
               )}
