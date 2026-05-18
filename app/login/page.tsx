@@ -16,7 +16,7 @@ import {
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, LoaderCircle } from 'lucide-react';
+import { Eye, EyeOff, LoaderCircle, Mail } from 'lucide-react';
 import { logError } from '../../lib/errorLogger';
 import { toast } from 'sonner';
 import { getPasswordStrength, PasswordStrengthLevel } from '../../lib/passwordStrength';
@@ -58,8 +58,8 @@ export default function LoginPage() {
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrengthLevel>('weak');
   const [resendCooldown, setResendCooldown] = useState(0);
   const [rateLimitCooldown, setRateLimitCooldown] = useState(0);
-  const [_showVerifyStep, setShowVerifyStep] = useState(false);
-  const [_pendingEmail, setPendingEmail] = useState('');
+  const [showVerifyStep, setShowVerifyStep] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -260,7 +260,7 @@ export default function LoginPage() {
     return false;
   };
 
-  const _handleResendVerification = async () => {
+  const handleResendVerification = async () => {
     if (resendCooldown > 0) return;
     setIsLoading(true);
     try {
@@ -514,6 +514,7 @@ export default function LoginPage() {
             />
 
             {/* Email form */}
+            {!showVerifyStep && (
             <form
               id="panel-auth"
               role="tabpanel"
@@ -695,6 +696,43 @@ export default function LoginPage() {
                 </div>
               )}
             </form>
+            )}
+
+            {/* Verification step UI */}
+            {showVerifyStep && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-8"
+              >
+                <div className="w-16 h-16 rounded-full bg-accent/10 dark:bg-accent/20 flex items-center justify-center mx-auto mb-6">
+                  <Mail className="w-8 h-8 text-accent" />
+                </div>
+                <h3 className="text-xl font-bold text-[#0a0a0a] dark:text-gray-100 mb-2">
+                  {t('login.verifyEmailTitle')}
+                </h3>
+                <p className="text-sm text-[#6b7280] dark:text-gray-400 mb-6">
+                  {t('login.verifyEmailSubtitle', { email: pendingEmail })}
+                </p>
+                <button
+                  onClick={handleResendVerification}
+                  disabled={isLoading || resendCooldown > 0}
+                  className="w-full bg-[#0a0a0a] dark:bg-gray-700 text-white rounded-lg px-4 py-3 font-medium hover:bg-gray-800 dark:hover:bg-gray-600 transition disabled:opacity-60 flex items-center justify-center gap-2 mb-4"
+                >
+                  {isLoading && <LoaderCircle className="w-4 h-4 animate-spin" />}
+                  {resendCooldown > 0
+                    ? t('login.verifyEmailResendCooldown', { seconds: resendCooldown })
+                    : t('login.verifyEmailResend')
+                  }
+                </button>
+                <button
+                  onClick={() => handleTabChange('signin')}
+                  className="text-sm text-accent hover:underline"
+                >
+                  {t('login.verifyEmailBackToSignIn')}
+                </button>
+              </motion.div>
+            )}
 
             {/* Tab toggle */}
             <div className="mt-4 text-center">
