@@ -1,17 +1,12 @@
 'use client';
-import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { db } from '../../../lib/firebase';
 import {
   collection,
-  getDocs,
-  query,
-  where,
   addDoc,
   deleteDoc,
   doc,
-  orderBy,
-  limit,
 } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { useAuth } from '../../../context/AuthContext';
@@ -19,7 +14,7 @@ import { useI18n } from '../../../context/I18nContext';
 import { useNotifications } from '../../../context/NotificationsContext';
 import { logError } from '../../../lib/errorLogger';
 import { DEFAULT_CURRENCY } from '../../../lib/utils';
-import type { Roommate, Expense, Settlement } from '../../../lib/types';
+import { useSettlements } from '../../../lib/hooks/useSettlements';
 import { Spinner } from '../../components/Spinner';
 import { SkeletonTable } from '../../components/Skeleton';
 import { EmptyState } from '../../components/EmptyState';
@@ -41,10 +36,6 @@ export default function BalancesPage() {
   const { t } = useI18n();
   const { userProfile } = useAuth();
   const { createNotification } = useNotifications();
-  const [users, setUsers] = useState<Roommate[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [settlements, setSettlements] = useState<Settlement[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -58,54 +49,13 @@ export default function BalancesPage() {
   });
   const [submittingSettlement, setSubmittingSettlement] = useState(false);
 
-  const loadData = useCallback(async () => {
-    if (!userProfile?.flatId) return;
-    setLoading(true);
-    try {
-      // Load users
-       const usersSnap = await getDocs(query(collection(db, 'users'), where('flatId', '==', userProfile.flatId), orderBy('createdAt', 'desc')));
-      setUsers(
-        usersSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Roommate))
-      );
-
-      // Load expenses for selected month
-       const expensesQuery = query(
-         collection(db, 'expenses'),
-         where('flatId', '==', userProfile.flatId),
-         where('date', '>=', `${selectedMonth}-01`),
-         where('date', '<=', `${selectedMonth}-31`),
-         orderBy('date', 'desc'),
-         limit(200)
-       );
-      const expensesSnap = await getDocs(expensesQuery);
-      setExpenses(
-        expensesSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Expense))
-      );
-
-      // Load settlements
-       const settlementsQuery = query(
-         collection(db, 'settlements'),
-         where('flatId', '==', userProfile.flatId),
-         where('date', '>=', `${selectedMonth}-01`),
-         where('date', '<=', `${selectedMonth}-31`),
-         orderBy('date', 'desc'),
-         limit(100)
-       );
-      const settlementsSnap = await getDocs(settlementsQuery);
-      setSettlements(
-        settlementsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Settlement))
-      );
-    } catch (error) {
-      logError(error, 'Balances.loadData');
-      toast.error(t('balances.toast.noConnection'));
-    } finally {
-      setLoading(false);
-    }
-  }, [userProfile?.flatId, selectedMonth, t]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  const {
+    settlements,
+    expenses,
+    users,
+    loading,
+    refetch,
+  } = useSettlements(userProfile?.flatId, selectedMonth);
 
   const createSettlement = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,7 +100,7 @@ export default function BalancesPage() {
 
       setShowSettlementModal(false);
       setSettlementForm({ from: '', to: '', amount: '', note: '' });
-      loadData();
+      refetch();
     } catch (error) {
       logError(error, 'Balances.createSettlement');
       toast.error(t('balances.toast.somethingWrong'));
@@ -166,7 +116,7 @@ export default function BalancesPage() {
         try {
           await deleteDoc(doc(db, 'settlements', id));
           toast.success(t('balances.toast.settlementDeleted'));
-          loadData();
+          refetch();
         } catch (error) {
           logError(error, 'Balances.deleteSettlement');
           toast.error(t('balances.toast.deleteFailed'));

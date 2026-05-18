@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { db, auth } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { Users, Key } from 'lucide-react';
 import { toast } from 'sonner';
 import { logError } from '../../lib/errorLogger';
+import { setFlatClaimAndRefresh } from '../../lib/setFlatClaim';
 
 function copyToClipboard(text: string): boolean {
   try {
@@ -57,6 +58,9 @@ export default function FlatConnectionModal() {
         members: [userProfile.uid],
       });
       await setDoc(doc(db, 'users', userProfile.uid), { flatId: code }, { merge: true });
+      if (auth.currentUser) {
+        await setFlatClaimAndRefresh(auth.currentUser, code);
+      }
       await refreshUserProfile();
       copyToClipboard(code);
       setShowFlatModal(false);
@@ -89,6 +93,9 @@ export default function FlatConnectionModal() {
         return;
       }
       await setDoc(doc(db, 'users', userProfile.uid), { flatId: code }, { merge: true });
+      if (auth.currentUser) {
+        await setFlatClaimAndRefresh(auth.currentUser, code);
+      }
       const flatRef = doc(db, 'flats', code);
       const flatSnap = await getDoc(flatRef);
       if (flatSnap.exists()) {

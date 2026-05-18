@@ -66,6 +66,15 @@ export default function LoginPage() {
   const [showVerifyStep, setShowVerifyStep] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
 
+  async function createSession(user: import('firebase/auth').User): Promise<void> {
+    const idToken = await user.getIdToken();
+    await fetch('/api/auth/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    });
+  }
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
@@ -159,6 +168,9 @@ export default function LoginPage() {
               return;
             }
             await signInWithCustomToken(auth, result.token);
+            if (auth.currentUser) {
+              await createSession(auth.currentUser);
+            }
             clearRateLimit();
           } catch (err) {
             recordFailedAttempt();
@@ -242,6 +254,7 @@ export default function LoginPage() {
         name: firebaseUser.displayName,
         avatar: firebaseUser.photoURL,
       });
+      await createSession(firebaseUser);
       router.push('/dashboard');
     } catch (err: unknown) {
       const errObj = err as { code?: string; message?: string };
@@ -358,6 +371,7 @@ export default function LoginPage() {
         return;
       }
       await ensureUserProfile(userCredential.user.uid, { email });
+      await createSession(userCredential.user);
       clearRateLimit();
       router.push('/dashboard');
     } catch (err) {

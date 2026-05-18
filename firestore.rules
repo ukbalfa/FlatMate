@@ -2,11 +2,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper: get the requesting user's flatId
-    function getUserFlatId() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.flatId;
-    }
-
     // Helper: check if the requesting user is an admin
     function isAdmin() {
       return request.auth != null
@@ -16,7 +11,7 @@ service cloud.firestore {
     // Users: same-flat read, self-only update, admin create
     match /users/{userId} {
       allow read: if request.auth != null
-        && (request.auth.uid == userId || isAdmin() || getUserFlatId() == resource.data.flatId);
+        && (request.auth.uid == userId || isAdmin() || request.auth.token.flatId == resource.data.flatId);
       allow create: if request.auth != null;
       allow update: if request.auth != null
         && request.auth.uid == userId;
@@ -26,16 +21,16 @@ service cloud.firestore {
     // Tenant-isolated collections: user can only access documents belonging to their flat
     function tenantIsolated() {
       return request.auth != null
-        && (getUserFlatId() == resource.data.flatId)
-        && (getUserFlatId() == request.resource.data.flatId);
+        && (request.auth.token.flatId == resource.data.flatId)
+        && (request.auth.token.flatId == request.resource.data.flatId);
     }
     
     function tenantRead() {
-      return request.auth != null && getUserFlatId() == resource.data.flatId;
+      return request.auth != null && request.auth.token.flatId == resource.data.flatId;
     }
     
     function tenantCreate() {
-      return request.auth != null && getUserFlatId() == request.resource.data.flatId;
+      return request.auth != null && request.auth.token.flatId == request.resource.data.flatId;
     }
 
     match /expenses/{docId} {

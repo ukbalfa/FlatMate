@@ -1,14 +1,12 @@
 'use client';
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, limit, where } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
 import { useI18n } from '@/context/I18nContext';
 import { Pencil, Check, Plus, Wallet, CheckSquare, Sparkles, Users } from 'lucide-react';
-import { DEFAULT_CURRENCY } from '@/lib/utils';
+import { DEFAULT_CURRENCY, getMonday } from '@/lib/utils';
 import { SkeletonCard } from '../components/Skeleton';
 import { useDashboardWidgets, type WidgetId } from '@/lib/hooks/useDashboardWidgets';
 import DashboardWidget from './components/DashboardWidget';
@@ -20,8 +18,11 @@ import RentCountdownWidget from './components/widgets/RentCountdownWidget';
 import TasksWidget from './components/widgets/TasksWidget';
 import CleaningWidget from './components/widgets/CleaningWidget';
 import MonthlySummaryWidget from './components/widgets/MonthlySummaryWidget';
-import { getMonday } from '@/lib/utils';
-import type { Expense, Task, CleaningTask, Roommate, ActivityItem } from '@/lib/types';
+import { useExpenses } from '@/lib/hooks/useExpenses';
+import { useTasks } from '@/lib/hooks/useTasks';
+import { useCleaningTasks } from '@/lib/hooks/useCleaningTasks';
+import { useRoommates } from '@/lib/hooks/useRoommates';
+import type { ActivityItem } from '@/lib/types';
 
 const WIDGET_COLUMN: Record<WidgetId, 'left' | 'right'> = {
   stats: 'left', quickActions: 'left', activity: 'left',
@@ -32,11 +33,6 @@ export default function DashboardPage() {
   const { userProfile, setShowFlatModal } = useAuth();
   const { t: _t } = useI18n();
   const t = _t as (key: string, params?: Record<string, unknown>) => string;
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [cleaningTasks, setCleaningTasks] = useState<CleaningTask[]>([]);
-  const [users, setUsers] = useState<Roommate[]>([]);
-  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [addPanelOpen, setAddPanelOpen] = useState(false);
   const [currentMonth] = useState(() => {
@@ -44,6 +40,13 @@ export default function DashboardPage() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
   const { visibleWidgets, hiddenWidgets, removeWidget, addWidget, reorderWidgets, save } = useDashboardWidgets();
+
+  const weekStart = useMemo(() => getMonday(new Date()), []);
+  const { expenses, loading: loadingExpenses } = useExpenses(userProfile?.flatId);
+  const { tasks, loading: loadingTasks } = useTasks(userProfile?.flatId);
+  const { cleaningTasks, loading: loadingCleaning } = useCleaningTasks(userProfile?.flatId, weekStart);
+  const { roommates: users, loading: loadingUsers } = useRoommates(userProfile?.flatId);
+  const loading = loadingExpenses || loadingTasks || loadingCleaning || loadingUsers;
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
@@ -55,36 +58,6 @@ export default function DashboardPage() {
     const newIndex = allIds.indexOf(over.id as WidgetId);
     if (oldIndex !== -1 && newIndex !== -1) reorderWidgets(oldIndex, newIndex);
   }, [visibleWidgets, reorderWidgets]);
-
-  useEffect(() => {
-    if (!userProfile?.flatId) { setLoading(false); return; }
-    const weekStart = getMonday(new Date());
-    const unsubs: (() => void)[] = [];
-    const loadedSources = new Set<string>();
-    const markLoaded = (source: string) => {
-      loadedSources.add(source);
-      if (loadedSources.size >= 4) setLoading(false);
-    };
-    setLoading(true);
-
-    unsubs.push(onSnapshot(
-      query(collection(db, 'expenses'), where('flatId', '==', userProfile.flatId), orderBy('date', 'desc'), limit(50)),
-      (snap) => { setExpenses(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Expense))); markLoaded('expenses'); }
-    ));
-    unsubs.push(onSnapshot(
-      query(collection(db, 'tasks'), where('flatId', '==', userProfile.flatId), orderBy('dueDate', 'desc'), limit(100)),
-      (snap) => { setTasks(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Task))); markLoaded('tasks'); }
-    ));
-    unsubs.push(onSnapshot(
-      query(collection(db, 'cleaning'), where('flatId', '==', userProfile.flatId), where('weekStart', '==', weekStart)),
-      (snap) => { setCleaningTasks(snap.docs.map((d) => ({ id: d.id, ...d.data() } as CleaningTask))); markLoaded('cleaning'); }
-    ));
-    unsubs.push(onSnapshot(
-      query(collection(db, 'users'), where('flatId', '==', userProfile.flatId), orderBy('createdAt', 'desc')),
-      (snap) => { setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Roommate))); markLoaded('users'); }
-    ));
-    return () => unsubs.forEach((u) => u());
-  }, [userProfile?.flatId]);
 
   const activityFeed = useMemo(() => {
     const items: ActivityItem[] = [];

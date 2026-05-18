@@ -167,22 +167,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, userProfile, loading, showFlatModal, setShowFlatModal } = useAuth();
   const pathname = usePathname();
   const { t } = useI18n();
-  const [authTimeout, setAuthTimeout] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pageTitle = pageNames[pathname] ? t(pageNames[pathname]) : t("nav.dashboard");
 
   useEffect(() => {
     setMounted(true);
-    const timer = setTimeout(() => setAuthTimeout(true), 10000);
-    return () => clearTimeout(timer);
-     
   }, []);
 
   useEffect(() => {
-    if ((!loading || authTimeout) && !user) {
+    if (!loading && !user) {
       router.replace("/login");
     }
-  }, [loading, user, router, authTimeout]);
+  }, [loading, user, router]);
 
   useEffect(() => {
     if (!loading && user && !userProfile?.flatId) {
@@ -192,6 +188,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const handleLogout = async () => {
     try {
+      await fetch('/api/auth/session', { method: 'DELETE' });
       await signOut(auth);
       router.replace("/login");
     } catch (error) {
@@ -201,7 +198,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const dashboardUser = mapToDashboardUser(userProfile);
 
-  if (!mounted || (loading && !authTimeout)) {
+  if (!mounted || loading) {
     return <LoadingScreen />;
   }
 

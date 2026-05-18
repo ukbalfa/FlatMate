@@ -1,22 +1,18 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '../../../lib/firebase';
-import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc, getDocs, limit, serverTimestamp, where, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, deleteDoc, doc, updateDoc, getDocs, query, where, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../../../context/AuthContext';
 import { useI18n } from '../../../context/I18nContext';
 import { useNotifications } from '../../../context/NotificationsContext';
 import { logError } from '../../../lib/errorLogger';
+import { useAnnouncements } from '../../../lib/hooks/useAnnouncements';
 import { toDate } from '../../../lib/utils';
-import type { Announcement } from '../../../lib/types';
 import { Pin, Trash2, Megaphone } from 'lucide-react';
 import { toast } from 'sonner';
 import ConfirmModal from '../../components/ConfirmModal';
-
-interface AnnouncementWithUI extends Announcement {
-  id: string;
-  color: 'teal' | 'amber' | 'red' | 'blue';
-}
+import { Timestamp } from 'firebase/firestore';
 
 const colorClasses = {
   teal: 'border-accent',
@@ -36,8 +32,7 @@ export default function AnnouncementsPage() {
   const { userProfile } = useAuth();
   const { t } = useI18n();
   const { createNotification } = useNotifications();
-  const [announcements, setAnnouncements] = useState<AnnouncementWithUI[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { announcements, loading } = useAnnouncements(userProfile?.flatId);
   const [confirmModal, setConfirmModal] = useState<{isOpen: boolean, action: (() => void) | null, message: string}>({isOpen: false, action: null, message: ''});
 
   const [title, setTitle] = useState('');
@@ -46,29 +41,6 @@ export default function AnnouncementsPage() {
   const [pinned, setPinned] = useState(false);
 
   const isAdmin = userProfile?.role === 'admin';
-
-  useEffect(() => {
-    if (!userProfile?.flatId) return;
-    const q = query(
-      collection(db, 'announcements'),
-      where('flatId', '==', userProfile.flatId),
-      orderBy('createdAt', 'desc'),
-      limit(50)
-    );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AnnouncementWithUI));
-      // Sort pinned first
-      const sorted = [...data].sort((a, b) => {
-        const aPinned = a.isPinned ?? false;
-        const bPinned = b.isPinned ?? false;
-        if (aPinned === bPinned) return 0;
-        return aPinned ? -1 : 1;
-      });
-      setAnnouncements(sorted);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, [userProfile?.flatId]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,7 +161,7 @@ export default function AnnouncementsPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className={`bg-[#1a1d27] border border-white/6 rounded-xl p-5 relative overflow-hidden border-l-4 ${colorClasses[a.color]}`}
+                  className={`bg-[#1a1d27] border border-white/6 rounded-xl p-5 relative overflow-hidden border-l-4 ${colorClasses[(a.color as 'teal' | 'amber' | 'red' | 'blue') ?? 'teal']}`}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">

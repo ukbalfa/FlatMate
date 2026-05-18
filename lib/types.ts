@@ -188,4 +188,5 @@ export interface Announcement {
   authorName: string;
   createdAt: Timestamp | string;
   isPinned?: boolean;
+  color?: string;
 }

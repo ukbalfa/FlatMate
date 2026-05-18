@@ -1,15 +1,17 @@
 'use client';
 import { useI18n } from '../../../context/I18nContext';
 import { useNotifications } from '../../../context/NotificationsContext';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { db } from '../../../lib/firebase';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { toast } from 'sonner';
 import ConfirmModal from '../../components/ConfirmModal';
 import { Trash2 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { logError } from '../../../lib/errorLogger';
-import type { Roommate, CleaningTask } from '../../../lib/types';
+import { useCleaningTasks } from '../../../lib/hooks/useCleaningTasks';
+import { useRoommates } from '../../../lib/hooks/useRoommates';
+import type { CleaningTask } from '../../../lib/types';
 
 
 
@@ -23,55 +25,13 @@ export default function CleaningPage() {
   const { t } = useI18n();
   const { createNotification } = useNotifications();
   const { userProfile } = useAuth();
-  const [cleaning, setCleaning] = useState<CleaningTask[]>([]);
-  const [users, setUsers] = useState<Roommate[]>([]);
   const [task, setTask] = useState('');
   const [dayOfWeek, setDayOfWeek] = useState('Monday');
   const [assignedTo, setAssignedTo] = useState('');
-  const [loading, setLoading] = useState(true);
   const [confirmModal, setConfirmModal] = useState<{isOpen: boolean, action: (() => void) | null, message: string}>({isOpen: false, action: null, message: ''});
   const weekStart = getMonday(new Date());
-
-  useEffect(() => {
-    if (!userProfile?.flatId) return;
-    let mounted = true;
-    const loadUsers = async () => {
-      try {
-        const snap = await getDocs(query(collection(db, 'users'), where('flatId', '==', userProfile!.flatId)));
-        if (!mounted) return;
-        setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Roommate)));
-      } catch (error) {
-        if (!mounted) return;
-        logError(error, 'Cleaning.loadUsers');
-        toast.error(t('cleaning.toast.loadUsersFailed'));
-      }
-    };
-    loadUsers();
-    return () => {
-      mounted = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userProfile?.flatId, t]);
-
-  useEffect(() => {
-    if (!userProfile?.flatId) return;
-    const q = query(collection(db, 'cleaning'), where('flatId', '==', userProfile.flatId), where('weekStart', '==', weekStart));
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CleaningTask));
-        setCleaning(data);
-        setLoading(false);
-      },
-      (error) => {
-        logError(error, 'Cleaning.load');
-        toast.error(t('cleaning.toast.loadTasksFailed'));
-        setLoading(false);
-      }
-    );
-    
-    return () => unsubscribe();
-  }, [userProfile?.flatId, weekStart, t]);
+  const { cleaningTasks: cleaning, loading } = useCleaningTasks(userProfile?.flatId, weekStart);
+  const { roommates: users } = useRoommates(userProfile?.flatId);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();

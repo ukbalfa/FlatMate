@@ -89,6 +89,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             : { uid: firebaseUser.uid, username: firebaseUser.email || 'Unknown' };
           setUserProfile(profile);
           setCachedProfile(profile);
+          if (profile.flatId) {
+            try {
+              const tokenResult = await firebaseUser.getIdTokenResult();
+              if (!tokenResult.claims.flatId) {
+                const idToken = await firebaseUser.getIdToken();
+                await fetch('/api/auth/set-flat-claim', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ idToken, flatId: profile.flatId }),
+                });
+                await firebaseUser.getIdToken(true);
+              }
+            } catch {
+              // Non-critical — claim will sync on next login
+            }
+          }
         } catch (error) {
           logError(error, 'AuthContext');
           const fallback = { uid: firebaseUser.uid, username: firebaseUser.email || 'Unknown' };
