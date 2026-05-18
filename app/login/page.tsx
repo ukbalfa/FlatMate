@@ -25,7 +25,6 @@ import OAuthButtons from './OAuthButtons';
 
 declare global {
   interface Window {
-    onTelegramAuth?: (user: Record<string, string>) => void;
     hcaptcha?: {
       getResponse: () => string;
       render: (element: Element | null, params: Record<string, unknown>) => void;
