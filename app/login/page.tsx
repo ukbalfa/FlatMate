@@ -16,11 +16,10 @@ import {
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, LoaderCircle, Mail } from 'lucide-react';
+import { Eye, EyeOff, LoaderCircle, Mail, ArrowLeft } from 'lucide-react';
 import { logError } from '../../lib/errorLogger';
 import { toast } from 'sonner';
 import { getPasswordStrength, PasswordStrengthLevel } from '../../lib/passwordStrength';
-import LeftPanel from './LeftPanel';
 import OAuthButtons from './OAuthButtons';
 
 declare global {
@@ -557,319 +556,353 @@ export default function LoginPage() {
     }
   };
 
-  const inputClass = 'w-full bg-bg-input border border-border rounded-xl px-4 py-3.5 text-heading placeholder:text-body-muted focus:ring-2 focus:ring-accent/30 focus:border-accent outline-none transition-all backdrop-blur-sm';
+  const inputClass = 'w-full h-10 bg-white/[0.03] border border-white/[0.08] rounded-[10px] px-3.5 text-sm text-heading placeholder:text-body-muted focus:ring-2 focus:ring-accent/30 focus:border-accent outline-none transition-all';
 
   return (
-    <div className="min-h-screen flex bg-bg-page relative overflow-hidden">
-      {/* Left panel - animated background */}
-      <LeftPanel />
+    <div className="min-h-screen flex items-center justify-center bg-bg-page relative overflow-hidden">
+      {/* Top accent bar */}
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-accent via-accent-honey to-accent-lime" />
 
-      {/* Right panel - glass card form */}
-      <div className="flex items-center justify-center w-full px-6 py-12 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
+      {/* Dot grid background */}
+      <div className="absolute inset-0 bg-dot-grid opacity-[0.03] hidden sm:block" />
+
+      {/* Geometric shapes */}
+      <div className="absolute w-[300px] h-[300px] border border-accent/[0.06] rounded-full -top-20 -right-20 hidden sm:block" />
+      <div className="absolute w-[200px] h-[200px] border border-accent-lime/[0.04] rotate-45 -bottom-10 -left-10 hidden sm:block" />
+
+      {/* Back to Home */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+        className="absolute top-6 left-6 z-10"
+      >
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 text-sm text-body-muted hover:text-heading transition-colors"
         >
-          {/* Glass card container */}
-          <div className="bg-bg-card border border-border rounded-2xl p-8 backdrop-blur-xl shadow-glow">
-            {/* Mobile logo */}
-            <div className="lg:hidden flex items-center gap-2 mb-8">
-              <div className="w-3 h-3 rounded-full bg-accent animate-pulse-orange" />
-              <span className="text-2xl font-bold gradient-citrus-text">FlatMate</span>
+          <ArrowLeft className="w-4 h-4" />
+          Back to Home
+        </Link>
+      </motion.div>
+
+      {/* Main card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+        className="w-full max-w-[380px] mx-4 relative z-10"
+      >
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-8">
+          {/* Logo */}
+          <div className="flex items-center gap-2.5 mb-7">
+            <div className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-accent to-accent-honey flex items-center justify-center text-white font-bold text-lg">
+              F
             </div>
-
-            {/* Tab switcher */}
-            <div
-              role="tablist"
-              aria-label="Authentication method"
-              className="flex items-center gap-1 p-1 bg-bg-input border border-border rounded-xl mb-6"
-            >
-              <button
-                role="tab"
-                id="tab-signin"
-                aria-selected={activeTab === 'signin'}
-                aria-controls="panel-auth"
-                onClick={() => handleTabChange('signin')}
-                onKeyDown={(e) => handleTabKeyDown(e, 'signin')}
-                className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
-                  activeTab === 'signin'
-                    ? 'bg-accent text-white shadow-sm'
-                    : 'text-body hover:text-heading'
-                }`}
-              >
-                {t('login.signInTab')}
-              </button>
-              <button
-                role="tab"
-                id="tab-signup"
-                aria-selected={activeTab === 'signup'}
-                aria-controls="panel-auth"
-                onClick={() => handleTabChange('signup')}
-                onKeyDown={(e) => handleTabKeyDown(e, 'signup')}
-                className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
-                  activeTab === 'signup'
-                    ? 'bg-accent text-white shadow-sm'
-                    : 'text-body hover:text-heading'
-                }`}
-              >
-                {t('login.createAccountTab')}
-              </button>
-            </div>
-
-            <h2 className="text-2xl font-bold text-heading mb-2">
-              {activeTab === 'signin' ? t('login.welcomeBack') : t('login.createAccountTitle')}
-            </h2>
-            <p className="text-sm text-body mb-8">
-              {activeTab === 'signin' ? t('login.signInToAccount') : t('login.createAccountSubtitle')}
-            </p>
-
-            <OAuthButtons
-              onGoogleSignIn={handleGoogleSignIn}
-              onTelegramClick={handleTelegramClick}
-              disabled={isLoading}
-            />
-
-            {/* Email form */}
-            {!showVerifyStep && (
-            <form
-              id="panel-auth"
-              role="tabpanel"
-              aria-labelledby={activeTab === 'signin' ? 'tab-signin' : 'tab-signup'}
-              onSubmit={activeTab === 'signin' ? handleEmailSignIn : handleEmailSignUp}
-              className="space-y-4"
-              noValidate
-            >
-              {/* Name field (signup only) */}
-              {activeTab === 'signup' && (
-                <div>
-                  <label htmlFor="name" className="block text-sm text-body mb-2">
-                    {t('login.fullName')}
-                  </label>
-                  <input
-                    ref={nameRef}
-                    id="name"
-                    type="text"
-                    placeholder="e.g. John Doe"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className={`${inputClass} ${fieldErrors.name ? 'border-red-400 focus:ring-red-400/30 focus:border-red-400' : ''}`}
-                    aria-invalid={!!fieldErrors.name}
-                    aria-describedby={fieldErrors.name ? 'error-name' : undefined}
-                  />
-                  {fieldErrors.name && (
-                    <p id="error-name" role="alert" className="text-red-400 text-xs mt-1">
-                      {fieldErrors.name}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* Email field */}
-              <div>
-                <label htmlFor="email" className="block text-sm text-body mb-2">
-                  {t('login.emailAddress')}
-                </label>
-                <input
-                  ref={emailRef}
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`${inputClass} ${fieldErrors.email ? 'border-red-400 focus:ring-red-400/30 focus:border-red-400' : ''}`}
-                  aria-invalid={!!fieldErrors.email}
-                  aria-describedby={fieldErrors.email ? 'error-email' : undefined}
-                />
-                {fieldErrors.email && (
-                  <p id="error-email" role="alert" className="text-red-400 text-xs mt-1">
-                    {fieldErrors.email}
-                  </p>
-                )}
-              </div>
-
-              {/* Password field */}
-              <div>
-                <label htmlFor="password" className="block text-sm text-body mb-2">
-                  {t('auth.password')}
-                </label>
-                <div className="relative">
-                  <input
-                    ref={passwordRef}
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={`${inputClass} pr-12 ${fieldErrors.password ? 'border-red-400 focus:ring-red-400/30 focus:border-red-400' : ''}`}
-                    aria-invalid={!!fieldErrors.password}
-                    aria-describedby={fieldErrors.password ? 'error-password' : undefined}
-                    autoComplete={activeTab === 'signin' ? 'current-password' : 'new-password'}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-body hover:text-heading transition-colors"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-                {fieldErrors.password && (
-                  <p id="error-password" role="alert" className="text-red-400 text-xs mt-1">
-                    {fieldErrors.password}
-                  </p>
-                )}
-                {activeTab === 'signup' && password.length > 0 && (
-                  <div className="mt-2">
-                    <div className="flex gap-1 mb-1">
-                      {[1, 2, 3].map((level) => (
-                        <div
-                          key={level}
-                          className={`h-1 flex-1 rounded-full transition-colors ${
-                            passwordStrength === 'weak' ? 'bg-red-500' :
-                            passwordStrength === 'fair' ? (level <= 1 ? 'bg-orange-500' : 'bg-border') :
-                            passwordStrength === 'good' ? (level <= 2 ? 'bg-yellow-500' : 'bg-border') :
-                            'bg-green-500'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <p className="text-xs text-body-muted">
-                      {t(`login.passwordStrength${passwordStrength.charAt(0).toUpperCase() + passwordStrength.slice(1)}`)}
-                    </p>
-                  </div>
-                )}
-                {/* Password hint (signup) / Forgot link (signin) */}
-                {activeTab === 'signup' && !fieldErrors.password && (
-                  <p className="text-xs text-body-muted mt-1">
-                    {t('login.passwordMinLength') || 'Min 8 characters'}
-                  </p>
-                )}
-                {activeTab === 'signin' && (
-                  <button
-                    type="button"
-                    onClick={handleForgotPassword}
-                    className="text-xs text-accent hover:underline mt-1"
-                    disabled={isLoading}
-                  >
-                    Forgot password?
-                  </button>
-                )}
-              </div>
-
-              {/* Privacy consent (signup only) */}
-              {activeTab === 'signup' && (
-                <div className="flex items-start gap-3 mb-4">
-                  <input
-                    type="checkbox"
-                    id="privacyConsent"
-                    checked={consentAccepted}
-                    onChange={(e) => setConsentAccepted(e.target.checked)}
-                    className="mt-1 w-4 h-4 rounded border-border text-accent focus:ring-accent/30"
-                  />
-                  <label htmlFor="privacyConsent" className="text-xs text-body leading-relaxed">
-                    {t('login.privacyConsent')}{' '}
-                    <Link href="/privacy" className="text-accent hover:underline">
-                      {t('login.privacyPolicy')}
-                    </Link>
-                    {' '}{t('login.and')}{' '}
-                    <Link href="/terms" className="text-accent hover:underline">
-                      {t('login.termsOfService')}
-                    </Link>
-                  </label>
-                </div>
-              )}
-
-              {/* hCaptcha widget (signup only) */}
-              {activeTab === 'signup' && process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY && (
-                <div className="mb-4">
-                  <div
-                    ref={hcaptchaContainerRef}
-                    className="h-captcha min-h-[78px]"
-                  />
-                  {hcaptchaError && (
-                    <p className="text-red-400 text-xs mt-2 text-center">{hcaptchaError}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Submit button */}
-              <button
-                type="submit"
-                disabled={isLoading || (activeTab === 'signup' && (!consentAccepted || rateLimitCooldown > 0)) || (activeTab === 'signin' && rateLimitCooldown > 0)}
-                className="w-full fm-btn fm-btn-primary rounded-xl px-4 py-3.5 disabled:opacity-60 flex items-center justify-center gap-2"
-              >
-                {isLoading && <LoaderCircle className="w-4 h-4 animate-spin" />}
-                {rateLimitCooldown > 0
-                  ? t('login.errorRateLimited', { seconds: rateLimitCooldown })
-                  : activeTab === 'signin'
-                    ? t('login.signIn')
-                    : t('login.createAccount')
-                }
-              </button>
-
-              {/* Global error */}
-              {error && (
-                <div role="alert" className="text-red-400 text-sm text-center mt-2">
-                  {error}
-                </div>
-              )}
-            </form>
-            )}
-
-            {/* Verification step UI */}
-            {showVerifyStep && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center py-8"
-              >
-                <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6 ring-1 ring-accent/20">
-                  <Mail className="w-8 h-8 text-accent" />
-                </div>
-                <h3 className="text-xl font-bold text-heading mb-2">
-                  {t('login.verifyEmailTitle')}
-                </h3>
-                <p className="text-sm text-body mb-6">
-                  {t('login.verifyEmailSubtitle', { email: pendingEmail })}
-                </p>
-                <button
-                  onClick={handleResendVerification}
-                  disabled={isLoading || resendCooldown > 0}
-                  className="w-full fm-btn fm-btn-primary rounded-xl px-4 py-3.5 disabled:opacity-60 flex items-center justify-center gap-2 mb-4"
-                >
-                  {isLoading && <LoaderCircle className="w-4 h-4 animate-spin" />}
-                  {resendCooldown > 0
-                    ? t('login.verifyEmailResendCooldown', { seconds: resendCooldown })
-                    : t('login.verifyEmailResend')
-                  }
-                </button>
-                <button
-                  onClick={() => handleTabChange('signin')}
-                  className="text-sm text-accent hover:underline"
-                >
-                  {t('login.verifyEmailBackToSignIn')}
-                </button>
-              </motion.div>
-            )}
-
-            {/* Tab toggle */}
-            <div className="mt-6 text-center">
-              <span className="text-xs text-body">
-                {activeTab === 'signin' ? t('login.noAccountYet') : t('login.alreadyHaveAccount')}{' '}
-                <button
-                  onClick={() => handleTabChange(activeTab === 'signin' ? 'signup' : 'signin')}
-                  className="text-accent hover:underline font-medium"
-                >
-                  {activeTab === 'signin' ? t('login.switchToSignUp') : t('login.switchToSignIn')}
-                </button>
-              </span>
+            <div>
+              <div className="text-base font-semibold text-heading tracking-tight">FlatMate</div>
+              <div className="text-[11px] text-body-muted">Shared living, simplified</div>
             </div>
           </div>
-        </motion.div>
-      </div>
+
+          {/* Tab switcher */}
+          <div
+            role="tablist"
+            aria-label="Authentication method"
+            className="flex items-center gap-0.5 p-[3px] bg-white/[0.04] border border-white/[0.06] rounded-[10px] mb-6"
+          >
+            <button
+              role="tab"
+              id="tab-signin"
+              aria-selected={activeTab === 'signin'}
+              aria-controls="panel-auth"
+              onClick={() => handleTabChange('signin')}
+              onKeyDown={(e) => handleTabKeyDown(e, 'signin')}
+              className={`flex-1 py-2 px-3 rounded-lg text-[13px] font-medium transition-all ${
+                activeTab === 'signin'
+                  ? 'bg-gradient-to-r from-accent to-accent-honey text-white'
+                  : 'text-body-muted hover:text-body'
+              }`}
+            >
+              {t('login.signInTab')}
+            </button>
+            <button
+              role="tab"
+              id="tab-signup"
+              aria-selected={activeTab === 'signup'}
+              aria-controls="panel-auth"
+              onClick={() => handleTabChange('signup')}
+              onKeyDown={(e) => handleTabKeyDown(e, 'signup')}
+              className={`flex-1 py-2 px-3 rounded-lg text-[13px] font-medium transition-all ${
+                activeTab === 'signup'
+                  ? 'bg-gradient-to-r from-accent to-accent-honey text-white'
+                  : 'text-body-muted hover:text-body'
+              }`}
+            >
+              {t('login.createAccountTab')}
+            </button>
+          </div>
+
+          {/* Heading */}
+          <h2 className="text-[22px] font-semibold text-heading tracking-tight mb-1">
+            {activeTab === 'signin' ? t('login.welcomeBack') : t('login.createAccountTitle')}
+          </h2>
+          <p className="text-[13px] text-body-muted mb-6">
+            {activeTab === 'signin' ? t('login.signInToAccount') : t('login.createAccountSubtitle')}
+          </p>
+
+          {/* OAuth buttons */}
+          <OAuthButtons
+            onGoogleSignIn={handleGoogleSignIn}
+            onTelegramClick={handleTelegramClick}
+            disabled={isLoading}
+          />
+
+          {/* Email form */}
+          {!showVerifyStep && (
+          <form
+            id="panel-auth"
+            role="tabpanel"
+            aria-labelledby={activeTab === 'signin' ? 'tab-signin' : 'tab-signup'}
+            onSubmit={activeTab === 'signin' ? handleEmailSignIn : handleEmailSignUp}
+            className="space-y-3"
+            noValidate
+          >
+            {/* Name field (signup only) */}
+            {activeTab === 'signup' && (
+              <div>
+                <label htmlFor="name" className="block text-[13px] text-body mb-1.5">
+                  {t('login.fullName')}
+                </label>
+                <input
+                  ref={nameRef}
+                  id="name"
+                  type="text"
+                  placeholder="e.g. John Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className={`${inputClass} ${fieldErrors.name ? 'border-red-400 focus:ring-red-400/30 focus:border-red-400' : ''}`}
+                  aria-invalid={!!fieldErrors.name}
+                  aria-describedby={fieldErrors.name ? 'error-name' : undefined}
+                />
+                {fieldErrors.name && (
+                  <p id="error-name" role="alert" className="text-red-400 text-[12px] mt-1">
+                    {fieldErrors.name}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Email field */}
+            <div>
+              <label htmlFor="email" className="block text-[13px] text-body mb-1.5">
+                {t('login.emailAddress')}
+              </label>
+              <input
+                ref={emailRef}
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={`${inputClass} ${fieldErrors.email ? 'border-red-400 focus:ring-red-400/30 focus:border-red-400' : ''}`}
+                aria-invalid={!!fieldErrors.email}
+                aria-describedby={fieldErrors.email ? 'error-email' : undefined}
+              />
+              {fieldErrors.email && (
+                <p id="error-email" role="alert" className="text-red-400 text-[12px] mt-1">
+                  {fieldErrors.email}
+                </p>
+              )}
+            </div>
+
+            {/* Password field */}
+            <div>
+              <label htmlFor="password" className="block text-[13px] text-body mb-1.5">
+                {t('auth.password')}
+              </label>
+              <div className="relative">
+                <input
+                  ref={passwordRef}
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`${inputClass} pr-10 ${fieldErrors.password ? 'border-red-400 focus:ring-red-400/30 focus:border-red-400' : ''}`}
+                  aria-invalid={!!fieldErrors.password}
+                  aria-describedby={fieldErrors.password ? 'error-password' : undefined}
+                  autoComplete={activeTab === 'signin' ? 'current-password' : 'new-password'}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-body-muted hover:text-body transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {fieldErrors.password && (
+                <p id="error-password" role="alert" className="text-red-400 text-[12px] mt-1">
+                  {fieldErrors.password}
+                </p>
+              )}
+              {activeTab === 'signup' && password.length > 0 && (
+                <div className="mt-2">
+                  <div className="flex gap-1 mb-1">
+                    {[1, 2, 3].map((level) => (
+                      <div
+                        key={level}
+                        className={`h-1 flex-1 rounded-full transition-colors ${
+                          passwordStrength === 'weak' ? 'bg-red-500' :
+                          passwordStrength === 'fair' ? (level <= 1 ? 'bg-orange-500' : 'bg-white/[0.06]') :
+                          passwordStrength === 'good' ? (level <= 2 ? 'bg-yellow-500' : 'bg-white/[0.06]') :
+                          'bg-green-500'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-body-muted">
+                    {t(`login.passwordStrength${passwordStrength.charAt(0).toUpperCase() + passwordStrength.slice(1)}`)}
+                  </p>
+                </div>
+              )}
+              {/* Password hint (signup) / Forgot link (signin) */}
+              {activeTab === 'signup' && !fieldErrors.password && (
+                <p className="text-[12px] text-body-muted mt-1">
+                  {t('login.passwordMinLength') || 'Min 8 characters'}
+                </p>
+              )}
+              {activeTab === 'signin' && (
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-[12px] text-accent hover:underline mt-1"
+                  disabled={isLoading}
+                >
+                  Forgot password?
+                </button>
+              )}
+            </div>
+
+            {/* Privacy consent (signup only) */}
+            {activeTab === 'signup' && (
+              <div className="flex items-start gap-2.5">
+                <input
+                  type="checkbox"
+                  id="privacyConsent"
+                  checked={consentAccepted}
+                  onChange={(e) => setConsentAccepted(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-white/[0.08] text-accent focus:ring-accent/30"
+                />
+                <label htmlFor="privacyConsent" className="text-[12px] text-body leading-relaxed">
+                  {t('login.privacyConsent')}{' '}
+                  <Link href="/privacy" className="text-accent hover:underline">
+                    {t('login.privacyPolicy')}
+                  </Link>
+                  {' '}{t('login.and')}{' '}
+                  <Link href="/terms" className="text-accent hover:underline">
+                    {t('login.termsOfService')}
+                  </Link>
+                </label>
+              </div>
+            )}
+
+            {/* hCaptcha widget (signup only) */}
+            {activeTab === 'signup' && process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY && (
+              <div>
+                <div
+                  ref={hcaptchaContainerRef}
+                  className="h-captcha min-h-[78px]"
+                />
+                {hcaptchaError && (
+                  <p className="text-red-400 text-[12px] mt-2 text-center">{hcaptchaError}</p>
+                )}
+              </div>
+            )}
+
+            {/* Submit button */}
+            <button
+              type="submit"
+              disabled={isLoading || (activeTab === 'signup' && (!consentAccepted || rateLimitCooldown > 0)) || (activeTab === 'signin' && rateLimitCooldown > 0)}
+              className="w-full h-[42px] bg-gradient-to-r from-accent to-accent-honey text-white text-[14px] font-medium rounded-[10px] shadow-[0_4px_16px_rgba(249,115,22,0.25)] disabled:opacity-60 flex items-center justify-center gap-2 mt-4"
+            >
+              {isLoading && <LoaderCircle className="w-4 h-4 animate-spin" />}
+              {rateLimitCooldown > 0
+                ? t('login.errorRateLimited', { seconds: rateLimitCooldown })
+                : activeTab === 'signin'
+                  ? t('login.signIn')
+                  : t('login.createAccount')
+              }
+            </button>
+
+            {/* Global error */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+                role="alert"
+                className="text-red-400 text-[12px] text-center"
+              >
+                {error}
+              </motion.div>
+            )}
+          </form>
+          )}
+
+          {/* Verification step UI */}
+          {showVerifyStep && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="text-center py-6"
+            >
+              <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-5 ring-1 ring-accent/20">
+                <Mail className="w-7 h-7 text-accent" />
+              </div>
+              <h3 className="text-lg font-semibold text-heading mb-1.5">
+                {t('login.verifyEmailTitle')}
+              </h3>
+              <p className="text-[13px] text-body-muted mb-5">
+                {t('login.verifyEmailSubtitle', { email: pendingEmail })}
+              </p>
+              <button
+                onClick={handleResendVerification}
+                disabled={isLoading || resendCooldown > 0}
+                className="w-full h-[42px] bg-gradient-to-r from-accent to-accent-honey text-white text-[14px] font-medium rounded-[10px] shadow-[0_4px_16px_rgba(249,115,22,0.25)] disabled:opacity-60 flex items-center justify-center gap-2 mb-3"
+              >
+                {isLoading && <LoaderCircle className="w-4 h-4 animate-spin" />}
+                {resendCooldown > 0
+                  ? t('login.verifyEmailResendCooldown', { seconds: resendCooldown })
+                  : t('login.verifyEmailResend')
+                }
+              </button>
+              <button
+                onClick={() => handleTabChange('signin')}
+                className="text-[13px] text-accent hover:underline"
+              >
+                {t('login.verifyEmailBackToSignIn')}
+              </button>
+            </motion.div>
+          )}
+
+          {/* Footer link */}
+          <div className="mt-6 text-center">
+            <span className="text-[13px] text-body-muted">
+              {activeTab === 'signin' ? t('login.noAccountYet') : t('login.alreadyHaveAccount')}{' '}
+              <button
+                onClick={() => handleTabChange(activeTab === 'signin' ? 'signup' : 'signin')}
+                className="text-accent hover:underline font-medium"
+              >
+                {activeTab === 'signin' ? t('login.switchToSignUp') : t('login.switchToSignIn')}
+              </button>
+            </span>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 }
