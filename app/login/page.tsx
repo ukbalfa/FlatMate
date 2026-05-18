@@ -116,7 +116,7 @@ export default function LoginPage() {
       return;
     }
 
-    if (!consentAccepted) {
+    if (activeTab === 'signup' && !consentAccepted) {
       setError(t('login.errorConsentRequired'));
       return;
     }
