@@ -348,7 +348,7 @@ export default function LoginPage() {
       errors.password = t('login.passwordMinLength');
     }
     if (!consentAccepted) {
-      setError(t('login.errorCaptchaRequired'));
+      setError(t('login.errorConsentRequired'));
       return;
     }
     if (Object.keys(errors).length > 0) {
@@ -358,10 +358,16 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
+      const captchaToken = window.hcaptcha?.getResponse();
+      if (!captchaToken) {
+        setError(t('login.errorCaptchaRequired'));
+        setIsLoading(false);
+        return;
+      }
       const captchaResponse = await fetch('/api/auth/verify-captcha', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: window.hcaptcha?.getResponse() }),
+        body: JSON.stringify({ token: captchaToken }),
       });
       const captchaData = await captchaResponse.json();
       if (!captchaData.success) {
