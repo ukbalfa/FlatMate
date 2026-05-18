@@ -11,6 +11,7 @@
   --color-heading: #FFFFFF;
   --color-body: rgba(255, 255, 255, 0.7);
   --color-muted: rgba(255, 255, 255, 0.4);
+  --color-body-muted: rgba(255, 255, 255, 0.35);
   
   --color-border: rgba(255, 255, 255, 0.1);
   --color-border-light: rgba(255, 255, 255, 0.05);

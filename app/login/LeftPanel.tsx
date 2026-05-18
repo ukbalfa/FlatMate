@@ -14,54 +14,115 @@ export default function LeftPanel() {
   ];
 
   return (
-    <div className="hidden lg:flex flex-col items-center justify-between w-1/2 px-16 py-12 bg-[#f9fafb] dark:bg-gray-900">
-      <div></div>
+    <div className="hidden lg:flex fixed inset-0 pointer-events-none overflow-hidden">
+      {/* Animated blob 1 */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="text-left max-w-md"
-      >
-        <div className="flex items-center gap-2 mb-2">
-          <span className="w-3 h-3 rounded-full bg-accent" />
-          <h1 className="text-2xl font-bold text-[#0a0a0a] dark:text-gray-100">FlatMate</h1>
-        </div>
-        <p className="text-lg text-[#6b7280] dark:text-gray-400 mb-8">
-          {t('login.manageApartmentTogether')}
-        </p>
+        className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-accent/20 blur-3xl"
+        animate={{
+          x: [0, 60, -30, 0],
+          y: [0, -40, 50, 0],
+          scale: [1, 1.15, 0.95, 1],
+        }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      />
 
-        {/* Value props */}
-        <div className="space-y-3 mb-8">
-          {bullets.map((b) => (
-            <div key={b} className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-full bg-accent/10 dark:bg-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Check className="w-3 h-3 text-accent" />
-              </div>
-              <span className="text-sm text-[#6b7280] dark:text-gray-400">{b}</span>
-            </div>
-          ))}
-        </div>
+      {/* Animated blob 2 */}
+      <motion.div
+        className="absolute top-1/3 right-1/4 w-80 h-80 rounded-full bg-accent-honey/15 blur-3xl"
+        animate={{
+          x: [0, -50, 40, 0],
+          y: [0, 60, -30, 0],
+          scale: [1, 1.1, 1.05, 1],
+        }}
+        transition={{
+          duration: 25,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      />
 
-        {/* Social proof */}
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
-          <div className="flex -space-x-2">
-            {['S', 'J', 'E', 'M'].map((initial, i) => (
-              <div
-                key={i}
-                className="w-7 h-7 rounded-full border-2 border-white dark:border-gray-800 bg-accent/10 flex items-center justify-center text-[9px] font-bold text-accent"
-                style={{ zIndex: 4 - i }}
+      {/* Animated blob 3 */}
+      <motion.div
+        className="absolute bottom-20 left-1/3 w-72 h-72 rounded-full bg-accent-lime/10 blur-3xl"
+        animate={{
+          x: [0, 40, -60, 0],
+          y: [0, -50, 30, 0],
+          scale: [1, 1.2, 0.9, 1],
+        }}
+        transition={{
+          duration: 18,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      />
+
+      {/* Dot grid overlay */}
+      <div className="absolute inset-0 bg-dot-grid opacity-30" />
+
+      {/* Branding content */}
+      <div className="relative z-10 flex flex-col items-center justify-center w-full px-16">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="max-w-lg"
+        >
+          {/* Logo */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-4 h-4 rounded-full bg-accent animate-pulse-orange" />
+            <h1 className="text-3xl font-bold gradient-citrus-text">FlatMate</h1>
+          </div>
+
+          {/* Tagline */}
+          <p className="text-xl text-heading/70 mb-10 leading-relaxed">
+            {t('login.manageApartmentTogether')}
+          </p>
+
+          {/* Value props */}
+          <div className="space-y-4 mb-10">
+            {bullets.map((b, i) => (
+              <motion.div
+                key={b}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: 0.4 + i * 0.1 }}
+                className="flex items-start gap-4"
               >
-                {initial}
-              </div>
+                <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5 ring-1 ring-accent/20">
+                  <Check className="w-3.5 h-3.5 text-accent" />
+                </div>
+                <span className="text-base text-body leading-relaxed">{b}</span>
+              </motion.div>
             ))}
           </div>
-          <div className="text-xs text-[#6b7280] dark:text-gray-400">
-            <span className="text-[#0a0a0a] dark:text-gray-200 font-semibold">5,000+</span> roommates using FlatMate
-          </div>
-        </div>
-      </motion.div>
-      <div className="text-xs text-gray-400 dark:text-gray-500">
-        &copy; {new Date().getFullYear()} FlatMate &middot; Tashkent
+
+          {/* Social proof */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.8 }}
+            className="flex items-center gap-4 p-4 rounded-xl bg-bg-card border border-border backdrop-blur-sm"
+          >
+            <div className="flex -space-x-2.5">
+              {['S', 'J', 'E', 'M'].map((initial, i) => (
+                <div
+                  key={i}
+                  className="w-8 h-8 rounded-full border-2 border-bg-page bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent ring-1 ring-accent/20"
+                  style={{ zIndex: 4 - i }}
+                >
+                  {initial}
+                </div>
+              ))}
+            </div>
+            <div className="text-sm text-body">
+              <span className="text-heading font-semibold">5,000+</span> roommates using FlatMate
+            </div>
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   );

@@ -502,36 +502,34 @@ export default function LoginPage() {
     }
   };
 
-  const inputClass = 'w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-3 text-[#0a0a0a] dark:text-gray-100 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-colors';
+  const inputClass = 'w-full bg-bg-input border border-border rounded-xl px-4 py-3.5 text-heading placeholder:text-body-muted focus:ring-2 focus:ring-accent/30 focus:border-accent outline-none transition-all backdrop-blur-sm';
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4 }}
-      className="min-h-screen flex bg-white"
-    >
+    <div className="min-h-screen flex bg-bg-page relative overflow-hidden">
+      {/* Left panel - animated background */}
       <LeftPanel />
 
-      <div className="flex items-center justify-center w-full lg:w-1/2 px-6 py-12 bg-white dark:bg-gray-800">
+      {/* Right panel - glass card form */}
+      <div className="flex items-center justify-center w-full px-6 py-12 relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="w-full max-w-sm"
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md"
         >
-          {/* Mobile logo */}
-          <div className="lg:hidden flex items-center gap-2 mb-8">
-            <span className="w-3 h-3 rounded-full bg-accent" />
-            <span className="text-2xl font-bold text-[#0a0a0a] dark:text-gray-100">FlatMate</span>
-          </div>
+          {/* Glass card container */}
+          <div className="bg-bg-card border border-border rounded-2xl p-8 backdrop-blur-xl shadow-glow">
+            {/* Mobile logo */}
+            <div className="lg:hidden flex items-center gap-2 mb-8">
+              <div className="w-3 h-3 rounded-full bg-accent animate-pulse-orange" />
+              <span className="text-2xl font-bold gradient-citrus-text">FlatMate</span>
+            </div>
 
-          <div>
-            {/* Accessible tab switcher */}
+            {/* Tab switcher */}
             <div
               role="tablist"
               aria-label="Authentication method"
-              className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg mb-6"
+              className="flex items-center gap-1 p-1 bg-bg-input border border-border rounded-xl mb-6"
             >
               <button
                 role="tab"
@@ -540,10 +538,10 @@ export default function LoginPage() {
                 aria-controls="panel-auth"
                 onClick={() => handleTabChange('signin')}
                 onKeyDown={(e) => handleTabKeyDown(e, 'signin')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
                   activeTab === 'signin'
                     ? 'bg-accent text-white shadow-sm'
-                    : 'text-[#6b7280] dark:text-gray-400 hover:text-[#0a0a0a] dark:hover:text-gray-100'
+                    : 'text-body hover:text-heading'
                 }`}
               >
                 {t('login.signInTab')}
@@ -555,20 +553,20 @@ export default function LoginPage() {
                 aria-controls="panel-auth"
                 onClick={() => handleTabChange('signup')}
                 onKeyDown={(e) => handleTabKeyDown(e, 'signup')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
                   activeTab === 'signup'
                     ? 'bg-accent text-white shadow-sm'
-                    : 'text-[#6b7280] dark:text-gray-400 hover:text-[#0a0a0a] dark:hover:text-gray-100'
+                    : 'text-body hover:text-heading'
                 }`}
               >
                 {t('login.createAccountTab')}
               </button>
             </div>
 
-            <h2 className="text-2xl font-bold text-[#0a0a0a] dark:text-gray-100 mb-2">
+            <h2 className="text-2xl font-bold text-heading mb-2">
               {activeTab === 'signin' ? t('login.welcomeBack') : t('login.createAccountTitle')}
             </h2>
-            <p className="text-sm text-[#6b7280] dark:text-gray-400 mb-8">
+            <p className="text-sm text-body mb-8">
               {activeTab === 'signin' ? t('login.signInToAccount') : t('login.createAccountSubtitle')}
             </p>
 
@@ -591,7 +589,7 @@ export default function LoginPage() {
               {/* Name field (signup only) */}
               {activeTab === 'signup' && (
                 <div>
-                  <label htmlFor="name" className="block text-sm text-[#6b7280] dark:text-gray-400 mb-2">
+                  <label htmlFor="name" className="block text-sm text-body mb-2">
                     {t('login.fullName')}
                   </label>
                   <input
@@ -601,12 +599,12 @@ export default function LoginPage() {
                     placeholder="e.g. John Doe"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className={`${inputClass} ${fieldErrors.name ? 'border-red-400 focus:ring-red-400' : ''}`}
+                    className={`${inputClass} ${fieldErrors.name ? 'border-red-400 focus:ring-red-400/30 focus:border-red-400' : ''}`}
                     aria-invalid={!!fieldErrors.name}
                     aria-describedby={fieldErrors.name ? 'error-name' : undefined}
                   />
                   {fieldErrors.name && (
-                    <p id="error-name" role="alert" className="text-red-500 dark:text-red-400 text-xs mt-1">
+                    <p id="error-name" role="alert" className="text-red-400 text-xs mt-1">
                       {fieldErrors.name}
                     </p>
                   )}
@@ -615,7 +613,7 @@ export default function LoginPage() {
 
               {/* Email field */}
               <div>
-                <label htmlFor="email" className="block text-sm text-[#6b7280] dark:text-gray-400 mb-2">
+                <label htmlFor="email" className="block text-sm text-body mb-2">
                   {t('login.emailAddress')}
                 </label>
                 <input
@@ -625,12 +623,12 @@ export default function LoginPage() {
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`${inputClass} ${fieldErrors.email ? 'border-red-400 focus:ring-red-400' : ''}`}
+                  className={`${inputClass} ${fieldErrors.email ? 'border-red-400 focus:ring-red-400/30 focus:border-red-400' : ''}`}
                   aria-invalid={!!fieldErrors.email}
                   aria-describedby={fieldErrors.email ? 'error-email' : undefined}
                 />
                 {fieldErrors.email && (
-                  <p id="error-email" role="alert" className="text-red-500 dark:text-red-400 text-xs mt-1">
+                  <p id="error-email" role="alert" className="text-red-400 text-xs mt-1">
                     {fieldErrors.email}
                   </p>
                 )}
@@ -638,7 +636,7 @@ export default function LoginPage() {
 
               {/* Password field */}
               <div>
-                <label htmlFor="password" className="block text-sm text-[#6b7280] dark:text-gray-400 mb-2">
+                <label htmlFor="password" className="block text-sm text-body mb-2">
                   {t('auth.password')}
                 </label>
                 <div className="relative">
@@ -649,7 +647,7 @@ export default function LoginPage() {
                     placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`${inputClass} pr-12 ${fieldErrors.password ? 'border-red-400 focus:ring-red-400' : ''}`}
+                    className={`${inputClass} pr-12 ${fieldErrors.password ? 'border-red-400 focus:ring-red-400/30 focus:border-red-400' : ''}`}
                     aria-invalid={!!fieldErrors.password}
                     aria-describedby={fieldErrors.password ? 'error-password' : undefined}
                     autoComplete={activeTab === 'signin' ? 'current-password' : 'new-password'}
@@ -657,14 +655,14 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b7280] dark:text-gray-400 hover:text-[#0a0a0a] dark:hover:text-gray-100 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-body hover:text-heading transition-colors"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
                 {fieldErrors.password && (
-                  <p id="error-password" role="alert" className="text-red-500 dark:text-red-400 text-xs mt-1">
+                  <p id="error-password" role="alert" className="text-red-400 text-xs mt-1">
                     {fieldErrors.password}
                   </p>
                 )}
@@ -676,21 +674,21 @@ export default function LoginPage() {
                           key={level}
                           className={`h-1 flex-1 rounded-full transition-colors ${
                             passwordStrength === 'weak' ? 'bg-red-500' :
-                            passwordStrength === 'fair' ? (level <= 1 ? 'bg-orange-500' : 'bg-gray-200 dark:bg-gray-600') :
-                            passwordStrength === 'good' ? (level <= 2 ? 'bg-yellow-500' : 'bg-gray-200 dark:bg-gray-600') :
+                            passwordStrength === 'fair' ? (level <= 1 ? 'bg-orange-500' : 'bg-border') :
+                            passwordStrength === 'good' ? (level <= 2 ? 'bg-yellow-500' : 'bg-border') :
                             'bg-green-500'
                           }`}
                         />
                       ))}
                     </div>
-                    <p className="text-xs text-[#9ca3af] dark:text-gray-500">
+                    <p className="text-xs text-body-muted">
                       {t(`login.passwordStrength${passwordStrength.charAt(0).toUpperCase() + passwordStrength.slice(1)}`)}
                     </p>
                   </div>
                 )}
                 {/* Password hint (signup) / Forgot link (signin) */}
                 {activeTab === 'signup' && !fieldErrors.password && (
-                  <p className="text-xs text-[#9ca3af] dark:text-gray-500 mt-1">
+                  <p className="text-xs text-body-muted mt-1">
                     {t('login.passwordMinLength') || 'Min 8 characters'}
                   </p>
                 )}
@@ -714,9 +712,9 @@ export default function LoginPage() {
                     id="privacyConsent"
                     checked={consentAccepted}
                     onChange={(e) => setConsentAccepted(e.target.checked)}
-                    className="mt-1 w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent"
+                    className="mt-1 w-4 h-4 rounded border-border text-accent focus:ring-accent/30"
                   />
-                  <label htmlFor="privacyConsent" className="text-xs text-[#6b7280] dark:text-gray-400 leading-relaxed">
+                  <label htmlFor="privacyConsent" className="text-xs text-body leading-relaxed">
                     {t('login.privacyConsent')}{' '}
                     <Link href="/privacy" className="text-accent hover:underline">
                       {t('login.privacyPolicy')}
@@ -743,7 +741,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading || (activeTab === 'signup' && (!consentAccepted || rateLimitCooldown > 0)) || (activeTab === 'signin' && rateLimitCooldown > 0)}
-                className="w-full bg-[#0a0a0a] dark:bg-gray-700 text-white rounded-lg px-4 py-3 font-medium hover:bg-gray-800 dark:hover:bg-gray-600 transition disabled:opacity-60 flex items-center justify-center gap-2"
+                className="w-full fm-btn fm-btn-primary rounded-xl px-4 py-3.5 disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {isLoading && <LoaderCircle className="w-4 h-4 animate-spin" />}
                 {rateLimitCooldown > 0
@@ -756,7 +754,7 @@ export default function LoginPage() {
 
               {/* Global error */}
               {error && (
-                <div role="alert" className="text-red-500 dark:text-red-400 text-sm text-center mt-2">
+                <div role="alert" className="text-red-400 text-sm text-center mt-2">
                   {error}
                 </div>
               )}
@@ -770,19 +768,19 @@ export default function LoginPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center py-8"
               >
-                <div className="w-16 h-16 rounded-full bg-accent/10 dark:bg-accent/20 flex items-center justify-center mx-auto mb-6">
+                <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6 ring-1 ring-accent/20">
                   <Mail className="w-8 h-8 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold text-[#0a0a0a] dark:text-gray-100 mb-2">
+                <h3 className="text-xl font-bold text-heading mb-2">
                   {t('login.verifyEmailTitle')}
                 </h3>
-                <p className="text-sm text-[#6b7280] dark:text-gray-400 mb-6">
+                <p className="text-sm text-body mb-6">
                   {t('login.verifyEmailSubtitle', { email: pendingEmail })}
                 </p>
                 <button
                   onClick={handleResendVerification}
                   disabled={isLoading || resendCooldown > 0}
-                  className="w-full bg-[#0a0a0a] dark:bg-gray-700 text-white rounded-lg px-4 py-3 font-medium hover:bg-gray-800 dark:hover:bg-gray-600 transition disabled:opacity-60 flex items-center justify-center gap-2 mb-4"
+                  className="w-full fm-btn fm-btn-primary rounded-xl px-4 py-3.5 disabled:opacity-60 flex items-center justify-center gap-2 mb-4"
                 >
                   {isLoading && <LoaderCircle className="w-4 h-4 animate-spin" />}
                   {resendCooldown > 0
@@ -800,8 +798,8 @@ export default function LoginPage() {
             )}
 
             {/* Tab toggle */}
-            <div className="mt-4 text-center">
-              <span className="text-xs text-[#6b7280] dark:text-gray-400">
+            <div className="mt-6 text-center">
+              <span className="text-xs text-body">
                 {activeTab === 'signin' ? t('login.noAccountYet') : t('login.alreadyHaveAccount')}{' '}
                 <button
                   onClick={() => handleTabChange(activeTab === 'signin' ? 'signup' : 'signin')}
@@ -814,6 +812,6 @@ export default function LoginPage() {
           </div>
         </motion.div>
       </div>
-    </motion.div>
+    </div>
   );
 }

@@ -17,7 +17,7 @@ export default function OAuthButtons({ onGoogleSignIn, onTelegramClick, disabled
       <button
         onClick={onGoogleSignIn}
         disabled={disabled}
-        className="w-full flex items-center justify-center gap-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-3 text-[#0a0a0a] dark:text-gray-100 font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition disabled:opacity-60 mb-3"
+        className="w-full flex items-center justify-center gap-3 bg-bg-input border border-border rounded-xl px-4 py-3.5 text-heading font-medium hover:border-accent/30 hover:shadow-glow transition disabled:opacity-60 mb-3 backdrop-blur-sm"
       >
         {disabled ? (
           <LoaderCircle className="w-5 h-5 animate-spin" />
@@ -35,7 +35,7 @@ export default function OAuthButtons({ onGoogleSignIn, onTelegramClick, disabled
       <button
         onClick={onTelegramClick}
         disabled={disabled}
-        className="w-full flex items-center justify-center gap-3 bg-[#0088cc] hover:bg-[#0077b5] rounded-lg px-4 py-3 text-white font-medium transition disabled:opacity-60 mb-6"
+        className="w-full flex items-center justify-center gap-3 bg-[#0088cc]/90 hover:bg-[#0077b5] border border-[#0088cc]/30 rounded-xl px-4 py-3.5 text-white font-medium transition disabled:opacity-60 mb-6 backdrop-blur-sm"
       >
         {disabled ? (
           <LoaderCircle className="w-5 h-5 animate-spin" />
@@ -48,9 +48,9 @@ export default function OAuthButtons({ onGoogleSignIn, onTelegramClick, disabled
       </button>
 
       <div className="flex items-center gap-3 mb-6">
-        <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-        <span className="text-xs text-[#6b7280] dark:text-gray-400">{t('login.orSignInWithEmail')}</span>
-        <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-xs text-body-muted">{t('login.orSignInWithEmail')}</span>
+        <div className="flex-1 h-px bg-border" />
       </div>
     </>
   );
