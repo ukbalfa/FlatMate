@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { sendEmailVerification, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../../lib/firebase';
 import { useI18n } from '../../../context/I18nContext';
@@ -55,50 +56,82 @@ export default function VerifyEmailPage() {
   }, [resendCooldown, t]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4 }}
-      className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 px-6"
-    >
+    <div className="min-h-screen flex items-center justify-center bg-bg-page relative overflow-hidden">
+      {/* Top accent bar */}
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-accent via-accent-honey to-accent-lime" />
+
+      {/* Back to Home */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-sm text-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+        className="absolute top-6 left-6 z-10"
       >
-        <div className="w-16 h-16 rounded-full bg-accent/10 dark:bg-accent/20 flex items-center justify-center mx-auto mb-6">
-          <Mail className="w-8 h-8 text-accent" />
-        </div>
-
-        <h1 className="text-2xl font-bold text-[#0a0a0a] dark:text-gray-100 mb-2">
-          {t('login.verifyEmailTitle')}
-        </h1>
-
-        <p className="text-sm text-[#6b7280] dark:text-gray-400 mb-8">
-          {t('login.verifyEmailSubtitle', { email })}
-        </p>
-
-        <button
-          onClick={handleResend}
-          disabled={isLoading || resendCooldown > 0}
-          className="w-full bg-[#0a0a0a] dark:bg-gray-700 text-white rounded-lg px-4 py-3 font-medium hover:bg-gray-800 dark:hover:bg-gray-600 transition disabled:opacity-60 flex items-center justify-center gap-2 mb-4"
-        >
-          {isLoading && <LoaderCircle className="w-4 h-4 animate-spin" />}
-          {resendCooldown > 0
-            ? t('login.verifyEmailResendCooldown', { seconds: resendCooldown })
-            : t('login.verifyEmailResend')
-          }
-        </button>
-
-        <button
-          onClick={() => router.push('/login')}
-          className="w-full flex items-center justify-center gap-2 text-sm text-[#6b7280] dark:text-gray-400 hover:text-[#0a0a0a] dark:hover:text-gray-100 transition"
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 text-sm text-body-muted hover:text-heading transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          {t('login.verifyEmailBackToSignIn')}
-        </button>
+          Back to Home
+        </Link>
       </motion.div>
-    </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-[380px] mx-4 relative z-10"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-8 text-center"
+        >
+          {/* Logo */}
+          <div className="flex items-center justify-center gap-2.5 mb-7">
+            <div className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-accent to-accent-honey flex items-center justify-center text-white font-bold text-lg">
+              F
+            </div>
+            <div>
+              <div className="text-base font-semibold text-heading tracking-tight">FlatMate</div>
+              <div className="text-[11px] text-body-muted">Shared living, simplified</div>
+            </div>
+          </div>
+
+          <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-5 ring-1 ring-accent/20">
+            <Mail className="w-7 h-7 text-accent" />
+          </div>
+
+          <h1 className="text-lg font-semibold text-heading mb-1.5">
+            {t('login.verifyEmailTitle')}
+          </h1>
+
+          <p className="text-[13px] text-body-muted mb-6">
+            {t('login.verifyEmailSubtitle', { email })}
+          </p>
+
+          <button
+            onClick={handleResend}
+            disabled={isLoading || resendCooldown > 0}
+            className="w-full h-[42px] bg-gradient-to-r from-accent to-accent-honey text-white text-[14px] font-medium rounded-[10px] shadow-[0_4px_16px_rgba(249,115,22,0.25)] disabled:opacity-60 flex items-center justify-center gap-2 mb-3"
+          >
+            {isLoading && <LoaderCircle className="w-4 h-4 animate-spin" />}
+            {resendCooldown > 0
+              ? t('login.verifyEmailResendCooldown', { seconds: resendCooldown })
+              : t('login.verifyEmailResend')
+            }
+          </button>
+
+          <Link
+            href="/login"
+            className="flex items-center justify-center gap-1.5 text-[13px] text-body-muted hover:text-heading transition-colors mx-auto"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {t('login.verifyEmailBackToSignIn')}
+          </Link>
+        </motion.div>
+      </motion.div>
+    </div>
   );
 }
