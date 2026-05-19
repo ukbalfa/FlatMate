@@ -11,7 +11,6 @@ import {
   sendPasswordResetEmail,
   sendEmailVerification,
   GoogleAuthProvider,
-  onAuthStateChanged,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
@@ -31,7 +30,7 @@ declare global {
     };
     Telegram?: {
       Login: {
-        init: (options: { client_id: string; redirect_uri?: string; request_access?: string[] }, callback: (data: { id_token?: string; user?: Record<string, string>; error?: string }) => void) => void;
+        init: (options: { bot_id: number; origin?: string; request_access?: string[] }, callback: (data: { id_token?: string; user?: Record<string, string>; error?: string }) => void) => void;
         open: () => void;
       };
     };
@@ -78,14 +77,40 @@ export default function LoginPage() {
     });
   }
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        router.replace('/dashboard');
-      }
+  async function verifyCaptcha(): Promise<boolean> {
+    if (activeTab !== 'signup' || !process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) {
+      return true;
+    }
+    if (hcaptchaError) {
+      setError(t('login.errorCaptchaRequired'));
+      return false;
+    }
+    const captchaToken = window.hcaptcha?.getResponse(hcaptchaWidgetId.current ?? undefined);
+    if (!captchaToken) {
+      setError(t('login.errorCaptchaRequired'));
+      return false;
+    }
+    const captchaResponse = await fetch('/api/auth/verify-captcha', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: captchaToken }),
     });
-    return () => unsubscribe();
-  }, [router]);
+    const captchaData = await captchaResponse.json();
+    if (!captchaData.success) {
+      setError(t('login.errorCaptchaFailed'));
+      return false;
+    }
+    return true;
+  }
+
+  function resetHcaptchaWidget() {
+    if (hcaptchaWidgetId.current !== null && window.hcaptcha) {
+      try {
+        window.hcaptcha.reset(hcaptchaWidgetId.current);
+      } catch { /* ignore */ }
+    }
+    setHcaptchaError('');
+  }
 
   const telegramScriptLoaded = useRef(false);
 
@@ -137,6 +162,10 @@ export default function LoginPage() {
       return;
     }
 
+    if (!(await verifyCaptcha())) {
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
@@ -144,7 +173,7 @@ export default function LoginPage() {
       await loadTelegramSDK();
 
       window.Telegram!.Login.init(
-        { client_id: clientId, redirect_uri: window.location.origin, request_access: ['write'] },
+        { bot_id: Number(clientId), origin: window.location.origin, request_access: ['write'] },
         async (data) => {
           if (data.error) {
             setError(t('login.telegramAuthFailed'));
@@ -171,10 +200,18 @@ export default function LoginPage() {
               return;
             }
             await signInWithCustomToken(auth, result.token);
-            if (auth.currentUser) {
-              await createSession(auth.currentUser);
+            try {
+              if (auth.currentUser) {
+                await createSession(auth.currentUser);
+              }
+              clearRateLimit();
+              router.push('/dashboard');
+            } catch (sessionErr) {
+              logError(sessionErr, 'Login.telegramCreateSession');
+              setError(t('login.errorGeneric'));
+            } finally {
+              setIsLoading(false);
             }
-            clearRateLimit();
           } catch (err) {
             recordFailedAttempt();
             logError(err, 'Login.telegramAuth');
@@ -290,6 +327,15 @@ export default function LoginPage() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (activeTab === 'signup' && !consentAccepted) {
+      setError(t('login.errorConsentRequired'));
+      return;
+    }
+
+    if (!(await verifyCaptcha())) {
+      return;
+    }
+
     setIsLoading(true);
     setError('');
     try {
@@ -330,6 +376,8 @@ export default function LoginPage() {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
+  // NOTE: Client-side rate limiting stored in sessionStorage is a soft UX guard only.
+  // It is trivially bypassed (clear sessionStorage, incognito). Do not rely on it for security.
   const getRateLimitState = (): { count: number; lastAttempt: number } => {
     if (typeof window === 'undefined') return { count: 0, lastAttempt: 0 };
     try {
@@ -417,7 +465,10 @@ export default function LoginPage() {
         recordFailedAttempt();
         return;
       }
-      await ensureUserProfile(userCredential.user.uid, { email });
+      await ensureUserProfile(userCredential.user.uid, {
+        email,
+        name: userCredential.user.displayName || undefined,
+      });
       await createSession(userCredential.user);
       clearRateLimit();
       router.push('/dashboard');
@@ -503,6 +554,7 @@ export default function LoginPage() {
       setPendingEmail(email);
       setShowVerifyStep(true);
     } catch (err) {
+      resetHcaptchaWidget();
       const code = (err as { code?: string }).code;
       let message = t('login.errorGeneric');
       switch (code) {
