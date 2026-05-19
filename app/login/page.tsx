@@ -20,6 +20,7 @@ import { logError } from '../../lib/errorLogger';
 import { toast } from 'sonner';
 import { getPasswordStrength, PasswordStrengthLevel } from '../../lib/passwordStrength';
 import OAuthButtons from './OAuthButtons';
+import LeftPanel from './LeftPanel';
 
 declare global {
   interface Window {
@@ -30,7 +31,7 @@ declare global {
     };
     Telegram?: {
       Login: {
-        init: (options: { bot_id: number; origin?: string; request_access?: string[] }, callback: (data: { id_token?: string; user?: Record<string, string>; error?: string }) => void) => void;
+        init: (element: Element | null, options: { bot_id: number; origin?: string; request_access?: string[] }, callback: (data: { id_token?: string; user?: Record<string, string>; error?: string }) => void) => void;
         open: () => void;
       };
     };
@@ -40,7 +41,8 @@ declare global {
 interface FieldErrors {
   email?: string;
   password?: string;
-  name?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export default function LoginPage() {
@@ -48,7 +50,8 @@ export default function LoginPage() {
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -56,7 +59,7 @@ export default function LoginPage() {
   const router = useRouter();
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
-  const nameRef = useRef<HTMLInputElement>(null);
+  const firstNameRef = useRef<HTMLInputElement>(null);
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrengthLevel>('weak');
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -81,10 +84,6 @@ export default function LoginPage() {
     if (activeTab !== 'signup' || !process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) {
       return true;
     }
-    if (hcaptchaError) {
-      setError(t('login.errorCaptchaRequired'));
-      return false;
-    }
     const captchaToken = window.hcaptcha?.getResponse(hcaptchaWidgetId.current ?? undefined);
     if (!captchaToken) {
       setError(t('login.errorCaptchaRequired'));
@@ -98,21 +97,39 @@ export default function LoginPage() {
     const captchaData = await captchaResponse.json();
     if (!captchaData.success) {
       setError(t('login.errorCaptchaFailed'));
+      resetHcaptchaWidget();
       return false;
     }
     return true;
   }
 
   function resetHcaptchaWidget() {
-    if (hcaptchaWidgetId.current !== null && window.hcaptcha) {
+    if (window.hcaptcha && hcaptchaWidgetId.current !== null) {
       try {
         window.hcaptcha.reset(hcaptchaWidgetId.current);
       } catch { /* ignore */ }
     }
     setHcaptchaError('');
+    const token = window.hcaptcha?.getResponse(hcaptchaWidgetId.current ?? undefined);
+    if (token) {
+      try {
+        window.hcaptcha?.reset(hcaptchaWidgetId.current ?? undefined);
+      } catch { /* ignore */ }
+    }
   }
 
   const telegramScriptLoaded = useRef(false);
+
+  const initTelegramWidget = (): HTMLElement => {
+    let widget = document.getElementById('telegram_login_widget');
+    if (!widget) {
+      widget = document.createElement('div');
+      widget.id = 'telegram_login_widget';
+      widget.style.display = 'none';
+      document.body.appendChild(widget);
+    }
+    return widget;
+  };
 
   const loadTelegramSDK = (): Promise<void> => {
     return new Promise((resolve, reject) => {
@@ -162,20 +179,32 @@ export default function LoginPage() {
       return;
     }
 
-    if (!(await verifyCaptcha())) {
-      return;
-    }
-
     setIsLoading(true);
     setError('');
+
+    if (activeTab === 'signup') {
+      resetHcaptchaWidget();
+    }
+
+    if (!(await verifyCaptcha())) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       await loadTelegramSDK();
 
+      const widgetElement = initTelegramWidget();
+
       window.Telegram!.Login.init(
+        widgetElement,
         { bot_id: Number(clientId), origin: window.location.origin, request_access: ['write'] },
         async (data) => {
           if (data.error) {
+            if (data.error === 'USER_CANCELLED') {
+              setIsLoading(false);
+              return;
+            }
             setError(t('login.telegramAuthFailed'));
             setIsLoading(false);
             return;
@@ -222,9 +251,16 @@ export default function LoginPage() {
       );
 
       window.Telegram!.Login.open();
-    } catch (err) {
+    } catch (err: unknown) {
       logError(err, 'Login.telegramLoad');
-      setError(t('login.errorPopupBlocked'));
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.includes('timeout')) {
+        setError(t('login.telegramSdkTimeout'));
+      } else if (message.includes('initialize') || message.includes('Failed to load')) {
+        setError(t('login.telegramSdkFailed'));
+      } else {
+        setError(t('login.errorPopupBlocked'));
+      }
       setIsLoading(false);
     }
   };
@@ -376,8 +412,6 @@ export default function LoginPage() {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  // NOTE: Client-side rate limiting stored in sessionStorage is a soft UX guard only.
-  // It is trivially bypassed (clear sessionStorage, incognito). Do not rely on it for security.
   const getRateLimitState = (): { count: number; lastAttempt: number } => {
     if (typeof window === 'undefined') return { count: 0, lastAttempt: 0 };
     try {
@@ -499,8 +533,8 @@ export default function LoginPage() {
     clearErrors();
 
     const errors: FieldErrors = {};
-    if (!name.trim()) {
-      errors.name = t('common.fillAllFields');
+    if (!firstName.trim()) {
+      errors.firstName = t('common.fillAllFields');
     }
     if (!email.trim() || !isValidEmail(email)) {
       errors.email = t('login.errorValidEmail');
@@ -548,7 +582,7 @@ export default function LoginPage() {
       await sendEmailVerification(userCredential.user);
       await ensureUserProfile(userCredential.user.uid, {
         email,
-        name: name.trim(),
+        name: `${firstName.trim()} ${lastName.trim()}`.trim(),
       });
       toast.success(t('login.signUpSuccess'));
       setPendingEmail(email);
@@ -592,7 +626,8 @@ export default function LoginPage() {
     clearErrors();
     setEmail('');
     setPassword('');
-    setName('');
+    setFirstName('');
+    setLastName('');
     setConsentAccepted(false);
     setPasswordStrength('weak');
     setShowVerifyStep(false);
@@ -608,52 +643,40 @@ export default function LoginPage() {
     }
   };
 
-  const inputClass = 'w-full h-10 bg-white/[0.03] border border-white/[0.08] rounded-[10px] px-3.5 text-sm text-heading placeholder:text-body-muted focus:ring-2 focus:ring-accent/30 focus:border-accent outline-none transition-all';
+  const inputClass = 'w-full h-12 bg-[#18181b] border border-[#27272a] rounded-[10px] px-4 text-sm text-white placeholder:text-[#71717a] focus:ring-2 focus:ring-white/20 focus:border-white/40 outline-none transition-all';
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg-page relative overflow-hidden">
-      {/* Top accent bar */}
-      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-accent via-accent-honey to-accent-lime" />
+    <div className="min-h-screen flex bg-[#000000] relative overflow-hidden">
+      {/* Left Panel - hidden on mobile */}
+      <div className="hidden lg:flex lg:w-[45%] xl:w-[42%] relative">
+        <LeftPanel activeTab={activeTab} />
+      </div>
 
-      {/* Dot grid background */}
-      <div className="absolute inset-0 bg-dot-grid opacity-[0.03] hidden sm:block" />
-
-      {/* Geometric shapes */}
-      <div className="absolute w-[300px] h-[300px] border border-accent/[0.06] rounded-full -top-20 -right-20 hidden sm:block" />
-      <div className="absolute w-[200px] h-[200px] border border-accent-lime/[0.04] rotate-45 -bottom-10 -left-10 hidden sm:block" />
-
-      {/* Back to Home */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
-        className="absolute top-6 left-6 z-10"
-      >
-        <Link
-          href="/"
-          className="flex items-center gap-1.5 text-sm text-body-muted hover:text-heading transition-colors"
+      {/* Right Panel - Form */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="w-full max-w-md"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Home
-        </Link>
-      </motion.div>
+          {/* Back to Home */}
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-white transition-colors mb-8"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </Link>
 
-      {/* Main card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-        className="w-full max-w-[380px] mx-4 relative z-10"
-      >
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-8">
-          {/* Logo */}
-          <div className="flex items-center gap-2.5 mb-7">
-            <div className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-accent to-accent-honey flex items-center justify-center text-white font-bold text-lg">
+          {/* Mobile logo */}
+          <div className="flex items-center gap-2.5 mb-8 lg:hidden">
+            <div className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-bold text-lg">
               F
             </div>
             <div>
-              <div className="text-base font-semibold text-heading tracking-tight">FlatMate</div>
-              <div className="text-[11px] text-body-muted">Shared living, simplified</div>
+              <div className="text-base font-semibold text-white tracking-tight">FlatMate</div>
+              <div className="text-[11px] text-zinc-500">Shared living, simplified</div>
             </div>
           </div>
 
@@ -661,7 +684,7 @@ export default function LoginPage() {
           <div
             role="tablist"
             aria-label="Authentication method"
-            className="flex items-center gap-0.5 p-[3px] bg-white/[0.04] border border-white/[0.06] rounded-[10px] mb-6"
+            className="flex items-center gap-0.5 p-[3px] bg-[#18181b] border border-[#27272a] rounded-[10px] mb-8"
           >
             <button
               role="tab"
@@ -670,10 +693,10 @@ export default function LoginPage() {
               aria-controls="panel-auth"
               onClick={() => handleTabChange('signin')}
               onKeyDown={(e) => handleTabKeyDown(e, 'signin')}
-              className={`flex-1 py-2 px-3 rounded-lg text-[13px] font-medium transition-all ${
+              className={`flex-1 py-2.5 px-3 rounded-lg text-[13px] font-medium transition-all ${
                 activeTab === 'signin'
-                  ? 'bg-gradient-to-r from-accent to-accent-honey text-white'
-                  : 'text-body-muted hover:text-body'
+                  ? 'bg-white text-black'
+                  : 'text-zinc-500 hover:text-white'
               }`}
             >
               {t('login.signInTab')}
@@ -685,10 +708,10 @@ export default function LoginPage() {
               aria-controls="panel-auth"
               onClick={() => handleTabChange('signup')}
               onKeyDown={(e) => handleTabKeyDown(e, 'signup')}
-              className={`flex-1 py-2 px-3 rounded-lg text-[13px] font-medium transition-all ${
+              className={`flex-1 py-2.5 px-3 rounded-lg text-[13px] font-medium transition-all ${
                 activeTab === 'signup'
-                  ? 'bg-gradient-to-r from-accent to-accent-honey text-white'
-                  : 'text-body-muted hover:text-body'
+                  ? 'bg-white text-black'
+                  : 'text-zinc-500 hover:text-white'
               }`}
             >
               {t('login.createAccountTab')}
@@ -696,10 +719,10 @@ export default function LoginPage() {
           </div>
 
           {/* Heading */}
-          <h2 className="text-[22px] font-semibold text-heading tracking-tight mb-1">
+          <h2 className="text-2xl font-semibold text-white tracking-tight mb-1">
             {activeTab === 'signin' ? t('login.welcomeBack') : t('login.createAccountTitle')}
           </h2>
-          <p className="text-[13px] text-body-muted mb-6">
+          <p className="text-sm text-zinc-500 mb-6">
             {activeTab === 'signin' ? t('login.signInToAccount') : t('login.createAccountSubtitle')}
           </p>
 
@@ -717,38 +740,53 @@ export default function LoginPage() {
             role="tabpanel"
             aria-labelledby={activeTab === 'signin' ? 'tab-signin' : 'tab-signup'}
             onSubmit={activeTab === 'signin' ? handleEmailSignIn : handleEmailSignUp}
-            className="space-y-3"
+            className="space-y-4"
             noValidate
           >
-            {/* Name field (signup only) */}
+            {/* Name fields (signup only) */}
             {activeTab === 'signup' && (
-              <div>
-                <label htmlFor="name" className="block text-[13px] text-body mb-1.5">
-                  {t('login.fullName')}
-                </label>
-                <input
-                  ref={nameRef}
-                  id="name"
-                  type="text"
-                  placeholder="e.g. John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className={`${inputClass} ${fieldErrors.name ? 'border-red-400 focus:ring-red-400/30 focus:border-red-400' : ''}`}
-                  aria-invalid={!!fieldErrors.name}
-                  aria-describedby={fieldErrors.name ? 'error-name' : undefined}
-                />
-                {fieldErrors.name && (
-                  <p id="error-name" role="alert" className="text-red-400 text-[12px] mt-1">
-                    {fieldErrors.name}
-                  </p>
-                )}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="firstName" className="block text-[13px] text-zinc-400 mb-1.5">
+                    First Name
+                  </label>
+                  <input
+                    ref={firstNameRef}
+                    id="firstName"
+                    type="text"
+                    placeholder="eg. John"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className={`${inputClass} ${fieldErrors.firstName ? 'border-red-400 focus:ring-red-400/30 focus:border-red-400' : ''}`}
+                    aria-invalid={!!fieldErrors.firstName}
+                    aria-describedby={fieldErrors.firstName ? 'error-firstname' : undefined}
+                  />
+                  {fieldErrors.firstName && (
+                    <p id="error-firstname" role="alert" className="text-red-400 text-[12px] mt-1">
+                      {fieldErrors.firstName}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="lastName" className="block text-[13px] text-zinc-400 mb-1.5">
+                    Last Name
+                  </label>
+                  <input
+                    id="lastName"
+                    type="text"
+                    placeholder="eg. Doe"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
               </div>
             )}
 
             {/* Email field */}
             <div>
-              <label htmlFor="email" className="block text-[13px] text-body mb-1.5">
-                {t('login.emailAddress')}
+              <label htmlFor="email" className="block text-[13px] text-zinc-400 mb-1.5">
+                Email
               </label>
               <input
                 ref={emailRef}
@@ -770,8 +808,8 @@ export default function LoginPage() {
 
             {/* Password field */}
             <div>
-              <label htmlFor="password" className="block text-[13px] text-body mb-1.5">
-                {t('auth.password')}
+              <label htmlFor="password" className="block text-[13px] text-zinc-400 mb-1.5">
+                Password
               </label>
               <div className="relative">
                 <input
@@ -781,7 +819,7 @@ export default function LoginPage() {
                   placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`${inputClass} pr-10 ${fieldErrors.password ? 'border-red-400 focus:ring-red-400/30 focus:border-red-400' : ''}`}
+                  className={`${inputClass} pr-12 ${fieldErrors.password ? 'border-red-400 focus:ring-red-400/30 focus:border-red-400' : ''}`}
                   aria-invalid={!!fieldErrors.password}
                   aria-describedby={fieldErrors.password ? 'error-password' : undefined}
                   autoComplete={activeTab === 'signin' ? 'current-password' : 'new-password'}
@@ -789,7 +827,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-body-muted hover:text-body transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -808,21 +846,20 @@ export default function LoginPage() {
                         key={level}
                         className={`h-1 flex-1 rounded-full transition-colors ${
                           passwordStrength === 'weak' ? 'bg-red-500' :
-                          passwordStrength === 'fair' ? (level <= 1 ? 'bg-orange-500' : 'bg-white/[0.06]') :
-                          passwordStrength === 'good' ? (level <= 2 ? 'bg-yellow-500' : 'bg-white/[0.06]') :
+                          passwordStrength === 'fair' ? (level <= 1 ? 'bg-orange-500' : 'bg-[#27272a]') :
+                          passwordStrength === 'good' ? (level <= 2 ? 'bg-yellow-500' : 'bg-[#27272a]') :
                           'bg-green-500'
                         }`}
                       />
                     ))}
                   </div>
-                  <p className="text-[11px] text-body-muted">
+                  <p className="text-[11px] text-zinc-500">
                     {t(`login.passwordStrength${passwordStrength.charAt(0).toUpperCase() + passwordStrength.slice(1)}`)}
                   </p>
                 </div>
               )}
-              {/* Password hint (signup) / Forgot link (signin) */}
               {activeTab === 'signup' && !fieldErrors.password && (
-                <p className="text-[12px] text-body-muted mt-1">
+                <p className="text-[12px] text-zinc-500 mt-1">
                   {t('login.passwordMinLength') || 'Min 8 characters'}
                 </p>
               )}
@@ -830,7 +867,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={handleForgotPassword}
-                  className="text-[12px] text-accent hover:underline mt-1"
+                  className="text-[12px] text-white hover:underline mt-1"
                   disabled={isLoading}
                 >
                   Forgot password?
@@ -846,15 +883,15 @@ export default function LoginPage() {
                   id="privacyConsent"
                   checked={consentAccepted}
                   onChange={(e) => setConsentAccepted(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded border-white/[0.08] text-accent focus:ring-accent/30"
+                  className="mt-0.5 w-4 h-4 rounded border-[#27272a] bg-[#18181b] text-white focus:ring-white/20"
                 />
-                <label htmlFor="privacyConsent" className="text-[12px] text-body leading-relaxed">
+                <label htmlFor="privacyConsent" className="text-[12px] text-zinc-400 leading-relaxed">
                   {t('login.privacyConsent')}{' '}
-                  <Link href="/privacy" className="text-accent hover:underline">
+                  <Link href="/privacy" className="text-white hover:underline">
                     {t('login.privacyPolicy')}
                   </Link>
                   {' '}{t('login.and')}{' '}
-                  <Link href="/terms" className="text-accent hover:underline">
+                  <Link href="/terms" className="text-white hover:underline">
                     {t('login.termsOfService')}
                   </Link>
                 </label>
@@ -878,7 +915,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading || (activeTab === 'signup' && (!consentAccepted || rateLimitCooldown > 0)) || (activeTab === 'signin' && rateLimitCooldown > 0)}
-              className="w-full h-[42px] bg-gradient-to-r from-accent to-accent-honey text-white text-[14px] font-medium rounded-[10px] shadow-[0_4px_16px_rgba(249,115,22,0.25)] disabled:opacity-60 flex items-center justify-center gap-2 mt-4"
+              className="w-full h-[44px] bg-white text-black text-[14px] font-semibold rounded-[10px] shadow-[0_4px_16px_rgba(255,255,255,0.1)] disabled:opacity-60 flex items-center justify-center gap-2 mt-6 hover:bg-white/90 active:scale-[0.98] transition-all"
             >
               {isLoading && <LoaderCircle className="w-4 h-4 animate-spin" />}
               {rateLimitCooldown > 0
@@ -912,19 +949,19 @@ export default function LoginPage() {
               transition={{ duration: 0.3 }}
               className="text-center py-6"
             >
-              <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-5 ring-1 ring-accent/20">
-                <Mail className="w-7 h-7 text-accent" />
+              <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-5 ring-1 ring-white/10">
+                <Mail className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-heading mb-1.5">
+              <h3 className="text-lg font-semibold text-white mb-1.5">
                 {t('login.verifyEmailTitle')}
               </h3>
-              <p className="text-[13px] text-body-muted mb-5">
+              <p className="text-[13px] text-zinc-500 mb-5">
                 {t('login.verifyEmailSubtitle', { email: pendingEmail })}
               </p>
               <button
                 onClick={handleResendVerification}
                 disabled={isLoading || resendCooldown > 0}
-                className="w-full h-[42px] bg-gradient-to-r from-accent to-accent-honey text-white text-[14px] font-medium rounded-[10px] shadow-[0_4px_16px_rgba(249,115,22,0.25)] disabled:opacity-60 flex items-center justify-center gap-2 mb-3"
+                className="w-full h-[44px] bg-white text-black text-[14px] font-semibold rounded-[10px] shadow-[0_4px_16px_rgba(255,255,255,0.1)] disabled:opacity-60 flex items-center justify-center gap-2 mb-3"
               >
                 {isLoading && <LoaderCircle className="w-4 h-4 animate-spin" />}
                 {resendCooldown > 0
@@ -934,7 +971,7 @@ export default function LoginPage() {
               </button>
               <button
                 onClick={() => handleTabChange('signin')}
-                className="text-[13px] text-accent hover:underline"
+                className="text-[13px] text-white hover:underline"
               >
                 {t('login.verifyEmailBackToSignIn')}
               </button>
@@ -942,19 +979,19 @@ export default function LoginPage() {
           )}
 
           {/* Footer link */}
-          <div className="mt-6 text-center">
-            <span className="text-[13px] text-body-muted">
+          <div className="mt-8 text-center">
+            <span className="text-[13px] text-zinc-500">
               {activeTab === 'signin' ? t('login.noAccountYet') : t('login.alreadyHaveAccount')}{' '}
               <button
                 onClick={() => handleTabChange(activeTab === 'signin' ? 'signup' : 'signin')}
-                className="text-accent hover:underline font-medium"
+                className="text-white hover:underline font-medium"
               >
                 {activeTab === 'signin' ? t('login.switchToSignUp') : t('login.switchToSignIn')}
               </button>
             </span>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }

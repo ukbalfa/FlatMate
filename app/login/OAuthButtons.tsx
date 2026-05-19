@@ -13,12 +13,13 @@ export default function OAuthButtons({ onGoogleSignIn, onTelegramClick, disabled
   const { t } = useI18n();
 
   return (
-    <div className="mb-5">
-      <div className="flex gap-2.5 mb-3">
+    <div className="mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-4">
         <button
+          type="button"
           onClick={onGoogleSignIn}
           disabled={disabled}
-          className="flex-1 flex items-center justify-center gap-2 h-[38px] bg-white/[0.04] border border-white/[0.08] rounded-[10px] px-3 text-sm text-body hover:text-heading hover:border-white/[0.15] transition disabled:opacity-60"
+          className="flex items-center justify-center gap-2 h-11 bg-[#18181b] border border-[#27272a] rounded-[10px] px-4 text-sm text-zinc-400 hover:text-white hover:border-zinc-600 transition-all disabled:opacity-60"
         >
           {disabled ? (
             <LoaderCircle className="w-4 h-4 animate-spin" />
@@ -34,9 +35,10 @@ export default function OAuthButtons({ onGoogleSignIn, onTelegramClick, disabled
         </button>
 
         <button
+          type="button"
           onClick={onTelegramClick}
           disabled={disabled}
-          className="flex-1 flex items-center justify-center gap-2 h-[38px] bg-white/[0.04] border border-white/[0.08] rounded-[10px] px-3 text-sm text-body hover:text-heading hover:border-white/[0.15] transition disabled:opacity-60"
+          className="flex items-center justify-center gap-2 h-11 bg-[#18181b] border border-[#27272a] rounded-[10px] px-4 text-sm text-zinc-400 hover:text-white hover:border-zinc-600 transition-all disabled:opacity-60"
         >
           {disabled ? (
             <LoaderCircle className="w-4 h-4 animate-spin" />
@@ -50,9 +52,9 @@ export default function OAuthButtons({ onGoogleSignIn, onTelegramClick, disabled
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="flex-1 h-px bg-white/[0.08]" />
-        <span className="text-[11px] text-body-muted uppercase tracking-[0.05em]">{t('login.orSignInWithEmail')}</span>
-        <div className="flex-1 h-px bg-white/[0.08]" />
+        <div className="flex-1 h-px bg-[#27272a]" />
+        <span className="text-[11px] text-zinc-500 uppercase tracking-[0.05em]">{t('login.orSignInWithEmail')}</span>
+        <div className="flex-1 h-px bg-[#27272a]" />
       </div>
     </div>
   );
