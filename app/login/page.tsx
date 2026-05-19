@@ -119,7 +119,6 @@ export default function LoginPage() {
   }
 
   const telegramScriptLoaded = useRef(false);
-  const telegramInitialized = useRef(false);
 
   const loadTelegramSDK = (): Promise<void> => {
     return new Promise((resolve, reject) => {
@@ -153,103 +152,12 @@ export default function LoginPage() {
     });
   };
 
-  // Pre-load Telegram SDK and init() ONCE on mount so open() is synchronous on click
+  // Pre-load Telegram SDK script on mount (no init — that happens on click)
   useEffect(() => {
-    const clientId = process.env.NEXT_PUBLIC_TELEGRAM_CLIENT_ID;
-    if (!clientId || typeof window === 'undefined' || telegramInitialized.current) return;
-
-    let widget = document.getElementById('telegram_login_widget');
-    if (!widget) {
-      widget = document.createElement('div');
-      widget.id = 'telegram_login_widget';
-      widget.style.display = 'none';
-      document.body.appendChild(widget);
-    }
-
-    loadTelegramSDK()
-      .then(() => {
-        if (!window.Telegram?.Login || telegramInitialized.current) return;
-        telegramInitialized.current = true;
-
-        window.Telegram.Login.init(
-          widget!,
-          { bot_id: Number(clientId), origin: window.location.origin, request_access: ['write'] },
-          async (data) => {
-            if (data.error) {
-              if (data.error === 'USER_CANCELLED') {
-                setIsLoading(false);
-                return;
-              }
-              setError(t('login.telegramAuthFailed'));
-              setIsLoading(false);
-              return;
-            }
-
-            if (!data.id_token) {
-              setError(t('login.telegramAuthFailed'));
-              setIsLoading(false);
-              return;
-            }
-
-            // Server-verify captcha after Telegram auth succeeds
-            if (activeTab === 'signup' && process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) {
-              const captchaToken = window.hcaptcha?.getResponse(hcaptchaWidgetId.current ?? undefined);
-              if (!captchaToken) {
-                setError(t('login.errorCaptchaRequired'));
-                resetHcaptchaWidget();
-                setIsLoading(false);
-                return;
-              }
-              const captchaResponse = await fetch('/api/auth/verify-captcha', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: captchaToken }),
-              });
-              const captchaData = await captchaResponse.json();
-              if (!captchaData.success) {
-                setError(t('login.errorCaptchaFailed'));
-                resetHcaptchaWidget();
-                setIsLoading(false);
-                return;
-              }
-            }
-
-            try {
-              const res = await fetch('/api/auth/telegram', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id_token: data.id_token }),
-              });
-              const result = await res.json();
-              if (!res.ok) {
-                setError(result.error || t('login.telegramAuthFailed'));
-                setIsLoading(false);
-                return;
-              }
-              await signInWithCustomToken(auth, result.token);
-              try {
-                if (auth.currentUser) {
-                  await createSession(auth.currentUser);
-                }
-                clearRateLimit();
-                router.push('/dashboard');
-              } catch (sessionErr) {
-                logError(sessionErr, 'Login.telegramCreateSession');
-                setError(t('login.errorGeneric'));
-              } finally {
-                setIsLoading(false);
-              }
-            } catch (err) {
-              recordFailedAttempt();
-              logError(err, 'Login.telegramAuth');
-              setError(t('login.telegramAuthFailed'));
-              setIsLoading(false);
-            }
-          },
-        );
-      })
-      .catch(() => { /* silent — will retry on click */ });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!process.env.NEXT_PUBLIC_TELEGRAM_CLIENT_ID) return;
+    if (typeof window === 'undefined') return;
+    loadTelegramSDK().catch(() => { /* silent — will retry on click */ });
+  }, []);
 
   const handleTelegramClick = () => {
     const clientId = process.env.NEXT_PUBLIC_TELEGRAM_CLIENT_ID;
@@ -276,54 +184,28 @@ export default function LoginPage() {
       }
     }
 
+    // Ensure widget element exists
+    let widget = document.getElementById('telegram_login_widget');
+    if (!widget) {
+      widget = document.createElement('div');
+      widget.id = 'telegram_login_widget';
+      widget.style.display = 'none';
+      document.body.appendChild(widget);
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    // If SDK not yet loaded, load it now then init+open
     if (!window.Telegram?.Login) {
-      // SDK not yet loaded — load it now, but popup will be in a new gesture context
-      setIsLoading(true);
-      setError('');
       loadTelegramSDK()
         .then(() => {
-          if (window.Telegram?.Login) {
-            // Re-init with current tab context since SDK loaded after first useEffect
-            const widget = document.getElementById('telegram_login_widget');
-            if (widget) {
-              window.Telegram.Login.init(
-                widget,
-                { bot_id: Number(clientId), origin: window.location.origin, request_access: ['write'] },
-                async (data) => {
-                  if (data.error) {
-                    if (data.error === 'USER_CANCELLED') { setIsLoading(false); return; }
-                    setError(t('login.telegramAuthFailed'));
-                    setIsLoading(false);
-                    return;
-                  }
-                  if (!data.id_token) { setError(t('login.telegramAuthFailed')); setIsLoading(false); return; }
-                  if (activeTab === 'signup' && process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) {
-                    const captchaToken = window.hcaptcha?.getResponse(hcaptchaWidgetId.current ?? undefined);
-                    if (!captchaToken) { setError(t('login.errorCaptchaRequired')); resetHcaptchaWidget(); setIsLoading(false); return; }
-                    const captchaResponse = await fetch('/api/auth/verify-captcha', {
-                      method: 'POST', headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ token: captchaToken }),
-                    });
-                    const captchaData = await captchaResponse.json();
-                    if (!captchaData.success) { setError(t('login.errorCaptchaFailed')); resetHcaptchaWidget(); setIsLoading(false); return; }
-                  }
-                  try {
-                    const res = await fetch('/api/auth/telegram', {
-                      method: 'POST', headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ id_token: data.id_token }),
-                    });
-                    const result = await res.json();
-                    if (!res.ok) { setError(result.error || t('login.telegramAuthFailed')); setIsLoading(false); return; }
-                    await signInWithCustomToken(auth, result.token);
-                    if (auth.currentUser) await createSession(auth.currentUser);
-                    clearRateLimit();
-                    router.push('/dashboard');
-                  } catch (err) { recordFailedAttempt(); logError(err, 'Login.telegramAuth'); setError(t('login.telegramAuthFailed')); } finally { setIsLoading(false); }
-                },
-              );
-              window.Telegram.Login.open();
-            }
+          if (!window.Telegram?.Login) {
+            setError(t('login.telegramSdkFailed'));
+            setIsLoading(false);
+            return;
           }
+          initAndOpenTelegram(widget!, clientId);
         })
         .catch((err: unknown) => {
           logError(err, 'Login.telegramLoad');
@@ -333,10 +215,89 @@ export default function LoginPage() {
       return;
     }
 
-    // SDK already initialized — open popup synchronously (preserves user gesture)
-    setIsLoading(true);
-    setError('');
-    window.Telegram.Login.open();
+    // SDK already loaded — init and open synchronously (preserves user gesture)
+    initAndOpenTelegram(widget, clientId);
+  };
+
+  const initAndOpenTelegram = (widget: HTMLElement, clientId: string) => {
+    window.Telegram!.Login.init(
+      widget,
+      { bot_id: Number(clientId), origin: window.location.origin, request_access: ['write'] },
+      async (data) => {
+        if (data.error) {
+          if (data.error === 'USER_CANCELLED') {
+            setIsLoading(false);
+            return;
+          }
+          setError(t('login.telegramAuthFailed'));
+          setIsLoading(false);
+          return;
+        }
+
+        if (!data.id_token) {
+          setError(t('login.telegramAuthFailed'));
+          setIsLoading(false);
+          return;
+        }
+
+        // Server-verify captcha after Telegram auth succeeds
+        if (activeTab === 'signup' && process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) {
+          const captchaToken = window.hcaptcha?.getResponse(hcaptchaWidgetId.current ?? undefined);
+          if (!captchaToken) {
+            setError(t('login.errorCaptchaRequired'));
+            resetHcaptchaWidget();
+            setIsLoading(false);
+            return;
+          }
+          const captchaResponse = await fetch('/api/auth/verify-captcha', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: captchaToken }),
+          });
+          const captchaData = await captchaResponse.json();
+          if (!captchaData.success) {
+            setError(t('login.errorCaptchaFailed'));
+            resetHcaptchaWidget();
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        try {
+          const res = await fetch('/api/auth/telegram', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_token: data.id_token }),
+          });
+          const result = await res.json();
+          if (!res.ok) {
+            setError(result.error || t('login.telegramAuthFailed'));
+            setIsLoading(false);
+            return;
+          }
+          await signInWithCustomToken(auth, result.token);
+          try {
+            if (auth.currentUser) {
+              await createSession(auth.currentUser);
+            }
+            clearRateLimit();
+            router.push('/dashboard');
+          } catch (sessionErr) {
+            logError(sessionErr, 'Login.telegramCreateSession');
+            setError(t('login.errorGeneric'));
+          } finally {
+            setIsLoading(false);
+          }
+        } catch (err) {
+          recordFailedAttempt();
+          logError(err, 'Login.telegramAuth');
+          setError(t('login.telegramAuthFailed'));
+          setIsLoading(false);
+        }
+      },
+    );
+
+    window.Telegram!.Login.open();
   };
 
   useEffect(() => {
