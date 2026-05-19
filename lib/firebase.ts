@@ -38,6 +38,8 @@ function getSafeFirestore(app: FirebaseApp | null): Firestore {
     });
   }
   try {
+    // To temporarily disable persistence for testing, replace the block below with:
+    //   return getFirestore(app);
     return initializeFirestore(app, {
       localCache: persistentLocalCache({
         tabManager: persistentMultipleTabManager(),

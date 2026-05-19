@@ -80,10 +80,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
-      if (firebaseUser) {
-        try {
+      try {
+        if (firebaseUser) {
           const docRef = doc(db, 'users', firebaseUser.uid);
-          const docSnap = await getDoc(docRef);
+          const docSnap = await Promise.race([
+            getDoc(docRef),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('Firestore getDoc timed out')), 8000)
+            ),
+          ]);
           const profile = docSnap.exists()
             ? ({ uid: firebaseUser.uid, ...docSnap.data() } as UserProfile)
             : { uid: firebaseUser.uid, username: firebaseUser.email || 'Unknown' };
@@ -105,17 +110,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               // Non-critical — claim will sync on next login
             }
           }
-        } catch (error) {
+        } else {
+          setUserProfile(null);
+          setCachedProfile(null);
+        }
+      } catch (error) {
+        if (firebaseUser) {
           logError(error, 'AuthContext');
           const fallback = { uid: firebaseUser.uid, username: firebaseUser.email || 'Unknown' };
           setUserProfile(fallback);
           setCachedProfile(fallback);
         }
-      } else {
-        setUserProfile(null);
-        setCachedProfile(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
     
     return () => {

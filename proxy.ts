@@ -4,7 +4,7 @@ import { decryptSession, SESSION_COOKIE } from './lib/session';
 const PROTECTED_PREFIX = '/dashboard';
 const LOGIN_PATH = '/login';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const sessionCookie = request.cookies.get(SESSION_COOKIE)?.value;
   const session = sessionCookie ? await decryptSession(sessionCookie) : null;

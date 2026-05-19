@@ -10,6 +10,7 @@ import {
   signInWithCustomToken,
   sendPasswordResetEmail,
   sendEmailVerification,
+  signOut,
   GoogleAuthProvider,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -73,11 +74,15 @@ export default function LoginPage() {
 
   async function createSession(user: import('firebase/auth').User): Promise<void> {
     const idToken = await user.getIdToken();
-    await fetch('/api/auth/session', {
+    const res = await fetch('/api/auth/session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ idToken }),
     });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error((body as { error?: string }).error || 'Session creation failed');
+    }
   }
 
   async function verifyCaptcha(): Promise<boolean> {
@@ -418,8 +423,13 @@ export default function LoginPage() {
         name: firebaseUser.displayName,
         avatar: firebaseUser.photoURL,
       });
-      await createSession(firebaseUser);
-      router.push('/dashboard');
+      try {
+        await createSession(firebaseUser);
+        router.push('/dashboard');
+      } catch (sessionErr) {
+        await signOut(auth);
+        setError((sessionErr as Error).message || t('login.errorGeneric'));
+      }
     } catch (err: unknown) {
       const errObj = err as { code?: string; message?: string };
       const code = errObj.code;
@@ -538,9 +548,14 @@ export default function LoginPage() {
         email,
         name: userCredential.user.displayName || undefined,
       });
-      await createSession(userCredential.user);
-      clearRateLimit();
-      router.push('/dashboard');
+      try {
+        await createSession(userCredential.user);
+        clearRateLimit();
+        router.push('/dashboard');
+      } catch (sessionErr) {
+        await signOut(auth);
+        setError((sessionErr as Error).message || t('login.errorGeneric'));
+      }
     } catch (err) {
       recordFailedAttempt();
       const code = (err as { code?: string }).code;
