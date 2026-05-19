@@ -182,11 +182,10 @@ export default function LoginPage() {
     setIsLoading(true);
     setError('');
 
-    if (activeTab === 'signup') {
-      resetHcaptchaWidget();
-    }
-
     if (!(await verifyCaptcha())) {
+      if (activeTab === 'signup') {
+        resetHcaptchaWidget();
+      }
       setIsLoading(false);
       return;
     }
