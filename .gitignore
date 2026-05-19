@@ -23,12 +23,14 @@
 # misc
 .DS_Store
 *.pem
+Thumbs.db
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
 
 # env files — DO NOT COMMIT (contains secrets / credentials)
 .env
@@ -41,6 +43,37 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# AI assistants & prompt files
 .aider*
 .mcp.json
 .superpowers/
+.cursor*
+.claude*
+*.prompt
+*.prompt.md
+PROMPT*
+prompt*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# cache
+.cache/
+.turbo/
+.eslintcache
+
+# temporary docs & planning files
+docs/superpowers/
+*.tmp
+*.bak
