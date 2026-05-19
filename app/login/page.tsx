@@ -163,7 +163,7 @@ export default function LoginPage() {
     });
   };
 
-  const handleTelegramClick = async () => {
+  const handleTelegramClick = () => {
     const clientId = process.env.NEXT_PUBLIC_TELEGRAM_CLIENT_ID;
     if (!clientId) {
       setError(t('login.telegramNotConfigured'));
@@ -179,20 +179,35 @@ export default function LoginPage() {
       return;
     }
 
+    // Synchronous captcha check — must not await or gesture context is lost
+    if (activeTab === 'signup' && process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) {
+      const captchaToken = window.hcaptcha?.getResponse(hcaptchaWidgetId.current ?? undefined);
+      if (!captchaToken) {
+        setError(t('login.errorCaptchaRequired'));
+        return;
+      }
+    }
+
     setIsLoading(true);
     setError('');
 
-    if (!(await verifyCaptcha())) {
-      if (activeTab === 'signup') {
-        resetHcaptchaWidget();
-      }
-      setIsLoading(false);
-      return;
+    // Telegram SDK must already be loaded — if not, load it now but popup
+    // will be in a new gesture context. Pre-loading is handled by useEffect.
+    if (!window.Telegram?.Login) {
+      loadTelegramSDK()
+        .then(() => openTelegramPopup(clientId))
+        .catch((err: unknown) => {
+          logError(err, 'Login.telegramLoad');
+          setError(t('login.errorPopupBlocked'));
+          setIsLoading(false);
+        });
+    } else {
+      openTelegramPopup(clientId);
     }
+  };
 
+  const openTelegramPopup = (clientId: string) => {
     try {
-      await loadTelegramSDK();
-
       const widgetElement = initTelegramWidget();
 
       window.Telegram!.Login.init(
@@ -213,6 +228,29 @@ export default function LoginPage() {
             setError(t('login.telegramAuthFailed'));
             setIsLoading(false);
             return;
+          }
+
+          // Server-verify captcha after Telegram auth succeeds
+          if (activeTab === 'signup' && process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY) {
+            const captchaToken = window.hcaptcha?.getResponse(hcaptchaWidgetId.current ?? undefined);
+            if (!captchaToken) {
+              setError(t('login.errorCaptchaRequired'));
+              resetHcaptchaWidget();
+              setIsLoading(false);
+              return;
+            }
+            const captchaResponse = await fetch('/api/auth/verify-captcha', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ token: captchaToken }),
+            });
+            const captchaData = await captchaResponse.json();
+            if (!captchaData.success) {
+              setError(t('login.errorCaptchaFailed'));
+              resetHcaptchaWidget();
+              setIsLoading(false);
+              return;
+            }
           }
 
           try {
@@ -263,6 +301,13 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  // Pre-load Telegram SDK on mount so popup opens synchronously
+  useEffect(() => {
+    if (!process.env.NEXT_PUBLIC_TELEGRAM_CLIENT_ID) return;
+    if (typeof window === 'undefined') return;
+    loadTelegramSDK().catch(() => { /* silent — will retry on click */ });
+  }, []);
 
   useEffect(() => {
     if (activeTab !== 'signup' || typeof window === 'undefined') return;
