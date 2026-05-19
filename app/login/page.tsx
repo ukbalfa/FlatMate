@@ -814,7 +814,7 @@ export default function LoginPage() {
               <div>
                 <div
                   ref={hcaptchaContainerRef}
-                  className="h-captcha min-h-[78px]"
+                  className="min-h-[78px]"
                 />
                 {hcaptchaError && (
                   <p className="text-red-400 text-[12px] mt-2 text-center">{hcaptchaError}</p>
