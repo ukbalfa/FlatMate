@@ -21,19 +21,30 @@ interface TelegramClaims {
   sub: string;
   iat: number;
   exp: number;
+  nonce?: string;
   id: number;
   name?: string;
   preferred_username?: string;
   picture?: string;
 }
 
+let cachedJwksPromise: Promise<JWKSKey[]> | null = null;
+let jwksCacheExpiry = 0;
+
 async function fetchJWKS(): Promise<JWKSKey[]> {
-  const res = await fetch('https://oauth.telegram.org/.well-known/jwks.json', {
-    next: { revalidate: 3600 },
-  });
-  if (!res.ok) throw new Error('Failed to fetch Telegram JWKS');
-  const data: JWKSResponse = await res.json();
-  return data.keys;
+  if (Date.now() < jwksCacheExpiry && cachedJwksPromise) {
+    return cachedJwksPromise;
+  }
+  cachedJwksPromise = fetch('https://oauth.telegram.org/.well-known/jwks.json')
+    .then((res) => {
+      if (!res.ok) throw new Error('Failed to fetch Telegram JWKS');
+      return res.json() as Promise<JWKSResponse>;
+    })
+    .then((data) => {
+      jwksCacheExpiry = Date.now() + 3600_000;
+      return data.keys;
+    });
+  return cachedJwksPromise;
 }
 
 function base64UrlDecode(base64Url: string): Uint8Array {
@@ -81,7 +92,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id_token } = body;
+    const { id_token, nonce } = body;
 
     if (!id_token) {
       return NextResponse.json({ error: 'Missing id_token' }, { status: 400 });
@@ -98,12 +109,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid audience' }, { status: 401 });
     }
 
+    if (!claims.sub || typeof claims.sub !== 'string') {
+      return NextResponse.json({ error: 'Invalid subject' }, { status: 401 });
+    }
+
     if (claims.exp * 1000 < Date.now()) {
       return NextResponse.json({ error: 'Token expired' }, { status: 401 });
     }
 
     if (claims.iat * 1000 > Date.now() + 60000) {
       return NextResponse.json({ error: 'Token issued in the future' }, { status: 401 });
+    }
+
+    if (nonce && claims.nonce !== nonce) {
+      return NextResponse.json({ error: 'Invalid nonce' }, { status: 401 });
     }
 
     getAdminApp();

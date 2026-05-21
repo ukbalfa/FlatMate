@@ -18,6 +18,7 @@ export interface UserProfile {
   occupation?: string;
   phone?: string;
   telegram?: string;
+  telegramId?: string;
   instagram?: string;
   joinedAt?: string;
 }

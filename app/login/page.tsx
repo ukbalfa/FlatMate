@@ -32,7 +32,19 @@ declare global {
     };
     Telegram?: {
       Login: {
-        init: (options: { client_id: string; request_access?: string[] }, callback: (data: { id_token?: string; user?: Record<string, string>; error?: string }) => void) => void;
+        init: (
+          options: {
+            client_id: string;
+            request_access?: string[];
+            lang?: string;
+            nonce?: string;
+          },
+          callback: (data: {
+            id_token?: string;
+            user?: { id: number; name?: string; preferred_username?: string; picture?: string };
+            error?: string;
+          }) => void,
+        ) => void;
         open: () => void;
       };
     };
@@ -47,7 +59,7 @@ interface FieldErrors {
 }
 
 export default function LoginPage() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -189,6 +201,11 @@ export default function LoginPage() {
       }
     }
 
+    const nonce = crypto.randomUUID();
+    try {
+      sessionStorage.setItem('telegram_nonce', nonce);
+    } catch { /* sessionStorage may be unavailable */ }
+
     setIsLoading(true);
     setError('');
 
@@ -201,7 +218,7 @@ export default function LoginPage() {
             setIsLoading(false);
             return;
           }
-          initAndOpenTelegram(clientId);
+          initAndOpenTelegram(clientId, nonce);
         })
         .catch((err: unknown) => {
           logError(err, 'Login.telegramLoad');
@@ -212,13 +229,24 @@ export default function LoginPage() {
     }
 
     // SDK already loaded — init and open synchronously (preserves user gesture)
-    initAndOpenTelegram(clientId);
+    initAndOpenTelegram(clientId, nonce);
   };
 
-  const initAndOpenTelegram = (clientId: string) => {
+  const initAndOpenTelegram = (clientId: string, nonce?: string) => {
+    const savedNonce = nonce || (() => {
+      try { return sessionStorage.getItem('telegram_nonce'); } catch { return null; }
+    })();
+
     window.Telegram!.Login.init(
-      { client_id: clientId, request_access: ['write'] },
+      {
+        client_id: clientId,
+        request_access: ['write'],
+        lang: language,
+        ...(savedNonce ? { nonce: savedNonce } : {}),
+      },
       async (data) => {
+        try { sessionStorage.removeItem('telegram_nonce'); } catch { /* ignore */ }
+
         if (data.error) {
           if (data.error === 'USER_CANCELLED') {
             setIsLoading(false);
@@ -262,7 +290,10 @@ export default function LoginPage() {
           const res = await fetch('/api/auth/telegram', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id_token: data.id_token }),
+            body: JSON.stringify({
+              id_token: data.id_token,
+              ...(savedNonce ? { nonce: savedNonce } : {}),
+            }),
           });
           const result = await res.json();
           if (!res.ok) {
@@ -280,6 +311,7 @@ export default function LoginPage() {
           } catch (sessionErr) {
             logError(sessionErr, 'Login.telegramCreateSession');
             setError(t('login.errorGeneric'));
+            setIsLoading(false);
           } finally {
             setIsLoading(false);
           }
