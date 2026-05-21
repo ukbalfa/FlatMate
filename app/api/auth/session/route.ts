@@ -30,8 +30,9 @@ export async function POST(request: NextRequest) {
     });
     return response;
   } catch (error) {
-    console.error('[session POST]', error);
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const message = error instanceof Error ? error.message : 'Unauthorized';
+    console.error('[session POST]', JSON.stringify({ message, projectId: process.env.FIREBASE_PROJECT_ID }));
+    return NextResponse.json({ error: `Session: ${message}` }, { status: 401 });
   }
 }
 
