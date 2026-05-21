@@ -295,16 +295,14 @@ export default function LoginPage() {
             setIsLoading(false);
             return;
           }
-          await signInWithCustomToken(auth, result.token);
+          const credential = await signInWithCustomToken(auth, result.token);
           try {
-            if (auth.currentUser) {
-              await createSession(auth.currentUser);
-            }
+            await createSession(credential.user);
             clearRateLimit();
             router.push('/dashboard');
           } catch (sessionErr) {
             logError(sessionErr, 'Login.telegramCreateSession');
-            setError(t('login.errorGeneric'));
+            setError(sessionErr instanceof Error ? sessionErr.message : t('login.errorGeneric'));
             setIsLoading(false);
           } finally {
             setIsLoading(false);
