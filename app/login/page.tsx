@@ -32,7 +32,7 @@ declare global {
     };
     Telegram?: {
       Login: {
-        init: (element: Element | null, options: { bot_id: number; origin?: string; request_access?: string[] }, callback: (data: { id_token?: string; user?: Record<string, string>; error?: string }) => void) => void;
+        init: (options: { client_id: string; request_access?: string[] }, callback: (data: { id_token?: string; user?: Record<string, string>; error?: string }) => void) => void;
         open: () => void;
       };
     };
@@ -189,15 +189,6 @@ export default function LoginPage() {
       }
     }
 
-    // Ensure widget element exists
-    let widget = document.getElementById('telegram_login_widget');
-    if (!widget) {
-      widget = document.createElement('div');
-      widget.id = 'telegram_login_widget';
-      widget.style.display = 'none';
-      document.body.appendChild(widget);
-    }
-
     setIsLoading(true);
     setError('');
 
@@ -210,7 +201,7 @@ export default function LoginPage() {
             setIsLoading(false);
             return;
           }
-          initAndOpenTelegram(widget!, clientId);
+          initAndOpenTelegram(clientId);
         })
         .catch((err: unknown) => {
           logError(err, 'Login.telegramLoad');
@@ -221,13 +212,12 @@ export default function LoginPage() {
     }
 
     // SDK already loaded — init and open synchronously (preserves user gesture)
-    initAndOpenTelegram(widget, clientId);
+    initAndOpenTelegram(clientId);
   };
 
-  const initAndOpenTelegram = (widget: HTMLElement, clientId: string) => {
+  const initAndOpenTelegram = (clientId: string) => {
     window.Telegram!.Login.init(
-      widget,
-      { bot_id: Number(clientId), origin: window.location.origin, request_access: ['write'] },
+      { client_id: clientId, request_access: ['write'] },
       async (data) => {
         if (data.error) {
           if (data.error === 'USER_CANCELLED') {
