@@ -32,19 +32,8 @@ declare global {
     };
     Telegram?: {
       Login: {
-        init: (
-          options: {
-            client_id: string;
-            request_access?: string[];
-            lang?: string;
-            nonce?: string;
-          },
-          callback: (data: {
-            id_token?: string;
-            user?: { id: number; name?: string; preferred_username?: string; picture?: string };
-            error?: string;
-          }) => void,
-        ) => void;
+        init: (options: Record<string, unknown>, callback: (data: Record<string, unknown>) => void) => void;
+        initOidc: (options: Record<string, unknown>, callback: (data: Record<string, unknown>) => void) => void;
         open: () => void;
       };
     };
@@ -237,18 +226,21 @@ export default function LoginPage() {
       try { return sessionStorage.getItem('telegram_nonce'); } catch { return null; }
     })();
 
+    const initOptions: Record<string, unknown> = {
+      client_id: clientId,
+      scope: 'openid',
+      lang: language,
+      ...(savedNonce ? { nonce: savedNonce } : {}),
+    };
+
     window.Telegram!.Login.init(
-      {
-        client_id: clientId,
-        request_access: ['write'],
-        lang: language,
-        ...(savedNonce ? { nonce: savedNonce } : {}),
-      },
-      async (data) => {
+      initOptions,
+      async (data: Record<string, unknown>) => {
         try { sessionStorage.removeItem('telegram_nonce'); } catch { /* ignore */ }
 
-        if (data.error) {
-          if (data.error === 'USER_CANCELLED') {
+        if ((data as { error?: string }).error) {
+          const err = (data as { error?: string }).error;
+          if (err === 'USER_CANCELLED') {
             setIsLoading(false);
             return;
           }
@@ -257,7 +249,9 @@ export default function LoginPage() {
           return;
         }
 
-        if (!data.id_token) {
+        const idToken = (data as { id_token?: string }).id_token;
+        if (!idToken) {
+          console.error('[Telegram Auth] callback data missing id_token:', JSON.stringify(data));
           setError(t('login.telegramAuthFailed'));
           setIsLoading(false);
           return;
@@ -291,7 +285,7 @@ export default function LoginPage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              id_token: data.id_token,
+              id_token: idToken,
               ...(savedNonce ? { nonce: savedNonce } : {}),
             }),
           });

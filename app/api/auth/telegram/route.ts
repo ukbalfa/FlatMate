@@ -105,11 +105,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid issuer' }, { status: 401 });
     }
 
-    if (claims.aud !== clientId) {
+    if (String(claims.aud) !== String(clientId)) {
       return NextResponse.json({ error: 'Invalid audience' }, { status: 401 });
     }
 
-    if (!claims.sub || typeof claims.sub !== 'string') {
+    if (!claims.sub) {
       return NextResponse.json({ error: 'Invalid subject' }, { status: 401 });
     }
 
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Token issued in the future' }, { status: 401 });
     }
 
-    if (nonce && claims.nonce !== nonce) {
+    if (nonce && String(claims.nonce) !== String(nonce)) {
       return NextResponse.json({ error: 'Invalid nonce' }, { status: 401 });
     }
 
@@ -160,7 +160,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ token: customToken });
   } catch (error) {
-    console.error('[Telegram Auth]', error);
-    return NextResponse.json({ error: 'Authentication failed' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Authentication failed';
+    console.error('[Telegram Auth]', message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
