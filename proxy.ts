@@ -7,7 +7,12 @@ const LOGIN_PATH = '/login';
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const sessionCookie = request.cookies.get(SESSION_COOKIE)?.value;
-  const session = sessionCookie ? await decryptSession(sessionCookie) : null;
+  let session = null;
+  if (sessionCookie) {
+    try {
+      session = await decryptSession(sessionCookie);
+    } catch {}
+  }
 
   const isProtected = pathname.startsWith(PROTECTED_PREFIX);
   const isLoginPage = pathname === LOGIN_PATH;

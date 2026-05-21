@@ -176,10 +176,11 @@ export default function BalancesPage() {
         });
       } else {
         // Split only among designated members + payer
-        const shareAmount = Math.round(amount / (e.splitWith.length + 1));
+        const splitCount = e.splitWith.length;
+        const shareAmount = Math.round(amount / (splitCount + 1));
 
         if (userStats[payer]) {
-          userStats[payer].netBalance += amount - shareAmount;
+          userStats[payer].netBalance += shareAmount * splitCount;
         }
 
         e.splitWith.forEach((member) => {
@@ -201,7 +202,7 @@ export default function BalancesPage() {
   }, [expenses, users, settlements]);
 
   const debts = useMemo(() => {
-    const creditors = balances.filter((b) => b.netBalance > 0);
+    const creditors = balances.filter((b) => b.netBalance > 0).map((c) => ({ ...c }));
     const debtors = balances.filter((b) => b.netBalance < 0);
     const result: { from: string; fromName: string; to: string; toName: string; amount: number }[] = [];
     debtors.forEach((debtor) => {
@@ -218,6 +219,7 @@ export default function BalancesPage() {
             amount: Math.round(amount * 100) / 100,
           });
           remainingDebt -= amount;
+          creditor.netBalance -= amount;
         }
       });
     });
@@ -273,7 +275,7 @@ export default function BalancesPage() {
               <span className="text-gray-400 text-sm">{t('balances.totalExpenses')}</span>
             </div>
             <p className="text-2xl font-bold text-white">
-              {totalExpenses.toLocaleString()} ${DEFAULT_CURRENCY}
+              {totalExpenses.toLocaleString()} {DEFAULT_CURRENCY}
             </p>
           </div>
           <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
@@ -282,7 +284,7 @@ export default function BalancesPage() {
               <span className="text-gray-400 text-sm">{t('balances.sharePerPerson')}</span>
             </div>
             <p className="text-2xl font-bold text-white">
-              {users.length > 0 ? Math.round(totalExpenses / users.length).toLocaleString() : '0'} ${DEFAULT_CURRENCY}
+              {users.length > 0 ? Math.round(totalExpenses / users.length).toLocaleString() : '0'} {DEFAULT_CURRENCY}
             </p>
           </div>
           <div className="bg-[#1a1d27] border border-white/5 rounded-xl p-6">
@@ -319,7 +321,7 @@ export default function BalancesPage() {
                       <div>
                         <p className="text-white font-medium">{balance.name}</p>
                         <p className="text-sm text-gray-500">
-                          {t('balances.paid')}: {balance.paid.toLocaleString()} ${DEFAULT_CURRENCY}
+                          {t('balances.paid')}: {balance.paid.toLocaleString()} {DEFAULT_CURRENCY}
                         </p>
                       </div>
                     </div>
@@ -395,7 +397,7 @@ export default function BalancesPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-semibold text-amber-400">
-                          {debt.amount.toLocaleString()} ${DEFAULT_CURRENCY}
+                          {debt.amount.toLocaleString()} {DEFAULT_CURRENCY}
                         </p>
                       </div>
                     </motion.div>
@@ -455,7 +457,7 @@ export default function BalancesPage() {
                         </div>
                         <div className="flex items-center gap-4">
                           <p className="text-lg font-semibold text-white">
-                            {settlement.amount.toLocaleString()} ${DEFAULT_CURRENCY}
+                            {settlement.amount.toLocaleString()} {DEFAULT_CURRENCY}
                           </p>
                           {isAdmin && (
                             <button

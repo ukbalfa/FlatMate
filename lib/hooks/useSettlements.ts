@@ -14,6 +14,13 @@ interface SettlementsData {
   refetch: () => void;
 }
 
+function getNextMonth(month: string): string {
+  const [year, m] = month.split('-').map(Number);
+  if (!year || !m) return month;
+  if (m === 12) return `${year + 1}-01`;
+  return `${year}-${String(m + 1).padStart(2, '0')}`;
+}
+
 export function useSettlements(flatId: string | undefined, month: string): SettlementsData {
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -35,6 +42,7 @@ export function useSettlements(flatId: string | undefined, month: string): Settl
 
     const load = async () => {
       try {
+        const nextMonth = getNextMonth(month);
         const [usersSnap, expensesSnap, settlementsSnap] = await Promise.all([
           getDocs(
             query(
@@ -48,7 +56,7 @@ export function useSettlements(flatId: string | undefined, month: string): Settl
               collection(db, 'expenses'),
               where('flatId', '==', flatId),
               where('date', '>=', `${month}-01`),
-              where('date', '<=', `${month}-31`),
+              where('date', '<', `${nextMonth}-01`),
               orderBy('date', 'desc'),
               limit(200),
             ),
@@ -57,7 +65,9 @@ export function useSettlements(flatId: string | undefined, month: string): Settl
             query(
               collection(db, 'settlements'),
               where('flatId', '==', flatId),
-              orderBy('createdAt', 'desc'),
+              where('date', '>=', `${month}-01`),
+              where('date', '<', `${nextMonth}-01`),
+              orderBy('date', 'desc'),
               limit(100),
             ),
           ),

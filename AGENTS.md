@@ -20,7 +20,7 @@ Run a single test: `npm run test -- <path>` (e.g. `npm run test -- __tests__/uti
 ## Architecture
 
 - **App Router** under `app/`. Protected routes under `app/dashboard/` require a valid session cookie (`fm_session`).
-- **Middleware** (`middleware.ts`) guards `/dashboard/*` → redirects to `/login`. Authenticated users on `/login` redirect to `/dashboard`.
+- **Proxy** (`proxy.ts`) guards `/dashboard/*` → redirects to `/login`. Authenticated users on `/login` redirect to `/dashboard`.
 - **Server Actions** in `app/actions/` use Firebase Admin SDK for privileged operations (create/delete data). Client UI uses Firebase Client SDK directly.
 - **API routes** under `app/api/` — currently only `api/auth/` for session management and Telegram Auth.
 - **Client SDK** (`lib/firebase.ts`) uses proxy fallbacks so the app doesn't crash if Firebase is unconfigured. Firestore has persistent multi-tab caching enabled.

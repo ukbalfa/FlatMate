@@ -138,7 +138,8 @@ export default function RoommatesPage() {
       const secondaryApp = getApps().find(a => a.name === 'Secondary')
         ?? initializeApp(config, 'Secondary');
       const secondaryAuth = getAuth(secondaryApp);
-      const userCred = await createUserWithEmailAndPassword(secondaryAuth, username, password);
+      const email = `${username}@flatmate.app`;
+      const userCred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
       await signOut(secondaryAuth);
       await setDoc(doc(db, 'users', userCred.user.uid), {
         name, surname, username, role: 'roommate', color,
@@ -151,7 +152,6 @@ export default function RoommatesPage() {
       });
       setName(''); setSurname(''); setUsername(''); setPassword('');
       setColor('blue'); setOccupation(''); setPhone(''); setTelegram(''); setInstagram('');
-      setAdding(false);
       fetchUsers();
       toast.success('Roommate added successfully!');
     } catch (err) {

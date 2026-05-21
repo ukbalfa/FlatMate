@@ -24,14 +24,14 @@ export default function TasksPage() {
   const { t } = useI18n();
   const { createNotification } = useNotifications();
 
-  const getBadgeLabel = (dueDate: string) => {
+  const getBadgeLabel = (dueDate: string): { key: string; label: string } => {
     const today = new Date();
     const due = new Date(dueDate);
     today.setHours(0, 0, 0, 0);
     due.setHours(0, 0, 0, 0);
-    if (due > today) return t('tasks.status.upcoming');
-    if (due.getTime() === today.getTime()) return t('tasks.status.today');
-    return t('tasks.status.overdue');
+    if (due > today) return { key: 'upcoming', label: t('tasks.status.upcoming') };
+    if (due.getTime() === today.getTime()) return { key: 'today', label: t('tasks.status.today') };
+    return { key: 'overdue', label: t('tasks.status.overdue') };
   };
 
   const { tasks, loading } = useTasks(userProfile?.flatId);
@@ -203,11 +203,11 @@ export default function TasksPage() {
                 let badgeClass = '';
                 if (task.done) {
                   badgeClass = 'bg-white/5 text-gray-400 border-white/10';
-                } else if (badgeType === 'Upcoming') {
+                } else if (badgeType.key === 'upcoming') {
                   badgeClass = 'bg-green-500/10 text-green-400 border-green-500/20';
-                } else if (badgeType === 'Today') {
+                } else if (badgeType.key === 'today') {
                   badgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-                } else if (badgeType === 'Overdue') {
+                } else if (badgeType.key === 'overdue') {
                   badgeClass = 'bg-red-500/10 text-red-400 border-red-500/20';
                 }
 
@@ -265,7 +265,7 @@ export default function TasksPage() {
                       </div>
                     </div>
                     <span className={`px-2 py-1 rounded text-xs font-semibold border ${badgeClass}`}>
-                      {badgeType}
+                      {badgeType.label}
                     </span>
                     {isAdmin && (
                       <button

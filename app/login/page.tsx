@@ -560,9 +560,8 @@ export default function LoginPage() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       if (!userCredential.user.emailVerified) {
+        await signOut(auth);
         setError(t('login.errorEmailNotVerified'));
-        await sendEmailVerification(userCredential.user);
-        setResendCooldown(60);
         recordFailedAttempt();
         return;
       }
@@ -652,6 +651,7 @@ export default function LoginPage() {
 
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await sendEmailVerification(userCredential.user);
+      await signOut(auth);
       await ensureUserProfile(userCredential.user.uid, {
         email,
         name: `${firstName.trim()} ${lastName.trim()}`.trim(),
@@ -705,6 +705,11 @@ export default function LoginPage() {
     setShowVerifyStep(false);
     setPendingEmail('');
     setHcaptchaError('');
+    if (window.hcaptcha && hcaptchaWidgetId.current !== null) {
+      try {
+        window.hcaptcha.reset(hcaptchaWidgetId.current);
+      } catch { /* ignore */ }
+    }
     hcaptchaWidgetId.current = null;
   };
 
@@ -917,7 +922,7 @@ export default function LoginPage() {
                       <div
                         key={level}
                         className={`h-1 flex-1 rounded-full transition-colors ${
-                          passwordStrength === 'weak' ? 'bg-red-500' :
+                          passwordStrength === 'weak' ? (level <= 1 ? 'bg-red-500' : 'bg-[#27272a]') :
                           passwordStrength === 'fair' ? (level <= 1 ? 'bg-orange-500' : 'bg-[#27272a]') :
                           passwordStrength === 'good' ? (level <= 2 ? 'bg-yellow-500' : 'bg-[#27272a]') :
                           'bg-green-500'

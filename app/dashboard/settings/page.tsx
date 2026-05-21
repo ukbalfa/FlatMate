@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { db } from '../../../lib/firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import {
   updatePassword,
   reauthenticateWithCredential,
@@ -234,6 +234,7 @@ export default function SettingsPage() {
     if (!firebaseUser) return;
     setDeleting(true);
     try {
+      await deleteDoc(doc(db, 'users', firebaseUser.uid));
       await deleteUser(firebaseUser);
       toast.success(t('settings.data.deleted'));
     } catch (error: unknown) {
