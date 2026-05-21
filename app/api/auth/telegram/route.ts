@@ -147,12 +147,12 @@ export async function POST(request: NextRequest) {
 
       const profileData: Record<string, unknown> = {
         username: claims.preferred_username || `tg_${telegramId}`,
-        name: claims.name || undefined,
         role: 'roommate',
         joinedAt: new Date().toISOString(),
-        avatar: claims.picture || undefined,
         telegramId,
       };
+      if (claims.name) profileData.name = claims.name;
+      if (claims.picture) profileData.avatar = claims.picture;
       await admin.firestore().collection('users').doc(uid).set(profileData);
     }
 
